@@ -12,5 +12,9 @@ pkgs.inputs.treefmt-nix.lib.mkWrapper pkgs {
 
     shfmt.enable = true;
     shfmt.indent_size = null;
+
+    taplo.enable = true;
   };
+
+  settings.formatter.nixfmt-rfc-style.excludes = [ "hardware-configuration.nix" ];
 }
