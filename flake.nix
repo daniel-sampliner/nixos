@@ -8,7 +8,9 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
+    impermanence.url = "github:nix-community/impermanence";
 
     devshell = {
       url = "github:numtide/devshell";
