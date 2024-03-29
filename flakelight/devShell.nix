@@ -15,6 +15,11 @@ devshell.mkShell {
   devshell = {
     motd = "";
     name = "nixos configs";
+
+    startup.sopsdiffer.text = ''
+      git config diff.sopsdiffer.textconv "sops -d"
+    '';
+
     startup.pre-commit.text = pre-commit-check.shellHook;
 
     packages = pre-commit-check.enabledPackages;
