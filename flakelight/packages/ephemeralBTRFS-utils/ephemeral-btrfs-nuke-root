@@ -1,0 +1,78 @@
+#!/usr/bin/env dash
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+set -e
+
+main() {
+	local root_disk="${1:?}"
+	local root_subvol="${2:?}"
+	local blank_subvol="${3:?}"
+
+	if [ "$DRY_RUN" != "no" ]; then
+		DRY_RUN=dry-run
+	fi
+
+	mkdir -p /mnt/oldroot
+	mount -o subvol=/ "$root_disk" /mnt/oldroot
+
+	local top_id
+	top_id=$(btrfs inspect rootid "/mnt/oldroot/$root_subvol")
+
+	recursive_btrfs_delete /mnt/oldroot "$root_subvol" "${top_id:?}"
+
+	btrfs subvolume snapshot \
+		"/mnt/oldroot/$blank_subvol" "/mnt/oldroot/$root_subvol"
+
+	umount /mnt/oldroot
+	rmdir /mnt/oldroot
+}
+
+btrfs() {
+	case "$1" in
+	subvolume)
+		shift
+		case "$1" in
+		delete | snapshot)
+			if [ "$DRY_RUN" != no ]; then
+				echo DRY-RUN: btrfs subvolume "$@"
+				return 0
+			fi
+			command btrfs subvolume "$@"
+			return $?
+			;;
+		*)
+			command btrfs subvolume "$@"
+			return $?
+			;;
+		esac
+		;;
+	*)
+		command btrfs "$@"
+		return $?
+		;;
+	esac
+}
+
+recursive_btrfs_delete() {
+	local mountpoint="${1:?}"
+	local top="${2:?}"
+	local top_id="${3:?}"
+
+	btrfs subvolume list -o "$mountpoint/$top" \
+		| while read -r _ id _ _ _ _ parent_id _ path _; do
+			if [ "${parent_id:?}" != "$top_id" ]; then
+				echo "path $path parent_id $parent_id != top_id $top_id" >&2
+				return 1
+			fi
+
+			recursive_btrfs_delete "$mountpoint" "${path:?}" "${id:?}"
+		done
+
+	btrfs subvolume delete --subvolid "$top_id" "$mountpoint/$top"
+	return $?
+}
+
+main "$@"
