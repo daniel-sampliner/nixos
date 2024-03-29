@@ -7,7 +7,7 @@ let
   inherit (pkgs) flakelight;
 
   devshell = import pkgs.inputs.devshell.outPath { nixpkgs = pkgs; };
-  pre-commit-check = pkgs.outputs'.checks.pre-commit;
+  git-hooks-check = pkgs.outputs'.checks.git-hooks;
 in
 devshell.mkShell {
   imports = builtins.attrValues (flakelight.importDir ./devshellModules);
@@ -20,10 +20,10 @@ devshell.mkShell {
       git config diff.sopsdiffer.textconv "sops -d"
     '';
 
-    startup.pre-commit.text = pre-commit-check.shellHook;
+    startup.git-hooks.text = git-hooks-check.shellHook;
 
     packages =
       builtins.attrValues { inherit (pkgs) nix-output-monitor pre-commit; }
-      ++ pre-commit-check.enabledPackages;
+      ++ git-hooks-check.enabledPackages;
   };
 }
