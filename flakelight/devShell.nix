@@ -22,6 +22,8 @@ devshell.mkShell {
 
     startup.pre-commit.text = pre-commit-check.shellHook;
 
-    packages = pre-commit-check.enabledPackages;
+    packages =
+      builtins.attrValues { inherit (pkgs) nix-output-monitor pre-commit; }
+      ++ pre-commit-check.enabledPackages;
   };
 }
