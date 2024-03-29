@@ -1,0 +1,32 @@
+#!/usr/bin/env dash
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+set -e
+
+for mnt in /mnt/root-blank /mnt/root@tmp; do
+	if [ -d "$mnt" ]; then
+		echo "dir already exists: $mnt" >&2
+		exit 1
+	fi
+done
+
+readonly root_disk="${1:-/dev/disk/by-label/root}"
+
+mkdir -p /mnt/root-blank
+mount -t btrfs -o subvol=@root-blank,ro "$root_disk" /mnt/root-blank
+btrfs subvolume snap -r / /mnt/root@tmp >/dev/null
+
+btrfs send --no-data -p /mnt/root-blank /mnt/root@tmp \
+	| btrfs receive --dump \
+	| grep -w '^update_extent' \
+	| sort -k2,2 -u \
+	| tr -s '[:space:]' \
+	| cut -d' ' -f2 \
+	| cut -d/ -f 3-
+
+btrfs subvolume delete --commit-after /mnt/root@tmp >/dev/null
+umount /mnt/root-blank
+rmdir /mnt/root-blank

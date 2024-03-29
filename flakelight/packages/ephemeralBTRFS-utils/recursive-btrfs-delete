@@ -1,0 +1,38 @@
+#!/usr/bin/env -S execlineb -WS3
+
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+multisubstitute {
+	define mountpoint $1
+	define top $2
+	define top_id $3
+	importas -D dry-run DRY_RUN DRY_RUN
+}
+
+foreground {
+	pipeline { btrfs subvolume list -o ${mountpoint}/${top} }
+	forstdin -o 0 -E line
+	multidefine $line { "" id "" "" "" "" parent_id "" path }
+
+	ifelse { eltest $parent_id != $top_id } {
+		foreground { fdmove -c 1 2 echo
+			path $path parent_id $parent_id != top_id $top_id }
+		exit 1
+	}
+
+	recursive-btrfs-delete $mountpoint $path $id ""
+}
+
+importas ret ?
+ifelse { eltest $ret -gt 1 } { exit $ret }
+
+define -s args "subvolume delete --subvolid ${top_id} ${mountpoint}/${top}"
+ifelse { eltest $DRY_RUN != no } {
+	foreground { echo -n DRY-RUN: btrfs }
+	foreground { printf " %q" $args }
+	echo
+}
+
+btrfs $args
