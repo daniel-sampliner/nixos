@@ -39,6 +39,7 @@
   outputs =
     { flakelight, ... }:
     flakelight ./. {
+      flakelight.editorconfig = false;
       nixDir = ./flakelight;
       nixpkgs.config.allowUnfree = true;
       systems = [ "x86_64-linux" ];
