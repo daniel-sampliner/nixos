@@ -4,19 +4,12 @@
 
 _: {
   imports = [
+    ../profiles
     ./disks.nix
     ./hardware-configuration.nix
   ];
 
   documentation.nixos.includeAllModules = true;
-
-  boot = {
-    ephemeral.enable = true;
-
-    # Use the systemd-boot EFI boot loader.
-    loader.systemd-boot.enable = true;
-    loader.efi.canTouchEfiVariables = true;
-  };
 
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.

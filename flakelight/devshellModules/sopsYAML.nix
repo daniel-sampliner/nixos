@@ -26,6 +26,19 @@ let
         age = buildVMKey;
       }
     ]
+    ++
+      builtins.map
+        (path_regex: {
+          inherit path_regex pgp;
+          age = lib.pipe hostKeys [
+            builtins.attrValues
+            (lib.concatStringsSep " ")
+          ];
+        })
+        [
+          "^hosts/profiles/"
+          "^users/"
+        ]
     ++ builtins.map (host: {
       inherit pgp;
       path_regex = "^hosts/${host}/";
