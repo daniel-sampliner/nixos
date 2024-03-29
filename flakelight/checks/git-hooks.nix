@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: GLWTPL
 
 pkgs:
-pkgs.inputs'.pre-commit-hooks.lib.run {
+pkgs.inputs'.git-hooks.lib.run {
   inherit (pkgs) src;
 
   hooks = {

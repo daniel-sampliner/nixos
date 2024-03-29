@@ -21,8 +21,8 @@
     flakelight.url = "github:nix-community/flakelight";
     flakelight.inputs.nixpkgs.follows = "unstable";
 
-    pre-commit-hooks = {
-      url = "github:cachix/pre-commit-hooks.nix";
+    git-hooks = {
+      url = "github:cachix/git-hooks.nix";
       inputs = {
         flake-utils.follows = "flake-utils";
         nixpkgs-stable.follows = "nixpkgs";
