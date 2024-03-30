@@ -11,3 +11,4 @@
 *.qcow2
 .direnv
 result
+result-*
