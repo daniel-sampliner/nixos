@@ -4,6 +4,8 @@
 
 { config, lib, ... }:
 {
+  imports = [ ./nix.nix ];
+
   boot = {
     ephemeral.enable = lib.mkDefault true;
     # Use the systemd-boot EFI boot loader.
