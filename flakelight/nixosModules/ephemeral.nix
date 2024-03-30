@@ -85,7 +85,7 @@ in
 
       virtualisation.vmVariant =
         let
-          btrfsFSs = lib.filterAttrs (_: v: v.fsType == "btrfs") config.fileSystems;
+          btrfsFSs = lib.filterAttrs (n: v: n != "/nix" && v.fsType == "btrfs") config.fileSystems;
         in
         if config.simpleBTRFS.enable then
           {
