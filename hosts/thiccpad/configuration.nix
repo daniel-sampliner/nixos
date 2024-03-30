@@ -4,7 +4,8 @@
 
 _: {
   imports = [
-    ../profiles
+    ../profiles/default
+
     ./disks.nix
     ./hardware-configuration.nix
   ];
