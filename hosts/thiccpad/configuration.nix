@@ -83,6 +83,11 @@ _: {
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  virtualisation.vmVariant = {
+    virtualisation.memorySize = 8192;
+    virtualisation.cores = 4;
+  };
+
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
   #
