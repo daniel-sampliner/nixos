@@ -12,4 +12,17 @@
   };
 
   sops.userPasswords.root = ./passwd.sops;
+
+  virtualisation.vmVariant = {
+    boot.kernelParams = [ "boot.shell_on_fail" ];
+
+    services.openssh.hostKeys = lib.mkVMOverride [
+      {
+        type = "ed25519";
+        path = ./build-vm.ssh_host_ed25519_key;
+      }
+    ];
+
+    sops.userPasswords.root = lib.mkVMOverride ./build-vm.passwd.sops;
+  };
 }

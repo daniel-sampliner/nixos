@@ -42,12 +42,6 @@ in
             message = "No usable ed25519 SSH host key for decryption";
           }
         ];
-
-        virtualisation.vmVariant = {
-          virtualisation.qemu.options = [
-            ''-smbios type=11,value=${smbiosKey}="$(sudo base64 -w0 "${sshHostKey}")"''
-          ];
-        };
       }
 
       (lib.mkIf (cfg.userPasswords != { }) {
