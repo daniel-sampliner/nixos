@@ -17,6 +17,13 @@ in
       inherit (lib) types;
     in
     {
+      key = lib.mkOption {
+        default = "";
+        description = "sops decryption key.";
+        type = types.path;
+        visible = false;
+      };
+
       userPasswords = lib.mkOption {
         default = { };
         description = "Attrset mapping users to sops-encrypted files containing their hashed password.";
@@ -42,6 +49,8 @@ in
             message = "No usable ed25519 SSH host key for decryption";
           }
         ];
+
+        sops.key = sshHostKey;
       }
 
       (lib.mkIf (cfg.userPasswords != { }) {

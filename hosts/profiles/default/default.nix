@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ lib, ... }:
+{ config, lib, ... }:
 {
   boot = {
     ephemeral.enable = lib.mkDefault true;
@@ -11,18 +11,20 @@
     loader.efi.canTouchEfiVariables = true;
   };
 
+  services.openssh.enable = true;
   sops.userPasswords.root = ./passwd.sops;
 
   virtualisation.vmVariant = {
     boot.kernelParams = [ "boot.shell_on_fail" ];
 
-    services.openssh.hostKeys = lib.mkVMOverride [
-      {
-        type = "ed25519";
-        path = ./build-vm.ssh_host_ed25519_key;
-      }
-    ];
-
     sops.userPasswords.root = lib.mkVMOverride ./build-vm.passwd.sops;
+
+    system.activationScripts = {
+      injectSOPSKey = ''
+        install -Dm 0400 "${./build-vm.ssh_host_ed25519_key}" "${config.sops.key}"
+      '';
+
+      sopsUserPasswords.deps = [ "injectSOPSKey" ];
+    };
   };
 }
