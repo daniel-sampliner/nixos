@@ -41,8 +41,22 @@
       (builtins.map (p: lib.setPrio ((p.meta.priority or 5) + 3) p))
     ];
 
-  services.openssh.enable = true;
+  services = {
+    openssh.enable = true;
+
+    timesyncd = {
+      enable = lib.mkDefault true;
+      servers = [ ];
+
+      extraConfig = ''
+        FallbackNTP=time1.google.com time2.google.com time3.google.com time4.google.com
+      '';
+    };
+  };
+
   sops.userPasswords.root = ./passwd.sops;
+
+  time.timeZone = lib.mkDefault "America/New_York";
 
   virtualisation.vmVariant = {
     boot.kernelParams = [ "boot.shell_on_fail" ];
