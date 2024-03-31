@@ -5,6 +5,7 @@
 _: {
   imports = [
     ../profiles/default
+    ../profiles/toolbox.nix
 
     ./disks.nix
     ./hardware-configuration.nix
