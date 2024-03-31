@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ config, lib, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   imports = [ ./nix.nix ];
 
@@ -12,6 +17,29 @@
     loader.systemd-boot.enable = true;
     loader.efi.canTouchEfiVariables = true;
   };
+
+  environment.systemPackages =
+    let
+      terminals = builtins.attrValues {
+        inherit (pkgs)
+          alacritty
+          dvtm
+          kitty
+          st
+          ;
+      };
+      getTerminfo = t: t.terminfo or (mkTerminfo t);
+      mkTerminfo =
+        t:
+        pkgs.runCommand (lib.getName t) { } ''
+          mkdir -p "$out/share/terminfo"
+          cp -r "${t}/share/terminfo" "$out/share"
+        '';
+    in
+    lib.pipe terminals [
+      (builtins.map getTerminfo)
+      (builtins.map (p: lib.setPrio ((p.meta.priority or 5) + 3) p))
+    ];
 
   services.openssh.enable = true;
   sops.userPasswords.root = ./passwd.sops;
