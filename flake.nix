@@ -11,6 +11,7 @@
 
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
     impermanence.url = "github:nix-community/impermanence";
+    nixos-hardware.url = "github:nixos/nixos-hardware";
 
     devshell = {
       url = "github:numtide/devshell";
