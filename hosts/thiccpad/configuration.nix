@@ -85,6 +85,19 @@ _: {
   # Or disable the firewall altogether.
   # networking.firewall.enable = false;
 
+  networking.useDHCP = false;
+
+  systemd.network = {
+    enable = true;
+
+    networks."10-ether" = {
+      DHCP = "yes";
+      dhcpV4Config.UseDomains = "route";
+      matchConfig.Type = "ether";
+      networkConfig.LLDP = true;
+    };
+  };
+
   virtualisation.vmVariant = {
     virtualisation.memorySize = 8192;
     virtualisation.cores = 4;
