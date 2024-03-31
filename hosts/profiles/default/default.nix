@@ -56,6 +56,14 @@
 
   sops.userPasswords.root = ./passwd.sops;
 
+  systemd.network.wait-online.anyInterface =
+    config.networking.useDHCP
+    || lib.pipe config.systemd.network.networks [
+      (lib.mapAttrsToList (_: v: v.DHCP))
+      (builtins.map (d: d != null && d != "no"))
+      (lib.any lib.id)
+    ];
+
   time.timeZone = lib.mkDefault "America/New_York";
 
   virtualisation.vmVariant = {
