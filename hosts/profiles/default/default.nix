@@ -41,6 +41,9 @@
       (builtins.map (p: lib.setPrio ((p.meta.priority or 5) + 3) p))
     ];
 
+  programs.git.enable = true;
+  programs.git.package = pkgs.gitMinimal;
+
   services = {
     openssh.enable = true;
 
