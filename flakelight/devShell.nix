@@ -23,7 +23,7 @@ devshell.mkShell {
     startup.git-hooks.text = git-hooks-check.shellHook;
 
     packages =
-      builtins.attrValues { inherit (pkgs) nix-output-monitor pre-commit; }
+      builtins.attrValues { inherit (pkgs) nix-output-monitor nix-update pre-commit; }
       ++ git-hooks-check.enabledPackages;
   };
 }
