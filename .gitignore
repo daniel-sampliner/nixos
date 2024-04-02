@@ -5,6 +5,9 @@
 # managed by pre-commit-hooks.nix
 .pre-commit-config.yaml
 
+# managed by sopsYAML.nix
+.sops.yaml
+
 *.qcow2
 .direnv
 result
