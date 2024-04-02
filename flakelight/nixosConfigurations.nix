@@ -6,7 +6,6 @@
   config,
   inputs,
   lib,
-  outputs,
   src,
   ...
 }:
@@ -28,7 +27,7 @@ let
     (lib.filterAttrs (_: f: builtins.pathExists f))
   ];
 
-  mkNixosSystem = host: {
+  mkNixosSystem = host: config-nix: {
     system = hostSystems.${host} or hostSystems.default;
 
     modules =
@@ -40,9 +39,8 @@ let
           nixpkgs.config = config.nixpkgs.config;
           networking.hostName = builtins.baseNameOf host;
         })
-
-        "${hostsDir}/${host}/configuration.nix"
+        config-nix
       ];
   };
 in
-builtins.mapAttrs (h: _: mkNixosSystem h) hosts
+builtins.mapAttrs mkNixosSystem hosts
