@@ -9,7 +9,10 @@
   ...
 }:
 {
-  imports = [ ./nix.nix ];
+  imports = [
+    ../users
+    ./profiles/nix.nix
+  ];
 
   boot = {
     ephemeral.enable = lib.mkDefault true;
@@ -57,8 +60,6 @@
     };
   };
 
-  sops.userPasswords.root = ./passwd.sops;
-
   systemd.network.wait-online.anyInterface =
     config.networking.useDHCP
     || lib.pipe config.systemd.network.networks [
@@ -71,8 +72,6 @@
 
   virtualisation.vmVariant = {
     boot.kernelParams = [ "boot.shell_on_fail" ];
-
-    sops.userPasswords.root = lib.mkVMOverride ./build-vm.passwd.sops;
 
     system.activationScripts = {
       injectSOPSKey = ''
