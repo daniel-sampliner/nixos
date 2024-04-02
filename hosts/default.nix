@@ -12,6 +12,7 @@
   imports = [
     ../users
     ./profiles/nix.nix
+    ./profiles/shells.nix
   ];
 
   boot = {
@@ -41,7 +42,7 @@
     in
     lib.pipe terminals [
       (builtins.map getTerminfo)
-      (builtins.map (p: lib.setPrio ((p.meta.priority or 5) + 3) p))
+      (builtins.map pkgs.hiPrio)
     ];
 
   programs.git.enable = true;
