@@ -83,14 +83,12 @@ in
           fi
 
           if [[ -f "$PRJ_ROOT/.sops.yaml" ]]; then
-            if [[ -L "$PRJ_ROOT/.sops.yaml" ]]; then
-              unlink "$PRJ_ROOT/.sops.yaml"
-            else
+            if [[ ! -L "$PRJ_ROOT/.sops.yaml" ]]; then
               sopsYAML_fatal "pre-existing .sops.yaml; skipping installation."
             fi
           fi
 
-          ln -s "${rendered}" "$PRJ_ROOT/.sops.yaml"
+          ln -sf "${rendered}" "$PRJ_ROOT/.sops.yaml"
         }
 
         sopsYAML_main
