@@ -44,4 +44,9 @@
       in
       urlRefs // localRefs;
   };
+
+  system.extraDependencies = lib.pipe inputs [
+    builtins.attrValues
+    (builtins.map (i: i.outPath))
+  ];
 }
