@@ -45,6 +45,9 @@
       (builtins.map pkgs.hiPrio)
     ];
 
+  home-manager.useGlobalPkgs = true;
+  home-manager.useUserPackages = true;
+
   programs.git.enable = true;
   programs.git.package = pkgs.gitMinimal;
 
