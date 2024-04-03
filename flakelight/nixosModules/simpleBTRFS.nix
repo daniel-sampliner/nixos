@@ -30,7 +30,7 @@ in
               type = types.path;
             };
             neededForBoot = lib.mkOption {
-              default = false;
+              default = true;
               description = "Whether this mount is needed for boot.";
               type = types.bool;
             };
@@ -48,15 +48,12 @@ in
       defaultMounts = lib.mkOption {
         default = {
           "/" = {
-            neededForBoot = true;
             subvolume = "@root";
           };
           "/nix" = {
-            neededForBoot = true;
             subvolume = "@nix";
           };
           "/var/log" = {
-            neededForBoot = true;
             subvolume = "@log";
           };
           "/home" = {
