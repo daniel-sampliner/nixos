@@ -78,7 +78,6 @@ in
 
       simpleBTRFS.mounts.${cfg.store} = {
         subvolume = "@persist";
-        neededForBoot = true;
       };
 
       users.mutableUsers = false;
