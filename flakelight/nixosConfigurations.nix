@@ -34,11 +34,14 @@ let
       builtins.attrValues outputs.nixosModules or { }
       ++ extraModules.${host} or [ ]
       ++ [
+        inputs.home-manager.nixosModules.default
+
         (import ./injectFlakeInputs.nix { inherit src; })
         (_: {
           nixpkgs.config = config.nixpkgs.config;
           networking.hostName = builtins.baseNameOf host;
         })
+
         config-nix
       ];
   };
