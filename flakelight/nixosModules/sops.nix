@@ -78,6 +78,8 @@ in
                   readonly dry=1
                 fi
 
+                umask 0277
+
                 if [[ ! -e "${sshHostKey}" ]]; then
                   ''${dry:+:} ${lib.getExe' pkgs.dmidecode "dmidecode"} -t 11 \
                     | while read -r line; do
@@ -90,7 +92,7 @@ in
                     done
                 fi
 
-                export SOPS_AGE_KEY_FILE=${sopsMountpoint}/age
+                export SOPS_AGE_KEY_FILE="${builtins.dirOf sshHostKey}/age"
                 ''${dry:+:} ${lib.getExe pkgs.ssh-to-age} \
                   -i "${sshHostKey}" \
                   -o "$SOPS_AGE_KEY_FILE" \
