@@ -2,4 +2,9 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-_: { imports = [ ./root ]; }
+_: {
+  imports = [
+    ./daniel
+    ./root
+  ];
+}
