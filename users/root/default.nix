@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   sops.userPasswords.root = ./passwd.sops;
+
+  users.users.root.shell = pkgs.zsh;
 
   virtualisation.vmVariant = {
     sops.userPasswords.root = lib.mkVMOverride ./build-vm.passwd.sops;
