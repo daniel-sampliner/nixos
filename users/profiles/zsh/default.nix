@@ -4,7 +4,10 @@
 
 { config, lib, ... }:
 {
-  imports = [ ./zprof.nix ];
+  imports = [
+    ./completions.nix
+    ./zprof.nix
+  ];
 
   programs.zsh =
     let
