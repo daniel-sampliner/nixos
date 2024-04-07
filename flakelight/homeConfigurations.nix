@@ -5,6 +5,7 @@
 {
   config,
   lib,
+  outputs,
   src,
   ...
 }:
@@ -25,7 +26,7 @@ let
     inherit system;
 
     modules =
-      builtins.attrValues config.homeModules or { }
+      builtins.attrValues outputs.homeModules or { }
       ++ extraModules.${user} or [ ]
       ++ [
         (_: { home.homeDirectory = homeDirs.${user} or "/home/${user}"; })
