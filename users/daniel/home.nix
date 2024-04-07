@@ -3,9 +3,10 @@
 # SPDX-License-Identifier: GLWTPL
 
 _: {
-  imports = [ ../profiles ];
+  imports = [
+    ../profiles
+    ../profiles/zsh
+  ];
 
   home.stateVersion = "22.05";
-
-  programs.zsh.enable = true;
 }
