@@ -5,6 +5,7 @@
 _: {
   imports = [
     ../profiles
+    ../profiles/bat.nix
     ../profiles/zsh
   ];
 
