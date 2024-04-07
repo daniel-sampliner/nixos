@@ -3,7 +3,10 @@
 # SPDX-License-Identifier: GLWTPL
 
 _: {
-  imports = [ ./aliases ];
+  imports = [
+    ./aliases
+    ./git.nix
+  ];
 
   programs.home-manager.enable = true;
 
