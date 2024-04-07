@@ -7,6 +7,7 @@
   imports = [
     ./completions.nix
     ./contrib.nix
+    ./options.nix
     ./zprof.nix
   ];
 
