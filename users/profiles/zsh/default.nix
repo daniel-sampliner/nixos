@@ -6,6 +6,7 @@
 {
   imports = [
     ./completions.nix
+    ./contrib.nix
     ./zprof.nix
   ];
 
