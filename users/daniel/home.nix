@@ -6,6 +6,7 @@ _: {
   imports = [
     ../profiles
     ../profiles/bat.nix
+    ../profiles/nvim
     ../profiles/zsh
   ];
 
