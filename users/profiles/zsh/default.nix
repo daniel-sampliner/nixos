@@ -12,6 +12,7 @@ in
     ./completions.nix
     ./contrib.nix
     ./options.nix
+    ./prompt.nix
     ./zprof.nix
   ];
 
