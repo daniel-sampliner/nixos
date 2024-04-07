@@ -32,23 +32,20 @@
 
       credential.helper =
         let
-          cache =
-            pkgs.writers.makeScriptWriter { interpreter = "${lib.getExe' pkgs.execline "execlineb"} -WS0"; }
-              "/bin/systemd-git-credential-cache"
-              ''
-                backtick -E uuid { redirfd -r 0 /proc/sys/kernel/random/uuid
-                  tr -dc "[:xdigit:]" }
+          cache = pkgs.writers.writeExecline { flags = "-WS0"; } "/bin/systemd-git-credential-cache" ''
+            backtick -E uuid { redirfd -r 0 /proc/sys/kernel/random/uuid
+              tr -dc "[:xdigit:]" }
 
-                systemd-run
-                  --scope
-                  --unit=app-git-credential-cache-$uuid
-                  --slice=app-git_credential_cache
-                  --quiet
-                  --user
+            systemd-run
+              --scope
+              --unit=app-git-credential-cache-$uuid
+              --slice=app-git_credential_cache
+              --quiet
+              --user
 
-                  ${config.programs.git.package}/libexec/git-core/git-credential-cache
-                  $@
-              '';
+              ${config.programs.git.package}/libexec/git-core/git-credential-cache
+              $@
+          '';
         in
         lib.mkBefore [ "${lib.getExe cache} --timeout 21600" ];
 
