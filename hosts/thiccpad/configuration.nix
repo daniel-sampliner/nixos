@@ -10,6 +10,7 @@ _: {
 
     ./disks.nix
     ./hardware-configuration.nix
+    ./pritunl.nix
   ];
 
   documentation.nixos.includeAllModules = true;
