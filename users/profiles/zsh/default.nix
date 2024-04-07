@@ -3,6 +3,10 @@
 # SPDX-License-Identifier: GLWTPL
 
 { config, lib, ... }:
+let
+  inherit (config.home) homeDirectory;
+  dotDir = "${lib.removePrefix "${homeDirectory}/" config.xdg.configHome}/zsh";
+in
 {
   imports = [
     ./completions.nix
@@ -11,22 +15,39 @@
     ./zprof.nix
   ];
 
-  programs.zsh =
+  home.file =
     let
-      inherit (config.home) homeDirectory;
-      dotDir = "${lib.removePrefix "${homeDirectory}/" config.xdg.configHome}/zsh";
+      files = [
+        ".zshenv"
+        ".zshrc"
+      ];
+      mkFile =
+        f:
+        let
+          name = "${dotDir}/${f}";
+        in
+        {
+          inherit name;
+          value = {
+            onChange = ''
+              zsh -f -c 'zcompile -U "${homeDirectory}/${name}"'
+            '';
+          };
+        };
     in
-    {
-      inherit dotDir;
+    builtins.listToAttrs (builtins.map mkFile files);
 
-      enable = true;
+  programs.zsh = {
+    inherit dotDir;
 
-      envExtra = ''
-        setopt NO_GLOBAL_RCS
-      '';
+    enable = true;
 
-      initExtra = lib.mkAfter ''
-        ttyctl -f
-      '';
-    };
+    envExtra = ''
+      setopt NO_GLOBAL_RCS
+    '';
+
+    initExtra = lib.mkAfter ''
+      ttyctl -f
+    '';
+  };
 }
