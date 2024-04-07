@@ -23,5 +23,9 @@
       envExtra = ''
         setopt NO_GLOBAL_RCS
       '';
+
+      initExtra = lib.mkAfter ''
+        ttyctl -f
+      '';
     };
 }

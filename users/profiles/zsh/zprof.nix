@@ -5,11 +5,11 @@
 { lib, ... }:
 {
   programs.zsh = {
-    envExtra = lib.mkBefore ''
+    envExtra = lib.mkOrder 1 ''
       [[ -v ZPROF ]] && zmodload zsh/zprof
     '';
 
-    initExtra = lib.mkAfter ''
+    initExtra = lib.mkOrder 9999 ''
       [[ -v ZPROF ]] && zprof
     '';
   };
