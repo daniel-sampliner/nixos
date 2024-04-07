@@ -6,6 +6,7 @@
 {
   imports = [
     ./aliases
+    ./direnv
     ./git.nix
   ];
 
