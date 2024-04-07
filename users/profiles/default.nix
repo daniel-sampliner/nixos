@@ -2,11 +2,14 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-_: {
+{ pkgs, ... }:
+{
   imports = [
     ./aliases
     ./git.nix
   ];
+
+  home.packages = builtins.attrValues { inherit (pkgs) fastrandom; };
 
   programs.home-manager.enable = true;
 
