@@ -6,6 +6,7 @@
   config,
   inputs,
   lib,
+  outputs,
   src,
   ...
 }:
@@ -38,8 +39,9 @@ let
 
         (import ./injectFlakeInputs.nix { inherit src; })
         (_: {
-          nixpkgs.config = config.nixpkgs.config;
+          home-manager.sharedModules = builtins.attrValues outputs.homeModules or { };
           networking.hostName = builtins.baseNameOf host;
+          nixpkgs.config = config.nixpkgs.config;
         })
 
         config-nix
