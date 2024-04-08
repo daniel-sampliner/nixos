@@ -5,6 +5,7 @@
 _: {
   imports = [
     ../profiles
+    ../profiles/asdf
     ../profiles/bat.nix
     ../profiles/nvim
     ../profiles/zsh
