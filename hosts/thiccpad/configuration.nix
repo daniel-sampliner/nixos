@@ -88,6 +88,7 @@ _: {
   # networking.firewall.enable = false;
 
   networking.useDHCP = false;
+  security.polkit.enable = true;
 
   systemd.network = {
     enable = true;
