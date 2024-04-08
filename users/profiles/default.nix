@@ -2,15 +2,42 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ pkgs, ... }:
+{ flake, pkgs, ... }:
 {
   imports = [
     ./aliases
+    ./bat.nix
     ./direnv
     ./git.nix
+    ./parallel.nix
   ];
 
-  home.packages = builtins.attrValues { inherit (pkgs) fastrandom; };
+  home.packages = builtins.attrValues {
+    inherit (flake.inputs'.unstable.legacyPackages) nixfmt-rfc-style;
+
+    inherit (pkgs)
+      age
+      coreutils-full
+      dash
+      execline
+      eza
+      fastrandom
+      fd
+      file
+      fzf
+      gh
+      hyperfine
+      less
+      man-pages
+      man-pages-posix
+      pv
+      ripgrep
+      rsync
+      shellcheck
+      shfmt
+      sops
+      ;
+  };
 
   programs.home-manager.enable = true;
 
