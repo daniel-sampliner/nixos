@@ -5,7 +5,7 @@
 _: {
   imports = [
     ../.
-    ../profiles/nvidia.nix
+    ../profiles/graphical.nix
     ../profiles/toolbox.nix
 
     ./disks.nix
