@@ -2,4 +2,7 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-_: { hardware.opengl.enable = true; }
+_: {
+  imports = [ ./v4l2loopback.nix ];
+  hardware.opengl.enable = true;
+}
