@@ -3,6 +3,11 @@
 # SPDX-License-Identifier: GLWTPL
 
 _: {
-  imports = [ ./v4l2loopback.nix ];
+  imports = [
+    ./fonts.nix
+    ./v4l2loopback.nix
+  ];
+
+  gtk.iconCache.enable = true;
   hardware.opengl.enable = true;
 }
