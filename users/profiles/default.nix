@@ -9,6 +9,7 @@
     ./bat.nix
     ./direnv
     ./git.nix
+    ./kitty.nix
     ./parallel.nix
   ];
 
