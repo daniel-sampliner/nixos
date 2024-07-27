@@ -7,8 +7,7 @@ pkgs.inputs.treefmt-nix.lib.mkWrapper pkgs {
   projectRootFile = "flake.nix";
 
   programs = {
-    nixfmt-rfc-style.enable = true;
-    nixfmt-rfc-style.package = pkgs.inputs'.unstable.legacyPackages.nixfmt-rfc-style;
+    nixfmt.enable = true;
 
     shfmt.enable = true;
     shfmt.indent_size = null;
@@ -16,5 +15,5 @@ pkgs.inputs.treefmt-nix.lib.mkWrapper pkgs {
     taplo.enable = true;
   };
 
-  settings.formatter.nixfmt-rfc-style.excludes = [ "hardware-configuration.nix" ];
+  settings.formatter.nixfmt.excludes = [ "hardware-configuration.nix" ];
 }
