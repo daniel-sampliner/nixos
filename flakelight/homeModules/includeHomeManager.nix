@@ -4,12 +4,12 @@
 
 {
   config,
-  flake,
   lib,
+  pkgs,
   ...
 }:
 {
   config.home.packages = lib.mkIf config.programs.home-manager.enable [
-    flake.inputs'.home-manager.packages.default
+    pkgs.inputs'.home-manager.packages.default
   ];
 }

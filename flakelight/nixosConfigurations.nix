@@ -37,7 +37,6 @@ let
       ++ [
         inputs.home-manager.nixosModules.default
 
-        (import ./injectFlakeInputs.nix { inherit src; })
         (_: {
           home-manager.sharedModules = builtins.attrValues outputs.homeModules or { };
           networking.hostName = builtins.baseNameOf host;

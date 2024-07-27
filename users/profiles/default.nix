@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: GLWTPL
 
-{ flake, pkgs, ... }:
+{ pkgs, ... }:
 {
   imports = [
     ./aliases
@@ -14,8 +14,6 @@
   ];
 
   home.packages = builtins.attrValues {
-    inherit (flake.inputs'.unstable.legacyPackages) nixfmt-rfc-style;
-
     inherit (pkgs)
       age
       coreutils-full
@@ -31,6 +29,7 @@
       less
       man-pages
       man-pages-posix
+      nixfmt-rfc-style
       pv
       ripgrep
       rsync

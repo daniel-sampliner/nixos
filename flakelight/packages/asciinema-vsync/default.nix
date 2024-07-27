@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: Apache-2.0
 
 {
-  callPackage,
   fetchFromGitHub,
+  inputs',
   lib,
   makeBinaryWrapper,
 
+  gradle_6,
   jre_headless,
 }:
 let
@@ -21,14 +22,14 @@ let
 
     hash = "sha256-PaBI9fvy1zVYosdPtC6uQ9pTioqhi+OLpI3hnuhTbXI=";
   };
-
-  buildGradle = callPackage ./gradle-env.nix { };
 in
-buildGradle {
+inputs'.gradle2nix.builders.buildGradlePackage {
   inherit pname src version;
 
-  envSpec = ./gradle-env.json;
-  gradleFlags = [ "assemble" ];
+  gradle = gradle_6;
+  lockFile = ./gradle.lock;
+
+  gradleBuildFlags = [ "assemble" ];
   nativeBuildInputs = [ makeBinaryWrapper ];
 
   installPhase = ''
