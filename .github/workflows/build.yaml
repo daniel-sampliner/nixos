@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: build
+
+permissions:
+  packages: write
+
+on:
+  push:
+    branches:
+      - '**'
+
+  workflow_dispatch:
+
+concurrency:
+  cancel-in-progress: true
+  group: >-
+    ${{ github.workflow }}-
+    ${{ github.ref_name == 'main'
+      && github.ref
+      || github.sha }}
+
+env:
+  cache_ver: 2
+
+jobs:
+  devshell:
+    uses: ./.github/workflows/devshell.yaml
+    secrets: inherit
+    with:
+      cache_ver: 4
+
+  nix-flake-check:
+    needs: devshell
+    uses: ./.github/workflows/nix-flake-check.yaml
+    secrets: inherit
+    with:
+      cache_ver: 4

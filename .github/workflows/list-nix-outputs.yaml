@@ -1,0 +1,57 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: list-nix-outputs
+
+on:
+  workflow_call:
+    inputs:
+      cache_ver:
+        default: 1
+        type: number
+      flake_output:
+        required: true
+        type: string
+      nix_public_key:
+        default: ${{ vars.nix_public_key }}
+        type: string
+    secrets:
+      nix_secret_key:
+        required: true
+
+    outputs:
+      outputs:
+        value: ${{ jobs.main.outputs.outputs }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    outputs:
+      outputs: ${{ steps.list-outputs.outputs.outputs }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/cache-devshell
+          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ inputs.cache_ver}}
+          fail-on-cache-miss: true
+
+      - uses: ./.github/actions/setup-nix
+        with:
+          extra_substituters: file://${{ runner.temp }}/cache-devshell
+          name: unused
+          nix_public_key: ${{ inputs.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: list outputs
+        id: list-outputs
+        env:
+          FLAKE_OUTPUT: ${{ inputs.flake_output }}
+        run: |
+          nix eval --impure --json --expr \
+            'builtins.attrNames (builtins.getFlake (builtins.toString ./.)).'"${FLAKE_OUTPUT:?}"'.${builtins.currentSystem}' \
+            >./outputs.json
+
+          echo "outputs=$(<outputs.json)" >>"$GITHUB_OUTPUT"

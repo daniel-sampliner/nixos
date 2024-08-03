@@ -1,0 +1,83 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: setup-nix
+
+inputs:
+  always_setup:
+    default: true
+  cache_ver:
+    default: 1
+  extra_substituters:
+    required: false
+  name:
+    required: true
+  nix_public_key:
+    required: true
+  nix_secret_key:
+    required: true
+
+outputs:
+  cache-hit:
+    value: ${{ steps.cache.outputs.cache-hit }}
+
+runs:
+  using: composite
+  steps:
+    - shell: bash --noprofile --norc -eu {0}
+      name: validate inputs
+      env:
+        INPUTS: ${{ toJSON(inputs) }}
+      run: |
+        while IFS=$'\t' read -r key value; do
+          if [[ -z $value ]]; then
+            echo "missing required input: $key" >&2
+            ret=1
+          fi
+        done \
+          < <(echo "$INPUTS" \
+            | jq -er 'to_entries[]
+              | select(.key != "extra_substituters")
+              | [.key, .value]
+              | @tsv')
+
+        exit "${ret:-0}"
+
+    - shell: bash --noprofile --norc -eu {0}
+      name: save cache url
+      env:
+        NAME: ${{ inputs.name }}
+      run: |
+        CACHE_DIR="$RUNNER_TEMP/cache-$NAME"
+        CACHE_URL="file://$CACHE_DIR?compression=zstd&parallel-compression=true"
+        {
+          echo "CACHE_DIR=$CACHE_DIR"
+          echo "CACHE_URL=$CACHE_URL"
+        } >>"$GITHUB_ENV"
+
+    - uses: actions/cache@v4
+      id: cache
+      with:
+        path: ${{ env.CACHE_DIR }}
+        key: nix-${{ inputs.name }}-${{ hashFiles('flake.lock') }}-v${{ inputs.cache_ver }}
+        restore-keys: |
+          nix-${{ inputs.name }}-${{ hashFiles('flake.lock') }}-
+          nix-${{ inputs.name }}-
+          nix-
+
+    - shell: bash --noprofile --norc -eu {0}
+      if: ${{ inputs.always_setup || steps.cache.outputs.cache-hit != 'true' }}
+      name: configure nix signing key
+      env:
+        NIX_SECRET_KEY: ${{ inputs.nix_secret_key }}
+      run: |
+        echo "$NIX_SECRET_KEY" >>"$RUNNER_TEMP"/secret-key
+
+    - uses: DeterminateSystems/nix-installer-action@v4
+      if: ${{ inputs.always_setup || steps.cache.outputs.cache-hit != 'true' }}
+      with:
+        extra-conf: |
+          secret-key-files = ${{ runner.temp }}/secret-key
+          extra-substituters = ${{ env.CACHE_URL }} ${{ inputs.extra_substituters }}
+          extra-trusted-public-keys = ${{ inputs.nix_public_key }}
