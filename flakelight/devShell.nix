@@ -23,7 +23,10 @@ devshell.mkShell {
     startup.git-hooks.text = git-hooks-check.shellHook;
 
     packages =
-      builtins.attrValues { inherit (pkgs) nix-output-monitor nix-update pre-commit; }
+      builtins.attrValues {
+        inherit (pkgs) nix-output-monitor nix-update pre-commit;
+        inherit (pkgs.inputs'.nix2container.packages) skopeo-nix2container;
+      }
       ++ git-hooks-check.enabledPackages;
   };
 }
