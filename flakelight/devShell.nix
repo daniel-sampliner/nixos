@@ -24,7 +24,14 @@ devshell.mkShell {
 
     packages =
       builtins.attrValues {
-        inherit (pkgs) nix-output-monitor nix-update pre-commit;
+        inherit (pkgs)
+          nix-eval-jobs
+          nix-fast-build
+          nix-output-monitor
+          nix-update
+          pre-commit
+          ;
+
         inherit (pkgs.inputs'.nix2container.packages) skopeo-nix2container;
       }
       ++ git-hooks-check.enabledPackages;
