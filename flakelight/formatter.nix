@@ -13,7 +13,27 @@ pkgs.inputs.treefmt-nix.lib.mkWrapper pkgs {
     shfmt.indent_size = null;
 
     taplo.enable = true;
+
+    yamlfmt.enable = true;
   };
 
-  settings.formatter.nixfmt.excludes = [ "hardware-configuration.nix" ];
+  settings.formatter = {
+    nixfmt.excludes = [ "hardware-configuration.nix" ];
+
+    yamlfmt.options =
+      let
+        cfg = pkgs.writers.writeYAML "yamlfmt.yaml" {
+          formatter = {
+            type = "basic";
+            retain_line_breaks_single = true;
+            scan_folded_as_literal = true;
+            trim_trailing_whitespace = true;
+          };
+        };
+      in
+      [
+        "-conf"
+        cfg.outPath
+      ];
+  };
 }

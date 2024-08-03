@@ -27,6 +27,7 @@ _: prev: {
           args' = args // {
             name = "ghcr.io/${repo}/${args.name}";
             maxLayers = args.maxLayers or 125;
+
             config = prev.lib.recursiveUpdate {
               Labels = {
                 "org.opencontainers.image.created" = "${year}-${month}-${day}T${hour}:${minute}:${second}+00:00";
@@ -34,6 +35,8 @@ _: prev: {
                 "org.opencontainers.image.licenses" = "GLWTPL";
               } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
             } args.config or { };
+
+            meta = prev.lib.recursiveUpdate { inherit (args) tag; } args.meta or { };
           };
         in
         nix2container.buildImage args';

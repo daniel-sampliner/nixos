@@ -1,0 +1,106 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GLWTPL
+
+name: build-containers
+
+permissions:
+  packages: write
+
+on:
+  workflow_call:
+    inputs:
+      cache_ver:
+        default: 1
+        type: number
+      nix_public_key:
+        default: ${{ vars.nix_public_key }}
+        type: string
+    secrets:
+      nix_secret_key:
+        required: true
+
+jobs:
+  gen-matrix:
+    uses: ./.github/workflows/list-nix-outputs.yaml
+    secrets: inherit
+    with:
+      cache_ver: ${{ inputs.cache_ver }}
+      flake_output: containers
+
+  main:
+    runs-on: ubuntu-latest
+    needs: gen-matrix
+    strategy:
+      matrix:
+        ctr: ${{ fromJSON(needs.gen-matrix.outputs.outputs) }}
+    env:
+      CTR: ${{ matrix.ctr }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          path: ${{ runner.temp }}/cache-devshell
+          key: nix-devshell-${{ hashFiles('flake.lock') }}-v${{ inputs.cache_ver}}
+          fail-on-cache-miss: true
+
+      - uses: ./.github/actions/setup-nix
+        id: setup-nix
+        with:
+          cache_ver: ${{ inputs.cache_ver }}
+          extra_substituters: file://${{ runner.temp }}/cache-devshell
+          name: container-${{ matrix.ctr }}
+          nix_public_key: ${{ inputs.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: build
+        run: |
+          system=$(nix eval --impure --raw --expr 'builtins.currentSystem')
+          drv=".#containers.${system:?}.${CTR:?}"
+          nix -L build --keep-going "$drv"
+          echo "DRV=$drv" >>"$GITHUB_ENV"
+
+      - name: cache artifacts
+        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
+        continue-on-error: true
+        run: |
+          nix=$(command -v nix)
+          sudo "${nix:?}" copy --to "${CACHE_URL:?}" "${DRV:?}"
+
+      - name: push to ghcr
+        shell: nix develop .#github --command bash -e {0}
+        env:
+          REGISTRY: ghcr.io
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -x
+
+          skopeo login \
+            --username "${GITHUB_ACTOR:?}" \
+            --password-stdin \
+            "${REGISTRY:?}" \
+            <<<"${GH_TOKEN:?}"
+
+          tags=("${GITHUB_SHA:?}" "${GITHUB_REF_NAME:?}")
+
+          if [[ $GITHUB_REF_NAME == main ]]; then
+            tags+=("latest" "$(nix eval --raw "$DRV.meta.tag")")
+          fi
+
+          for tag in "${tags[@]}"; do
+            skopeo copy \
+              nix:./result \
+              "docker://${REGISTRY:?}/${GITHUB_REPOSITORY:?}/${CTR:?}:${tag:?}"
+          done
+
+  success:
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() }}
+    needs: main
+    steps:
+      - name: success
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          jq -e 'length > 0 and all(. == "success")' <<<"$RESULTS"
