@@ -38,3 +38,10 @@ jobs:
     secrets: inherit
     with:
       cache_ver: 4
+
+  build-containers:
+    needs: devshell
+    uses: ./.github/workflows/build-containers.yaml
+    secrets: inherit
+    with:
+      cache_ver: 4
