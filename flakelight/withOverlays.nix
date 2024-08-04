@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
 #
-# SPDX-License-Identifier: GLWTPL
+# SPDX-License-Identifier: AGPL-3.0-or-later
 
 _: prev: {
   nix2container =
@@ -32,7 +32,7 @@ _: prev: {
               Labels = {
                 "org.opencontainers.image.created" = "${year}-${month}-${day}T${hour}:${minute}:${second}+00:00";
                 "org.opencontainers.image.source" = "https://github.com/${repo}";
-                "org.opencontainers.image.licenses" = "GLWTPL";
+                "org.opencontainers.image.licenses" = "AGPL-3.0-or-later";
               } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
             } args.config or { };
 
