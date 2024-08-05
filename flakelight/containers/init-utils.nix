@@ -11,11 +11,14 @@
   coreutils,
   dash,
   execline,
+  jq,
   sops,
+  yq,
+  ...
 }:
 nix2container.buildImage {
   name = "init-utils";
-  tag = "0.0.1";
+  tag = "0.0.2";
 
   copyToRoot = [
     (buildEnv {
@@ -24,7 +27,9 @@ nix2container.buildImage {
         coreutils
         dash
         execline
+        jq
         sops
+        yq
 
         (runCommandLocal "dashSymlink" { } ''
           mkdir -p $out/bin
