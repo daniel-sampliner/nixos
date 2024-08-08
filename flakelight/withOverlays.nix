@@ -17,6 +17,8 @@ _: prev: {
       minute = lib.substring 10 2 date;
       second = lib.substring 12 2 date;
 
+      isoDate = "${year}-${month}-${day}T${hour}:${minute}:${second}+00:00";
+
       rev = sourceInfo.rev or sourceInfo.dirtyRev or null;
 
       buildImage' =
@@ -30,11 +32,13 @@ _: prev: {
 
             config = prev.lib.recursiveUpdate {
               Labels = {
-                "org.opencontainers.image.created" = "${year}-${month}-${day}T${hour}:${minute}:${second}+00:00";
+                "org.opencontainers.image.created" = isoDate;
                 "org.opencontainers.image.source" = "https://github.com/${repo}";
                 "org.opencontainers.image.licenses" = "AGPL-3.0-or-later";
               } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
             } args.config or { };
+
+            created = args.created or isoDate;
 
             meta = prev.lib.recursiveUpdate { inherit (args) tag; } args.meta or { };
           };

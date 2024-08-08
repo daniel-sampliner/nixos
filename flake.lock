@@ -188,15 +188,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1720642556,
-        "narHash": "sha256-qsnqk13UmREKmRT7c8hEnz26X3GFFyIQrqx4EaRc1Is=",
-        "owner": "nlewo",
+        "lastModified": 1723079330,
+        "narHash": "sha256-g6Zb7OrlNEM1lep9e/Neqn8Z+0VgCXAakF03GjtSfA8=",
+        "owner": "daniel-sampliner",
         "repo": "nix2container",
-        "rev": "3853e5caf9ad24103b13aa6e0e8bcebb47649fe4",
+        "rev": "d9acb01c15904c4c7ac34fc9754242e1f9816186",
         "type": "github"
       },
       "original": {
-        "owner": "nlewo",
+        "owner": "daniel-sampliner",
+        "ref": "created-time",
         "repo": "nix2container",
         "type": "github"
       }
