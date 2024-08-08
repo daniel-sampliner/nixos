@@ -37,7 +37,7 @@
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix2container = {
-      url = "github:nlewo/nix2container";
+      url = "github:daniel-sampliner/nix2container/created-time";
       inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
