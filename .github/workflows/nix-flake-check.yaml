@@ -25,12 +25,29 @@ jobs:
       cache_ver: ${{ inputs.cache_ver }}
       flake_output: checks
 
-  main:
+  filter-matrix:
     runs-on: ubuntu-latest
     needs: gen-matrix
+    outputs:
+      outputs: ${{ steps.filter.outputs.outputs }}
+    steps:
+      - name: remove unnecessary checks
+        id: filter
+        env:
+          CHECKS: ${{ needs.gen-matrix.outputs.outputs }}
+        run: |
+          jq -ce 'map(select(test("^containers-") | not))' \
+            <<<"$CHECKS" \
+            > ./outputs.json
+
+          echo "outputs=$(<outputs.json)" >>"$GITHUB_OUTPUT"
+
+  main:
+    runs-on: ubuntu-latest
+    needs: filter-matrix
     strategy:
       matrix:
-        check: ${{ fromJSON(needs.gen-matrix.outputs.outputs) }}
+        check: ${{ fromJSON(needs.filter-matrix.outputs.outputs) }}
     env:
       CHECK: ${{ matrix.check }}
     steps:
