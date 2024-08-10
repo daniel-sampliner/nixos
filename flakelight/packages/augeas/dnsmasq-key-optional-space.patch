@@ -1,0 +1,32 @@
+diff --git a/lenses/dnsmasq.aug b/lenses/dnsmasq.aug
+index f7ef9070..3ea205e4 100644
+--- a/lenses/dnsmasq.aug
++++ b/lenses/dnsmasq.aug
+@@ -34,7 +34,7 @@ let domains      = slash . [ label "domain" . sto_no_slash . slash ]+
+  *************************************************************************)
+ 
+ let entry_re   = Rx.word - /(address|server)/
+-let entry      = [ key entry_re . (sep_eq . sto_to_eol)? . eol ]
++let entry      = [ key entry_re . (Sep.opt_space . sep_eq . sto_to_eol)? . eol ]
+ 
+ (************************************************************************
+  *                          STRUCTURED ENTRIES
+diff --git a/lenses/tests/test_dnsmasq.aug b/lenses/tests/test_dnsmasq.aug
+index c6a63d96..17c91062 100644
+--- a/lenses/tests/test_dnsmasq.aug
++++ b/lenses/tests/test_dnsmasq.aug
+@@ -16,6 +16,8 @@ server=/baz.org/#
+ server=/baz.net/#@eth1
+ server=10.6.5.4#1234@eth0#5678
+ server=/qux.com/qux.net/
++
++listen-address =127.0.0.1,127.0.1.2
+ "
+ 
+ test Dnsmasq.lns get conf =
+@@ -62,3 +64,5 @@ test Dnsmasq.lns get conf =
+     { "domain" = "qux.com" }
+     { "domain" = "qux.net" }
+   }
++  { }
++  { "listen-address" = "127.0.0.1,127.0.1.2" }
