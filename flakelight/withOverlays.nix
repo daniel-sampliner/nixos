@@ -46,4 +46,7 @@ _: prev: {
         nix2container.buildImage args';
     in
     nix2container // { buildImage = buildImage'; };
+
+  replaceDependencies = prev.callPackage ./withOverlays/replace-dependencies.nix { };
+  replaceDirectDependencies = prev.callPackage ./withOverlays/replace-direct-dependencies.nix { };
 }

@@ -22,26 +22,16 @@ concurrency:
       && github.ref
       || github.sha }}
 
-env:
-  cache_ver: 2
-
 jobs:
   devshell:
     uses: ./.github/workflows/devshell.yaml
     secrets: inherit
     with:
-      cache_ver: 4
-
-  nix-flake-check:
-    needs: devshell
-    uses: ./.github/workflows/nix-flake-check.yaml
-    secrets: inherit
-    with:
-      cache_ver: 4
+      cache_ver: 12
 
   build-containers:
     needs: devshell
     uses: ./.github/workflows/build-containers.yaml
     secrets: inherit
     with:
-      cache_ver: 4
+      cache_ver: 12
