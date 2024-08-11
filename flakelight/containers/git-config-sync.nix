@@ -33,7 +33,7 @@ let
     if { s6-touch ${repo}/git-daemon-export-ok }
     if { s6-ln -sf ${post-receive} ${repo}/hooks/post-receive }
 
-    s6-tcpserver -v 0.0.0.0 9418
+    exec -a s6-tcpserver s6-tcpserver -v 0.0.0.0 9418
     git daemon
       --base-path=.
       --enable=receive-pack
