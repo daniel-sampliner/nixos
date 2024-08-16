@@ -5,10 +5,6 @@
 name: setup-nix
 
 inputs:
-  always_setup:
-    default: true
-  cache_ver:
-    default: 1
   extra_substituters:
     required: false
   name:
@@ -21,6 +17,10 @@ inputs:
 outputs:
   cache-hit:
     value: ${{ steps.cache.outputs.cache-hit }}
+  cache_dir:
+    value: ${{ steps.save-cache-url.outputs.cache_dir }}
+  cache_url:
+    value: ${{ steps.save-cache-url.outputs.cache_url }}
 
 runs:
   using: composite
@@ -45,39 +45,70 @@ runs:
         exit "${ret:-0}"
 
     - shell: bash --noprofile --norc -eu {0}
-      name: save cache url
+      name: sanitize name
+      id: sanitize-name
       env:
         NAME: ${{ inputs.name }}
       run: |
-        CACHE_DIR="$RUNNER_TEMP/cache-$NAME"
-        CACHE_URL="file://$CACHE_DIR?compression=zstd&parallel-compression=true"
+        name=$(echo -n "${NAME:?}" | tr -sc '[:alnum:]' '-')
+        echo "name=${name:?}" >>"${GITHUB_OUTPUT:?}"
+
+    - shell: bash --noprofile --norc -eu {0}
+      name: save cache url
+      id: save-cache-url
+      env:
+        NAME: ${{ steps.sanitize-name.outputs.name }}
+      run: |
+        CACHE_DIR="${RUNNER_TEMP:?}/cache-${NAME:?}"
+        CACHE_URL="file://$CACHE_DIR?compression=zstd&parallel-compression=true&priority=0"
+        ARCHIVE_CACHE_DIR="${RUNNER_TEMP:?}/flake-archive"
+        ARCHIVE_CACHE_URL="file://$ARCHIVE_CACHE_DIR?compression=zstd&parallel-compression=true&priority=0"
         {
           echo "CACHE_DIR=$CACHE_DIR"
           echo "CACHE_URL=$CACHE_URL"
-        } >>"$GITHUB_ENV"
+          echo "ARCHIVE_CACHE_DIR=$ARCHIVE_CACHE_DIR"
+          echo "ARCHIVE_CACHE_URL=$ARCHIVE_CACHE_URL"
+        } >>"${GITHUB_ENV:?}"
+
+        {
+          echo "cache_dir=$CACHE_DIR"
+          echo "cache_url=$CACHE_URL"
+        } >>"${GITHUB_OUTPUT:?}"
 
     - uses: actions/cache@v4
       id: cache
       with:
-        path: ${{ env.CACHE_DIR }}
-        key: nix-${{ inputs.name }}-${{ hashFiles('flake.lock') }}-v${{ inputs.cache_ver }}
+        path: |
+          ${{ env.CACHE_DIR }}
+          ~/.cache/nix
+        key: nix-${{ steps.sanitize-name.outputs.name }}-${{ hashFiles('flake.lock') }}-${{ github.sha }}
         restore-keys: |
-          nix-${{ inputs.name }}-${{ hashFiles('flake.lock') }}-
-          nix-${{ inputs.name }}-
+          nix-${{ steps.sanitize-name.outputs.name }}-${{ hashFiles('flake.lock') }}-
+          nix-${{ steps.sanitize-name.outputs.name }}-
           nix-
 
+    - uses: actions/cache@v4
+      id: cache-flake-archive
+      with:
+        path: ${{ env.ARCHIVE_CACHE_DIR }}
+        key: nix-flake-archive-${{ hashFiles('flake.lock') }}
+
     - shell: bash --noprofile --norc -eu {0}
-      if: ${{ inputs.always_setup || steps.cache.outputs.cache-hit != 'true' }}
       name: configure nix signing key
       env:
         NIX_SECRET_KEY: ${{ inputs.nix_secret_key }}
       run: |
-        echo "$NIX_SECRET_KEY" >>"$RUNNER_TEMP"/secret-key
+        echo "${NIX_SECRET_KEY:?}" >>"${RUNNER_TEMP:?}"/secret-key
 
     - uses: DeterminateSystems/nix-installer-action@v4
-      if: ${{ inputs.always_setup || steps.cache.outputs.cache-hit != 'true' }}
       with:
         extra-conf: |
           secret-key-files = ${{ runner.temp }}/secret-key
-          extra-substituters = ${{ env.CACHE_URL }} ${{ inputs.extra_substituters }}
+          extra-substituters = ${{ env.ARCHIVE_CACHE_URL }} ${{ env.CACHE_URL }} ${{ inputs.extra_substituters }}
           extra-trusted-public-keys = ${{ inputs.nix_public_key }}
+
+    - shell: bash --noprofile --norc -eu {0}
+      name: cache flake archive
+      if: ${{ steps.cache-flake-archive.outputs.cache-hit != 'true' }}
+      run: |
+        sudo $(command -v nix) flake archive --to "${ARCHIVE_CACHE_URL:?}" .

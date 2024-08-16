@@ -23,15 +23,133 @@ concurrency:
       || github.sha }}
 
 jobs:
-  devshell:
-    uses: ./.github/workflows/devshell.yaml
-    secrets: inherit
-    with:
-      cache_ver: 12
+  gen-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      checks: ${{ steps.list-flake-outputs.outputs.checks }}
+      containers: ${{ steps.list-flake-outputs.outputs.containers }}
+    steps:
+      - uses: actions/checkout@v4
 
-  build-containers:
-    needs: devshell
-    uses: ./.github/workflows/build-containers.yaml
-    secrets: inherit
-    with:
-      cache_ver: 12
+      - uses: ./.github/actions/setup-nix
+        id: setup-nix
+        with:
+          name: build-gen-matrix
+          nix_public_key: ${{ vars.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: list flake outputs
+        id: list-flake-outputs
+        run: |
+          system=$(nix eval --impure --expr 'builtins.currentSystem')
+
+          for attr in checks containers; do
+            echo "$attr=$(nix eval --json ".#github.${system:?}.${attr:?}")"
+          done | tee -a "${GITHUB_OUTPUT:?}"
+
+  flake-check:
+    runs-on: ubuntu-latest
+    needs: gen-matrix
+    strategy:
+      matrix:
+        installable: ${{ fromJSON(needs.gen-matrix.outputs.checks) }}
+    env:
+      INSTALLABLE: ${{ matrix.installable }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-nix
+        id: setup-nix
+        with:
+          name: ${{ matrix.installable }}
+          nix_public_key: ${{ vars.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: check
+        run: |
+          nix -L build --keep-going "${INSTALLABLE:?}"
+
+      - name: cache artifacts
+        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
+        run: |
+          sudo $(command -v nix) copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}"
+
+  cache-push-to-registry:
+    runs-on: ubuntu-latest
+    outputs:
+      cache_dir: ${{ steps.setup-nix.outputs.cache_dir }}
+      cache_url: ${{ steps.setup-nix.outputs.cache_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/setup-nix
+        id: setup-nix
+        with:
+          name: push-to-registry
+          nix_public_key: ${{ vars.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: cache artifacts
+        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
+        run: |
+          sudo $(command -v nix) -L copy --to "${CACHE_URL:?}" ".#push-to-registry"
+
+  build-and-push-containers:
+    runs-on: ubuntu-latest
+    needs:
+      - cache-push-to-registry
+      - gen-matrix
+    strategy:
+      matrix:
+        installable: ${{ fromJSON(needs.gen-matrix.outputs.containers) }}
+    env:
+      INSTALLABLE: ${{ matrix.installable }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache/restore@v4
+        with:
+          fail-on-cache-miss: true
+          key: nix-push-to-registry-${{ hashFiles('flake.lock') }}-${{ github.sha }}
+          path: |
+            ${{ needs.cache-push-to-registry.outputs.cache_dir }}
+            ~/.cache/nix
+          restore-keys: |
+            nix-push-to-registry-${{ hashFiles('flake.lock') }}-
+            nix-push-to-registry-
+
+      - uses: ./.github/actions/setup-nix
+        id: setup-nix
+        with:
+          extra_substituters: ${{ needs.cache-push-to-registry.outputs.cache_url }}
+          name: ${{ matrix.installable }}
+          nix_public_key: ${{ vars.nix_public_key }}
+          nix_secret_key: ${{ secrets.nix_secret_key }}
+
+      - name: build
+        run: |
+          nix -L build --keep-going "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
+
+      - name: cache artifacts
+        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
+        run: |
+          sudo $(command -v nix) copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
+
+      - name: push to ghcr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          nix run .#push-to-registry
+
+  success:
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() }}
+    needs:
+      - build-and-push-containers
+      - flake-check
+    steps:
+      - name: success
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |
+          jq -e 'length > 0 and all(. == "success")' <<<"${RESULTS:?}"

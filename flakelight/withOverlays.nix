@@ -26,22 +26,30 @@ _: prev: {
         let
           repo = "daniel-sampliner/nixos";
 
-          args' = args // {
-            name = "ghcr.io/${repo}/${args.name}";
-            maxLayers = args.maxLayers or 125;
+          args' =
+            let
+              repository = "ghcr.io/${repo}/${args.name}";
+            in
+            args
+            // {
+              name = repository;
+              maxLayers = args.maxLayers or 125;
 
-            config = prev.lib.recursiveUpdate {
-              Labels = {
-                "org.opencontainers.image.created" = isoDate;
-                "org.opencontainers.image.source" = "https://github.com/${repo}";
-                "org.opencontainers.image.licenses" = "AGPL-3.0-or-later";
-              } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
-            } args.config or { };
+              config = prev.lib.recursiveUpdate {
+                Labels = {
+                  "org.opencontainers.image.created" = isoDate;
+                  "org.opencontainers.image.source" = "https://github.com/${repo}";
+                  "org.opencontainers.image.licenses" = "AGPL-3.0-or-later";
+                } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
+              } args.config or { };
 
-            created = args.created or isoDate;
+              created = args.created or isoDate;
 
-            meta = prev.lib.recursiveUpdate { inherit (args) tag; } args.meta or { };
-          };
+              meta = prev.lib.recursiveUpdate {
+                inherit (args) tag;
+                inherit repository;
+              } args.meta or { };
+            };
         in
         nix2container.buildImage args';
     in
