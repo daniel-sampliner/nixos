@@ -51,7 +51,7 @@ nix2container.buildImage {
   name = chrony.pname;
   tag = chrony.version;
 
-  contents = [
+  copyToRoot = [
     chrony-conf
     entrypoint
     healthcheck
