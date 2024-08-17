@@ -23,7 +23,7 @@ nix2container.buildImage {
   name = dnsmasq.pname;
   tag = dnsmasq.version;
 
-  contents = buildEnv {
+  copyToRoot = buildEnv {
     name = "root";
     paths = [
       ldns
