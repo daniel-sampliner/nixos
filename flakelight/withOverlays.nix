@@ -55,6 +55,13 @@ _: prev: {
     in
     nix2container // { buildImage = buildImage'; };
 
+  pythonPackagesExtensions = prev.pythonPackagesExtensions ++ [
+    (final': _: {
+      cmapy = final'.callPackage ./withOverlays/cmapy.nix { };
+      mediapipe = final'.callPackage ./withOverlays/mediapipe.nix { };
+    })
+  ];
+
   replaceDependencies = prev.callPackage ./withOverlays/replace-dependencies.nix { };
   replaceDirectDependencies = prev.callPackage ./withOverlays/replace-direct-dependencies.nix { };
 }

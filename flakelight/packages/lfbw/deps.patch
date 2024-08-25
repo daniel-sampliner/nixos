@@ -1,0 +1,23 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+diff --git a/pyproject.toml b/pyproject.toml
+index c0f2449..c0d7599 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -17,11 +17,11 @@ lfbw = 'lfbw.lfbw:main'
+ [tool.poetry.dependencies]
+ python = ">=3.9"
+ numpy = ">=1.19.3"
+-opencv-python = ">=4.4.0.46"
++opencv = ">=4.4.0.46"
+ pyfakewebcam = ">=0.1.0"
+ mediapipe = ">=0.8.7.1"
+ inotify_simple = ">=1.2"
+ cmapy = ">=0.6.6"
+-configargparse = ">=1.5.0,<1.6.dev0"
+-protobuf = "3.20.2"
++configargparse = ">=1.5.0"
++protobuf = ">=3.20.2"
+ 
