@@ -43,7 +43,8 @@ let
   '';
 
   healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
-    s6-setuidgid nobody
+    importas -D nobody USER USER
+    s6-setuidgid $USER
     chronyc waitsync 1
   '';
 in
