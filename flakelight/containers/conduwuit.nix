@@ -5,14 +5,41 @@
 {
   buildEnv,
   dockerTools,
+  lib,
   nix2container,
+  noopPkg,
+  replaceDependencies,
 
   catatonit,
   conduwuit,
+
+  # unneeded dependencies
+  gcc,
+  rustc,
 }:
+let
+  unneeded = [
+    gcc
+    rustc.unwrapped
+  ];
+
+  replacements = builtins.map (pkg: {
+    oldDependency = pkg;
+    newDependency = noopPkg pkg;
+  }) unneeded;
+
+  conduwuit-stripped = replaceDependencies {
+    inherit replacements;
+    drv = conduwuit;
+  };
+in
 nix2container.buildImage {
   name = conduwuit.pname;
   tag = conduwuit.version;
+
+  layers = lib.singleton (
+    nix2container.buildLayer { deps = builtins.map (builtins.getAttr "newDependency") replacements; }
+  );
 
   copyToRoot = [
     (buildEnv {
@@ -20,7 +47,8 @@ nix2container.buildImage {
       paths = [
         dockerTools.caCertificates
         catatonit
-        conduwuit
+
+        conduwuit-stripped
       ];
     })
   ];
