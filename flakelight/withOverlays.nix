@@ -2,10 +2,13 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: prev: {
+_: prev:
+let
+  inherit (prev) lib;
+in
+{
   nix2container =
     let
-      inherit (prev) lib;
       inherit (prev.inputs'.nix2container.packages) nix2container;
       inherit (prev.inputs.self) sourceInfo;
 
@@ -54,4 +57,17 @@ _: prev: {
         nix2container.buildImage args';
     in
     nix2container // { buildImage = buildImage'; };
+
+  noopPkg =
+    pkg:
+    let
+      name = lib.pipe pkg [
+        (builtins.getAttr "outPath")
+        (builtins.match "${builtins.storeDir}/[a-z0-9]{32}-(.*)")
+        builtins.head
+      ];
+    in
+    prev.runCommandLocal name { } ''
+      touch $out
+    '';
 }

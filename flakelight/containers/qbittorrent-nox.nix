@@ -7,8 +7,8 @@
   dockerTools,
   lib,
   nix2container,
+  noopPkg,
   replaceDependencies,
-  runCommandLocal,
   writeText,
   writers,
 
@@ -79,19 +79,6 @@ let
       xorg.xcbutilwm
     ]
     ++ [ dbus.dev ];
-
-  noopPkg =
-    pkg:
-    let
-      name = lib.pipe pkg [
-        (builtins.getAttr "outPath")
-        (builtins.match "${builtins.storeDir}/[a-z0-9]{32}-(.*)")
-        builtins.head
-      ];
-    in
-    runCommandLocal name { } ''
-      touch $out
-    '';
 
   replacements = builtins.map (pkg: {
     oldDependency = pkg;
