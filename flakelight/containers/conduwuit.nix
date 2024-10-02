@@ -50,6 +50,7 @@ nix2container.buildImage {
 
         conduwuit-stripped
       ];
+      pathsToLink = [ "/bin" ];
     })
   ];
 
