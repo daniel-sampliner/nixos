@@ -105,8 +105,8 @@ let
     }
     multisubstitute {
       define confDir ''${XDG_CONFIG_HOME}/qBittorrent
-      define logDir ''${XDG_DATA_HOME}/qbitTorrent/logs
-      define log ''${XDG_DATA_HOME}/qbitTorrent/logs/qbittorrent.log
+      define logDir ''${XDG_DATA_HOME}/qBittorrent/logs
+      define log ''${XDG_DATA_HOME}/qBittorrent/logs/qbittorrent.log
     }
 
     foreground { echo QBT_LEGAL_NOTICE: $QBT_LEGAL_NOTICE }
@@ -119,7 +119,6 @@ let
             ${config} ''${confDir}/qBittorrent.conf
         }
       }
-      foreground { env }
       foreground {
         fdmove -c 1 2
         echo "set QBT_LEGAL_NOTICE to \"confirm\" to accept legal notice"
@@ -139,7 +138,7 @@ let
     if { ln -sfv /proc/self/fd/2 $log }
 
     emptyenv -c
-    echo stdbuf -oL qbittorrent-nox $@
+    stdbuf -oL qbittorrent-nox $@
   '';
 
   healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
