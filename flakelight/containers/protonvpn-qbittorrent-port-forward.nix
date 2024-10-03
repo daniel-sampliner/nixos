@@ -10,7 +10,7 @@
 
   catatonit,
   coreutils,
-  curl,
+  curl-healthchecker,
   gawk,
   jq,
   libnatpmp,
@@ -115,7 +115,7 @@ nix2container.buildImage {
       paths = [
         catatonit
         coreutils
-        curl
+        curl-healthchecker
         entrypoint
         healthcheck
         jq
