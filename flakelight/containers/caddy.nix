@@ -12,6 +12,7 @@
   writeText,
 
   caddy,
+  curl-healthchecker,
   mailcap,
 }:
 let
@@ -65,14 +66,24 @@ nix2container.buildImage {
   inherit name;
   tag = caddy.version;
 
-  copyToRoot = buildEnv {
-    name = "root";
-    paths = [
-      caddy-w-plugins
-      dockerTools.caCertificates
-      mailcap
-    ];
-  };
+  copyToRoot = [
+    (buildEnv {
+      name = "root";
+      paths = [
+        caddy-w-plugins
+        curl-healthchecker
+      ];
+      pathsToLink = [ "/bin" ];
+    })
+    (buildEnv {
+      name = "etc";
+      paths = [
+        dockerTools.caCertificates
+        mailcap
+      ];
+      pathsToLink = [ "/etc" ];
+    })
+  ];
 
   config = {
     Entrypoint = [ "caddy" ];
