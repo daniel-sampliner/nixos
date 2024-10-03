@@ -9,6 +9,7 @@
   runCommand,
   writeTextFile,
 
+  curl-healthchecker,
   s6-networking,
   tipidee,
 }:
@@ -21,6 +22,7 @@ let
       custom-header add Access-Control-Allow-Methods GET, POST, PUT, DELETE, OPTIONS
       custom-header add Access-Control-Allow-Origin *
       custom-header add Cache-Control public, max-age=86400
+
       log request user-agent x-forwarded-for answer answer_size
     '';
   };
@@ -37,15 +39,17 @@ nix2container.buildImage {
   tag = tipidee.version;
 
   copyToRoot = [
+    tipidee-conf
+    tipidee-conf-cdb
+
     (buildEnv {
       name = "root";
       paths = [
+        curl-healthchecker
         s6-networking
         tipidee
-
-        tipidee-conf
-        tipidee-conf-cdb
       ];
+      pathsToLink = [ "/bin" ];
     })
   ];
 
