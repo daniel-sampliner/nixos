@@ -109,22 +109,21 @@ nix2container.buildImage {
   name = "protonvpn-qbittorrent-port-forward";
   tag = "0.0.1";
 
-  copyToRoot = [
-    (buildEnv {
-      name = "root";
-      paths = [
-        catatonit
-        coreutils
-        curl-healthchecker
-        entrypoint
-        healthcheck
-        jq
-        libnatpmp
-        mainLoop
-        snooze
-      ];
-    })
-  ];
+  copyToRoot = buildEnv {
+    name = "root";
+    paths = [
+      catatonit
+      coreutils
+      curl-healthchecker
+      entrypoint
+      healthcheck
+      jq
+      libnatpmp
+      mainLoop
+      snooze
+    ];
+    pathsToLink = [ "/bin" ];
+  };
 
   config = {
     Entrypoint = [
