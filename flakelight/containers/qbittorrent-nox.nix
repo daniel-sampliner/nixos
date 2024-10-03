@@ -13,6 +13,7 @@
   writers,
 
   coreutils,
+  curl-healthchecker,
   qbittorrent-nox,
 
   # unneeded dependencies
@@ -162,6 +163,7 @@ nix2container.buildImage {
       name = "root";
       paths = [
         coreutils
+        curl-healthchecker
         entrypoint
         healthcheck
         qbt
