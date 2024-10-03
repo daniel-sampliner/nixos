@@ -42,10 +42,10 @@ nix2container.buildImage {
   );
 
   copyToRoot = [
+    dockerTools.caCertificates
     (buildEnv {
       name = "root";
       paths = [
-        dockerTools.caCertificates
         catatonit
 
         conduwuit-stripped
