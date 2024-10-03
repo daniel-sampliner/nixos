@@ -143,9 +143,11 @@ let
   '';
 
   healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
-    define -s curl "curl -qsSf --max-time 1 --retry 10 --retry-max-time 15"
-
-    $curl localhost:8080/api/v2/app/version
+    curl -qsSf
+      --max-time 1
+      --retry 10
+      --retry-max-time 15
+      localhost:8080/api/v2/app/version
   '';
 in
 nix2container.buildImage {
