@@ -33,14 +33,13 @@ let
     if { s6-touch ${repo}/git-daemon-export-ok }
     if { s6-ln -sf ${post-receive} ${repo}/hooks/post-receive }
 
-    exec -a s6-tcpserver s6-tcpserver -v 0.0.0.0 9418
+    exec -a s6-tcpserver s6-tcpserver 0.0.0.0 9418
     git daemon
       --base-path=.
       --enable=receive-pack
       --inetd
       --informative-errors
       --log-destination=stderr
-      --verbose
       .
   '';
 
@@ -60,6 +59,10 @@ let
     if { s6-ln -nsf work-$new work }
     s6-rmrf $old
   '';
+
+  healthcheck = writers.writeExecline { } "/bin/healthcheck" ''
+    git ls-remote --exit-code git://127.0.0.1:9418/repo HEAD
+  '';
 in
 nix2container.buildImage {
   name = "git-config-sync";
@@ -74,6 +77,11 @@ nix2container.buildImage {
         s6-portable-utils
 
         entrypoint
+        healthcheck
+      ];
+      pathsToLink = [
+        "/bin"
+        "/libexec"
       ];
     })
   ];
