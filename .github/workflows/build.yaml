@@ -72,6 +72,7 @@ jobs:
       - name: cache artifacts
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
+          sudo chown -Rc $USER "${CACHE_DIR:?}"
           nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}"
 
   cache-push-to-registry:
@@ -93,6 +94,7 @@ jobs:
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
           nix -L build ".#push-to-registry"
+          sudo chown -Rc $USER "${CACHE_DIR:?}"
           nix --offline copy --to "${CACHE_URL:?}" ".#push-to-registry"
 
   build-and-push-containers:
@@ -134,6 +136,7 @@ jobs:
       - name: cache artifacts
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
+          sudo chown -Rc $USER "${CACHE_DIR:?}"
           nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
 
       - name: push to ghcr
