@@ -72,7 +72,7 @@ jobs:
       - name: cache artifacts
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
-          sudo $(command -v nix) copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}"
+          nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}"
 
   cache-push-to-registry:
     runs-on: ubuntu-latest
@@ -92,7 +92,8 @@ jobs:
       - name: cache artifacts
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
-          sudo $(command -v nix) -L copy --to "${CACHE_URL:?}" ".#push-to-registry"
+          nix -L build ".#push-to-registry"
+          nix --offline copy --to "${CACHE_URL:?}" ".#push-to-registry"
 
   build-and-push-containers:
     runs-on: ubuntu-latest
@@ -133,7 +134,7 @@ jobs:
       - name: cache artifacts
         if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
         run: |
-          sudo $(command -v nix) copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
+          nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
 
       - name: push to ghcr
         env:
