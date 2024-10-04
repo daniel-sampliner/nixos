@@ -9,9 +9,10 @@
   nix2container,
   noopPkg,
   replaceDependencies,
+  writers,
 
-  catatonit,
   conduwuit,
+  curl-healthchecker,
 
   # unneeded dependencies
   gcc,
@@ -32,6 +33,15 @@ let
     inherit replacements;
     drv = conduwuit;
   };
+
+  healthcheck = writers.writeExecline { flags = "-WS0"; } "/bin/healthcheck" ''
+    curl -qsSf
+      --max-time 1
+      --retry 10
+      --retry-max-time 15
+      $@
+      http://localhost:8008
+  '';
 in
 nix2container.buildImage {
   name = conduwuit.pname;
@@ -46,9 +56,9 @@ nix2container.buildImage {
     (buildEnv {
       name = "root";
       paths = [
-        catatonit
-
         conduwuit-stripped
+        curl-healthchecker
+        healthcheck
       ];
       pathsToLink = [ "/bin" ];
     })
@@ -64,10 +74,11 @@ nix2container.buildImage {
         "CONDUWUIT_DATABASE_BACKEND=rocksdb"
       ];
 
-      Entrypoint = [
-        "catatonit"
-        "--"
-        "conduit"
+      Entrypoint = [ "conduit" ];
+
+      Healthcheck.Test = [
+        "CMD"
+        "healthcheck"
       ];
 
       Volumes.${dbPath} = { };
