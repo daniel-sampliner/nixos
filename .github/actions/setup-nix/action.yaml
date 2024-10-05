@@ -81,9 +81,8 @@ runs:
         path: |
           ${{ env.CACHE_DIR }}
           ~/.cache/nix
-        key: nix-${{ steps.sanitize-name.outputs.name }}-${{ hashFiles('flake.lock') }}-${{ github.sha }}
+        key: nix-${{ steps.sanitize-name.outputs.name }}-${{ hashFiles('flake.lock') }}
         restore-keys: |
-          nix-${{ steps.sanitize-name.outputs.name }}-${{ hashFiles('flake.lock') }}-
           nix-${{ steps.sanitize-name.outputs.name }}-
           nix-
 
