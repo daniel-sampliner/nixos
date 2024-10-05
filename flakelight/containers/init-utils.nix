@@ -8,6 +8,7 @@
   nix2container,
   runCommandLocal,
 
+  catatonit,
   coreutils,
   dash,
   execline,
@@ -29,11 +30,12 @@ let
 in
 nix2container.buildImage {
   name = "init-utils";
-  tag = "0.0.2";
+  tag = "0.0.3";
 
   copyToRoot = buildEnv {
     name = "root";
     paths = [
+      catatonit
       coreutils
       dash
       execline
