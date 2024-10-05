@@ -113,12 +113,11 @@ jobs:
       - uses: actions/cache/restore@v4
         with:
           fail-on-cache-miss: true
-          key: nix-push-to-registry-${{ hashFiles('flake.lock') }}-${{ github.sha }}
+          key: nix-push-to-registry-${{ hashFiles('flake.lock') }}
           path: |
             ${{ needs.cache-push-to-registry.outputs.cache_dir }}
             ~/.cache/nix
           restore-keys: |
-            nix-push-to-registry-${{ hashFiles('flake.lock') }}-
             nix-push-to-registry-
 
       - uses: ./.github/actions/setup-nix
