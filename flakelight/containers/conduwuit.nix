@@ -40,7 +40,7 @@ let
       --retry 10
       --retry-max-time 15
       $@
-      http://localhost:8008
+      http://localhost:8008/_matrix/client/versions
   '';
 in
 nix2container.buildImage {
