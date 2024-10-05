@@ -56,7 +56,7 @@ nix2container.buildImage {
         "healthcheck"
       ];
       Volumes = lib.pipe vols [
-        (builtins.map (v: lib.nameValuePair v { }))
+        (builtins.map (v: lib.nameValuePair "/${v}" { }))
         builtins.listToAttrs
       ];
     };
