@@ -18,6 +18,7 @@
   s6,
   s6-portable-utils,
   sops,
+  util-linuxMinimal,
   wireguard-tools,
 }:
 let
@@ -42,6 +43,7 @@ nix2container.buildImage {
       s6
       s6-portable-utils
       sops
+      util-linuxMinimal
 
       my-iproute2
       my-wireguard-tools
