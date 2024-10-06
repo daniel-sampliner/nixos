@@ -64,7 +64,7 @@ let
 in
 nix2container.buildImage {
   name = "conduwuit-backup";
-  tag = "0.0.1";
+  tag = "0.0.2";
 
   copyToRoot = buildEnv {
     name = "root";
@@ -98,8 +98,6 @@ nix2container.buildImage {
       "-H0"
       "-M0"
       "-S0"
-      "-R1h"
-      "-J60"
       "-s1d"
     ];
 
