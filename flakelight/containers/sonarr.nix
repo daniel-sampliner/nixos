@@ -9,6 +9,7 @@
   writers,
 
   curl-healthchecker,
+  ffmpeg-headless,
   sonarr,
 }:
 nix2container.buildImage {
@@ -23,6 +24,7 @@ nix2container.buildImage {
       name = "root";
       paths = [
         curl-healthchecker
+        ffmpeg-headless
         sonarr
 
         (writers.writeExecline { } "/bin/healthcheck" ''
