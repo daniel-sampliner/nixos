@@ -159,8 +159,6 @@ nix2container.buildImage {
   );
 
   copyToRoot = [
-    dockerTools.caCertificates
-
     (buildEnv {
       name = "root";
       paths = [
@@ -172,6 +170,8 @@ nix2container.buildImage {
       ];
       pathsToLink = [ "/bin" ];
     })
+
+    dockerTools.caCertificates
   ];
 
   config = {
