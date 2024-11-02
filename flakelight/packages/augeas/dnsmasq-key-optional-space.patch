@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: GPL-2.0-only
+
 diff --git a/lenses/dnsmasq.aug b/lenses/dnsmasq.aug
 index f7ef9070..3ea205e4 100644
 --- a/lenses/dnsmasq.aug

@@ -27,8 +27,8 @@ pkgs.inputs'.git-hooks.lib.run {
         name = "fix end of files";
         package = pre-commit-hooks;
         stages = [
-          "commit"
-          "push"
+          "pre-commit"
+          "pre-push"
           "manual"
         ];
         types = [ "text" ];
