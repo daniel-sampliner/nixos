@@ -8,7 +8,6 @@
   lib,
   makeBinaryWrapper,
 
-  gradle_6,
   jre_headless,
 }:
 let
@@ -26,7 +25,8 @@ in
 inputs'.gradle2nix.builders.buildGradlePackage {
   inherit pname src version;
 
-  gradle = gradle_6;
+  patches = [ ./0001-gradle-6-to-8.patch ];
+
   lockFile = ./gradle.lock;
 
   gradleBuildFlags = [ "assemble" ];
