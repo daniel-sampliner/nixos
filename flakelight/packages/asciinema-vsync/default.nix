@@ -4,7 +4,6 @@
 
 {
   fetchFromGitHub,
-  fetchpatch,
   inputs',
   lib,
   makeBinaryWrapper,
@@ -18,22 +17,15 @@ let
   src = fetchFromGitHub {
     owner = "JakeWharton";
     repo = pname;
-    rev = version;
+    rev = "290343c0b0c425671f8db3556d054baae3818da0";
 
-    hash = "sha256-PaBI9fvy1zVYosdPtC6uQ9pTioqhi+OLpI3hnuhTbXI=";
+    hash = "sha256-LiZGqnDn4Eh9oGp/X8REUYWIQrWZcBpgsskBn6mT+3c=";
   };
 in
 inputs'.gradle2nix.builders.buildGradlePackage {
   inherit pname src;
 
   version = "${version}-1";
-
-  patches = [
-    (fetchpatch {
-      url = "https://github.com/JakeWharton/asciinema-vsync/pull/2.patch";
-      hash = "sha256-2xJy8QhbawX+Bv+rdLpfex6Rf66QYk3BMh5YN1JoYls=";
-    })
-  ];
 
   lockFile = ./gradle.lock;
 
