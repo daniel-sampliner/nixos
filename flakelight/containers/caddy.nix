@@ -57,7 +57,7 @@ let
               + ''
                 cp vendor/smuggle/go.{mod,sum} .
               '';
-            vendorHash = "sha256-ki4hzfPCUeUes/3B9kx72s+m050NRntasYVbSKlHD34=";
+            vendorHash = "sha256-YVvgKrppxj0clB9InrD84NUvHTv0/8gdSAfLNVou7w8=";
           }
         );
     };
