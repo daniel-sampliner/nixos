@@ -44,9 +44,10 @@ let
     ifelse
       { eltest $GITHUB_REF_NAME = main }
       {
-        backtick -E nix_tag { nix eval --raw ''${INSTALLABLE}.meta.tag }
-        forx -o 0 -E t { latest $nix_tag }
-        nix run ''${INSTALLABLE}.copyTo -- "docker://''${repository}:''${t}"
+        pipeline { nix eval --json ''${INSTALLABLE}.meta.tags }
+        pipeline { jq -r .[] }
+        forstdin -o 0 -E tag
+        nix run ''${INSTALLABLE}.copyTo -- "docker://''${repository}:''${tag}"
       }
     exit 0
   '';
