@@ -51,6 +51,14 @@ in
               meta = prev.lib.recursiveUpdate {
                 inherit (args) tag;
                 inherit repository;
+
+                tags =
+                  let
+                    splitTag = lib.splitString "." args.tag;
+                    head = builtins.head splitTag;
+                    tail = builtins.tail splitTag;
+                  in
+                  builtins.foldl' (x: y: [ "${builtins.head x}.${y}" ] ++ x) [ head ] tail ++ [ "latest" ];
               } args.meta or { };
             };
         in
