@@ -16,32 +16,8 @@ pkgs.inputs'.git-hooks.lib.run {
     nil.enable = true;
     shellcheck.enable = true;
     statix.enable = true;
-
-    end-of-file-fixer =
-      let
-        inherit (pkgs.python3Packages) pre-commit-hooks;
-      in
-      {
-        enable = true;
-        entry = "${pre-commit-hooks}/bin/end-of-file-fixer";
-        name = "fix end of files";
-        package = pre-commit-hooks;
-        stages = [
-          "pre-commit"
-          "pre-push"
-          "manual"
-        ];
-        types = [ "text" ];
-      };
-
-    reuse = {
-      enable = true;
-      name = "REUSE spec compliance";
-      entry = "${pkgs.reuse}/bin/reuse lint";
-      pass_filenames = false;
-      package = pkgs.reuse;
-    };
-
+    end-of-file-fixer.enable = true;
+    reuse.enable = true;
     treefmt.enable = true;
     treefmt.package = pkgs.outputs'.formatter;
   };
