@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 { ephemeralBTRFS-utils }:
-ephemeralBTRFS-utils.overrideAttrs {
+ephemeralBTRFS-utils.overrideAttrs (prev: {
+  pname = prev.pname + "-initrd";
   buildInputs = [ ];
   nativeBuildInputs = [ ];
 
@@ -16,4 +17,4 @@ ephemeralBTRFS-utils.overrideAttrs {
       fi
     done
   '';
-}
+})

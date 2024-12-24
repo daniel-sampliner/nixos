@@ -4,6 +4,8 @@
 
 { curlMinimal }:
 (curlMinimal.override { gssSupport = false; }).overrideAttrs (prev: {
+  pname = prev.pname + "-hc";
+
   configureFlags = prev.configureFlags or [ ] ++ [
     "--disable-alt-svc"
     "--disable-aws"

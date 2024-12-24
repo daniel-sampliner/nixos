@@ -2,7 +2,11 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ fetchFromGitHub, vimUtils }:
+{
+  fetchFromGitHub,
+  lib,
+  vimUtils,
+}:
 let
   pname = "vim-apathy";
   src = fetchFromGitHub {
@@ -16,4 +20,6 @@ in
 vimUtils.buildVimPlugin {
   inherit pname src;
   version = "unstable-2021-11-22";
+
+  meta.license = lib.licenses.vim;
 }

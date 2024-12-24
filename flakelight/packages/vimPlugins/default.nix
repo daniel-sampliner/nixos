@@ -15,11 +15,13 @@ let
     (builtins.mapAttrs (_: v: pkgs.callPackage v { }))
   ];
 in
-linkFarm "vimPlugins" (
-  lib.mapAttrsToList (name: drv: {
-    inherit name;
-    path = drv.outPath;
-  }) plugins
-)
+linkFarm "vimPlugins" (builtins.mapAttrs (_: drv: drv.outPath) plugins)
+// {
+  meta.license = lib.pipe plugins [
+    (lib.mapAttrsToList (_: p: p.meta.license or [ ]))
+    lib.flatten
+    lib.unique
+  ];
+}
 // vimPlugins
 // plugins

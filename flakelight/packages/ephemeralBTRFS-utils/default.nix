@@ -48,4 +48,6 @@ stdenvNoCC.mkDerivation {
       fi
     done
   '';
+
+  meta.license = lib.licenses.agpl3Plus;
 }

@@ -13,10 +13,13 @@ let
     writeExecline =
       {
         flags ? "-WP",
+        license ? lib.licenses.agpl3Plus,
       }:
-      writers.makeScriptWriter {
+      nameOrPath: content:
+      (writers.makeScriptWriter {
         interpreter = lib.getExe' execline "execlineb" + lib.optionalString (flags != "") (" " + flags);
-      };
+      } nameOrPath content).overrideAttrs
+        { meta.license = license; };
   };
 in
 runCommandLocal "writers" { } "touch $out" // writers // myWriters

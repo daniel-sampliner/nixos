@@ -60,24 +60,6 @@
       inherit inputs nixDir;
 
       flakelight.editorconfig = false;
-      nixpkgs.config.allowUnfree = true;
-
-      # Workaround for Dotnet SDK 6.x EOL
-      nixpkgs.config.allowInsecurePredicate =
-        pkg:
-        builtins.elem (lib.getName pkg) (
-          lib.concatMap
-            (n: [
-              n
-              "${n}-wrapped"
-            ])
-            [
-              "aspnetcore-runtime"
-              "dotnet-sdk"
-            ]
-        )
-        && lib.hasPrefix "6." (lib.getVersion pkg);
-
       systems = [ "x86_64-linux" ];
     };
 }
