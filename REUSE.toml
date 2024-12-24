@@ -1,0 +1,9 @@
+# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+version = 1
+SPDX-PackageName = "nixos"
+SPDX-PackageSupplier = "Daniel Sampliner <samplinerD@gmail.com>"
+SPDX-PackageDownloadLocation = "https://github.com/daniel-sampliner/nixos"
+annotations = []
