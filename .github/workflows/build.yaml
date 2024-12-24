@@ -41,10 +41,10 @@ jobs:
       - name: list flake outputs
         id: list-flake-outputs
         run: |
-          system=$(nix eval --impure --expr 'builtins.currentSystem')
+          system=$(nix show-config system)
 
           for attr in checks containers; do
-            echo "$attr=$(nix eval --json ".#github.${system:?}.${attr:?}")"
+            echo "$attr=$(nix eval --json ".#github.${attr:?}.${system:?}")"
           done | tee -a "${GITHUB_OUTPUT:?}"
 
   flake-check:
