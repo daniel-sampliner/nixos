@@ -23,25 +23,65 @@ concurrency:
       || github.sha }}
 
 jobs:
+  cache-flake:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: cache flake
+        run: |
+          nix flake archive --json \
+            | jq -r '.path, (.inputs | to_entries[].value.path)' \
+            | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
+
+  cachix-pushfilter:
+    runs-on: ubuntu-latest
+    outputs:
+      regexp: ${{ steps.pushfilter.outputs.regexp }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: evaluate push filter
+        id: pushfilter
+        run: |
+          {
+            echo -n regexp=
+            nix eval --raw '.#github.cachixPushFilter'
+          } | tee -a "${GITHUB_OUTPUT:?}"
+
   gen-matrix:
     runs-on: ubuntu-latest
     outputs:
       checks: ${{ steps.list-flake-outputs.outputs.checks }}
       containers: ${{ steps.list-flake-outputs.outputs.containers }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-nix
-        id: setup-nix
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
         with:
-          name: build-gen-matrix
-          nix_public_key: ${{ vars.nix_public_key }}
-          nix_secret_key: ${{ secrets.nix_secret_key }}
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
       - name: list flake outputs
         id: list-flake-outputs
         run: |
-          system=$(nix show-config system)
+          system=$(nix config show system)
 
           for attr in checks containers; do
             echo "$attr=$(nix eval --json ".#github.${attr:?}.${system:?}")"
@@ -49,100 +89,81 @@ jobs:
 
   flake-check:
     runs-on: ubuntu-latest
-    needs: gen-matrix
+    needs:
+      - cachix-pushfilter
+      - gen-matrix
+
     strategy:
       matrix:
         installable: ${{ fromJSON(needs.gen-matrix.outputs.checks) }}
     env:
       INSTALLABLE: ${{ matrix.installable }}
+
     steps:
       - uses: actions/checkout@v4
 
-      - uses: ./.github/actions/setup-nix
-        id: setup-nix
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
         with:
-          name: ${{ matrix.installable }}
-          nix_public_key: ${{ vars.nix_public_key }}
-          nix_secret_key: ${{ secrets.nix_secret_key }}
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
+
+      - name: check binary cache
+        id: binary-cache
+        run: |
+          hit=false
+          if nix path-info --eval-store auto --store "https://${GITHUB_REPOSITORY_OWNER:?}.cachix.org" "${INSTALLABLE:?}"; then
+            hit=true
+          fi
+          echo "cache-hit=$hit" | tee -a "${GITHUB_OUTPUT:?}"
 
       - name: check
+        if: ${{ steps.binary-cache.outputs.cache-hit != 'true' }}
         run: |
           nix -L build --keep-going "${INSTALLABLE:?}"
-
-      - name: cache artifacts
-        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
-        run: |
-          sudo chown -Rc $USER "${CACHE_DIR:?}"
-          nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}"
-
-  cache-push-to-registry:
-    runs-on: ubuntu-latest
-    outputs:
-      cache_dir: ${{ steps.setup-nix.outputs.cache_dir }}
-      cache_url: ${{ steps.setup-nix.outputs.cache_url }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/setup-nix
-        id: setup-nix
-        with:
-          name: push-to-registry
-          nix_public_key: ${{ vars.nix_public_key }}
-          nix_secret_key: ${{ secrets.nix_secret_key }}
-
-      - name: cache artifacts
-        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
-        run: |
-          nix -L build ".#push-to-registry"
-          sudo chown -Rc $USER "${CACHE_DIR:?}"
-          nix --offline copy --to "${CACHE_URL:?}" ".#push-to-registry"
 
   build-and-push-containers:
     runs-on: ubuntu-latest
     needs:
-      - cache-push-to-registry
+      - cachix-pushfilter
       - gen-matrix
+
     strategy:
       matrix:
         installable: ${{ fromJSON(needs.gen-matrix.outputs.containers) }}
+
     env:
       INSTALLABLE: ${{ matrix.installable }}
+
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/cache/restore@v4
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
         with:
-          fail-on-cache-miss: true
-          key: nix-push-to-registry-${{ hashFiles('flake.lock') }}
-          path: |
-            ${{ needs.cache-push-to-registry.outputs.cache_dir }}
-            ~/.cache/nix
-          restore-keys: |
-            nix-push-to-registry-
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
 
-      - uses: ./.github/actions/setup-nix
-        id: setup-nix
-        with:
-          extra_substituters: ${{ needs.cache-push-to-registry.outputs.cache_url }}
-          name: ${{ matrix.installable }}
-          nix_public_key: ${{ vars.nix_public_key }}
-          nix_secret_key: ${{ secrets.nix_secret_key }}
+      - name: check binary cache
+        id: binary-cache
+        run: |
+          hit=false
+          if nix path-info --eval-store auto --store "https://${GITHUB_REPOSITORY_OWNER:?}.cachix.org" "${INSTALLABLE:?}"; then
+            hit=true
+          fi
+          echo "cache-hit=$hit" | tee -a "${GITHUB_OUTPUT:?}"
 
       - name: build
+        if: ${{ steps.binary-cache.outputs.cache-hit != 'true' }}
         run: |
           nix -L build --keep-going "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
-
-      - name: cache artifacts
-        if: ${{ steps.setup-nix.outputs.cache-hit != 'true' }}
-        run: |
-          sudo chown -Rc $USER "${CACHE_DIR:?}"
-          nix --offline copy --to "${CACHE_URL:?}" "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
 
       - name: push to ghcr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          nix run .#push-to-registry
+          nix -L run .#push-to-registry
 
   success:
     runs-on: ubuntu-latest
