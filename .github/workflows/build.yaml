@@ -34,6 +34,7 @@ jobs:
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          skipPush: true
 
       - name: cache flake
         run: |
@@ -54,6 +55,7 @@ jobs:
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          skipPush: true
 
       - name: evaluate push filter
         id: pushfilter
@@ -77,6 +79,7 @@ jobs:
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          skipPush: true
 
       - name: list flake outputs
         id: list-flake-outputs
