@@ -9,24 +9,18 @@
   ...
 }:
 {
-  config.outputs.github = {
-    checks = lib.genAttrs config.systems (
-      system:
-      lib.pipe outputs.checks.${system} [
-        builtins.attrNames
-        (builtins.filter (n: !lib.hasPrefix "containers-" n))
-        (builtins.filter (n: !lib.hasPrefix "nixos-" n))
-        (builtins.map (n: ".#checks.${system}.${n}"))
-      ]
-    );
+  config.outputs.github = lib.genAttrs config.systems (system: {
+    checks = lib.pipe outputs.checks.${system} [
+      builtins.attrNames
+      (builtins.filter (n: !lib.hasPrefix "containers-" n))
+      (builtins.filter (n: !lib.hasPrefix "nixos-" n))
+      (builtins.map (n: ".#checks.${system}.${n}"))
+    ];
 
-    containers = lib.genAttrs config.systems (
-      system:
-      lib.pipe outputs.containers.${system} [
-        builtins.attrNames
-        (builtins.map (n: ".#containers.${system}.${n}"))
-      ]
-    );
+    containers = lib.pipe outputs.containers.${system} [
+      builtins.attrNames
+      (builtins.map (n: ".#containers.${system}.${n}"))
+    ];
 
     cachixPushFilter =
       let
@@ -53,7 +47,7 @@
               lib.optionals res.success res.value;
 
           in
-          lib.pipe (packagesWith notRedistributable outputs.packages) [
+          lib.pipe (packagesWith notRedistributable outputs.packages.${system}) [
             (lib.collect (x: builtins.isList x && x != [ ]))
             lib.flatten
             lib.unique
@@ -78,5 +72,5 @@
         ];
       in
       "^(" + lib.concatStringsSep "|" (notRedistributables ++ extraExcludes ++ unfree) + ")$\n";
-  };
+  });
 }

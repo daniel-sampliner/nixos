@@ -84,7 +84,7 @@ jobs:
           system=$(nix config show system)
 
           for attr in checks containers; do
-            echo "$attr=$(nix eval --json ".#github.${attr:?}.${system:?}")"
+            echo "$attr=$(nix eval --json ".#github.${system:?}.${attr:?}")"
           done | tee -a "${GITHUB_OUTPUT:?}"
 
   flake-check:
