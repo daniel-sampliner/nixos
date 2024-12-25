@@ -38,7 +38,7 @@ let
 
     if {
       forx -o 0 -E t { $GITHUB_SHA $GITHUB_REF_NAME }
-      nix run ''${INSTALLABLE}.copyTo -- "docker://''${repository}:''${t}"
+      nix run ''${INSTALLABLE}.copyTo -- --retry-times 5 "docker://''${repository}:''${t}"
     }
 
     ifelse
@@ -47,7 +47,7 @@ let
         pipeline { nix eval --json ''${INSTALLABLE}.meta.tags }
         pipeline { jq -r .[] }
         forstdin -o 0 -E tag
-        nix run ''${INSTALLABLE}.copyTo -- "docker://''${repository}:''${tag}"
+        nix run ''${INSTALLABLE}.copyTo -- --retry-times 5 "docker://''${repository}:''${tag}"
       }
     exit 0
   '';
