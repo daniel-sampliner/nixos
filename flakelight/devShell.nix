@@ -24,6 +24,7 @@ devshell.mkShell {
     {
       motd = "";
       name = (import "${src}/flake.nix").description;
+      packagesFrom = [ outputs'.formatter.passthru.moduleArgs.config.build.devShell ];
 
       startup.sopsdiffer.text = ''
         git config diff.sopsdiffer.textconv "sops -d"
