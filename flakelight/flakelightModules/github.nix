@@ -24,36 +24,6 @@
 
     cachixPushFilter =
       let
-        notRedistributables =
-          let
-            isRedistributable =
-              pkg: lib.lists.any (l: l.redistributable or false) (lib.lists.toList (pkg.meta.license or [ ]));
-
-            notRedistributable = pkg: !isRedistributable pkg;
-
-            packagesWith =
-              cond: arg:
-              let
-                res = builtins.tryEval (
-                  if lib.isDerivation arg then
-                    lib.optional (cond arg) arg.outPath
-                    ++ builtins.map (packagesWith cond) (arg.buildInputs or [ ] ++ arg.propagatedBuildInputs or [ ])
-                  else if lib.isAttrs arg then
-                    builtins.mapAttrs (_: arg': packagesWith cond arg') arg
-                  else
-                    [ ]
-                );
-              in
-              lib.optionals res.success res.value;
-
-          in
-          lib.pipe (packagesWith notRedistributable outputs.packages.${system}) [
-            (lib.collect (x: builtins.isList x && x != [ ]))
-            lib.flatten
-            lib.unique
-            (builtins.map lib.escapeRegex)
-          ];
-
         unfree = builtins.map (pkg: ".*-${pkg}-.*") config.nixpkgs-config.unfreePkgs;
 
         extraExcludes = lib.pipe outputs.checks [
@@ -71,6 +41,6 @@
           (builtins.map lib.escapeRegex)
         ];
       in
-      "^(" + lib.concatStringsSep "|" (notRedistributables ++ extraExcludes ++ unfree) + ")$\n";
+      "^(" + lib.concatStringsSep "|" (unfree ++ extraExcludes) + ")$\n";
   });
 }
