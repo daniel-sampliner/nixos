@@ -60,10 +60,9 @@ jobs:
       - name: evaluate push filter
         id: pushfilter
         run: |
-          {
-            echo -n regexp=
-            nix eval --raw '.#github.cachixPushFilter'
-          } | tee -a "${GITHUB_OUTPUT:?}"
+          system=$(nix config show system)
+          regexp=$(nix eval --raw ".#github.${system:?}.cachixPushFilter")
+          echo "regexp=${regexp:?}" | tee -a "${GITHUB_OUTPUT:?}"
 
   gen-matrix:
     runs-on: ubuntu-latest
