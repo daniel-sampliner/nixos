@@ -61,5 +61,6 @@
 
       flakelight.editorconfig = false;
       systems = [ "x86_64-linux" ];
+      withOverlays = [ inputs.devshell.overlays.default ];
     };
 }
