@@ -3,8 +3,6 @@
 # SPDX-License-Identifier: CC0-1.0
 
 # managed by pre-commit-hooks.nix
-.cache/pre-commit
-.gitconfig
 .pre-commit-config.yaml
 
 # managed by sopsYAML.nix
