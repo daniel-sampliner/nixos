@@ -7,6 +7,7 @@
   inputs',
   lib,
   makeBinaryWrapper,
+  nix-update-script,
 
   jre_headless,
 }:
@@ -38,4 +39,5 @@ inputs'.gradle2nix.builders.buildGradlePackage {
   '';
 
   meta.license = lib.licenses.asl20;
+  passthru.updateScript = nix-update-script { };
 }

@@ -5,6 +5,7 @@
 {
   fetchFromGitHub,
   lib,
+  nix-update-script,
   vimUtils,
 }:
 let
@@ -22,4 +23,5 @@ vimUtils.buildVimPlugin {
   version = "unstable-2023-11-10";
 
   meta.license = lib.licenses.vim;
+  passthru.updateScript = nix-update-script { extraArgs = [ "--version=branch" ]; };
 }

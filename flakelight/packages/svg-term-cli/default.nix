@@ -7,6 +7,7 @@
   fetchYarnDeps,
   lib,
   mkYarnPackage,
+  nix-update-script,
 }:
 let
   pname = "svg-term-cli";
@@ -46,4 +47,8 @@ mkYarnPackage {
 
   meta.license = lib.licenses.mit;
   meta.mainProgram = "svg-term";
+
+  passthru.updateScript = nix-update-script {
+    extraArgs = [ "--override-filename=${builtins.toString ./default.nix}" ];
+  };
 }

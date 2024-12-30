@@ -5,6 +5,7 @@
 {
   buildNpmPackage,
   fetchFromGitHub,
+  nix-update-script,
 
   pairdrop,
 }:
@@ -33,4 +34,6 @@ in
     installPhase = builtins.replaceStrings [ "index.js" ] [ "server/index.js" ] (
       prev.installPhase or ""
     );
+
+    passthru.updateScript = nix-update-script { };
   })
