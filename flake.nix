@@ -60,6 +60,7 @@
       inherit inputs nixDir;
 
       flakelight.editorconfig = false;
+      legacyPackages = lib.id;
       systems = [ "x86_64-linux" ];
       withOverlays = [ inputs.devshell.overlays.default ];
     };
