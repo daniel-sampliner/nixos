@@ -82,4 +82,6 @@ in
   vimPlugins = prev.vimPlugins.extend (
     _: _: lib.filterAttrs (_: v: lib.strings.hasPrefix "vimplugin-" v.name) prev.outputs'.packages
   );
+
+  writers = prev.writers // prev.callPackage ./withOverlays/writers.nix { };
 }
