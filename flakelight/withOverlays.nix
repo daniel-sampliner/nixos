@@ -78,4 +78,8 @@ in
     prev.runCommandLocal name { } ''
       touch $out
     '';
+
+  vimPlugins = prev.vimPlugins.extend (
+    _: _: lib.filterAttrs (_: v: lib.strings.hasPrefix "vimplugin-" v.name) prev.outputs'.packages
+  );
 }
