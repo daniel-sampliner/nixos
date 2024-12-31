@@ -4,9 +4,6 @@
 
 name: build
 
-permissions:
-  packages: write
-
 on:
   push:
     paths:
@@ -100,6 +97,7 @@ jobs:
       - gen-matrix
 
     strategy:
+      fail-fast: false
       matrix:
         installable: ${{ fromJSON(needs.gen-matrix.outputs.checks) }}
     env:
@@ -131,11 +129,16 @@ jobs:
 
   build-and-push-containers:
     runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
     needs:
       - cachix-pushfilter
       - gen-matrix
 
     strategy:
+      fail-fast: false
       matrix:
         installable: ${{ fromJSON(needs.gen-matrix.outputs.containers) }}
 
