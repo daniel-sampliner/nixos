@@ -3,27 +3,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
-  lib,
   inputs',
   writers,
 }:
-let
-  deps = builtins.attrValues {
-    inherit (inputs'.nix2container.packages) nix2container-bin skopeo-nix2container;
-  };
-
-  pkg = writers.writeExecline { } "/bin/push-to-registry" ''
+writers.writeExecline
+  {
+    runtimeInputs = builtins.attrValues {
+      inherit (inputs'.nix2container.packages) nix2container-bin skopeo-nix2container;
+    };
+  }
+  "/bin/push-to-registry"
+  ''
     multisubstitute {
       importas -i GH_TOKEN GH_TOKEN
       importas -i GITHUB_ACTOR GITHUB_ACTOR
       importas -i GITHUB_REF_NAME GITHUB_REF_NAME
       importas -i GITHUB_SHA GITHUB_SHA
       importas -i INSTALLABLE INSTALLABLE
-
-      importas -i path PATH
     }
-
-    export PATH ${lib.makeBinPath deps}:$path
 
     backtick -E repository { nix eval --raw ''${INSTALLABLE}.meta.repository }
     backtick -E registry { heredoc 0 $repository cut -d/ -f1 }
@@ -51,6 +48,4 @@ let
         nix run ''${INSTALLABLE}.copyTo -- --retry-times 5 "docker://''${repository}:''${tag}"
       }
     exit 0
-  '';
-in
-pkg
+  ''
