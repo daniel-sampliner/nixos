@@ -12,9 +12,16 @@
   writeExecline =
     {
       flags ? "-WP",
+      runtimeInputs ? [ ],
     }:
     nameOrPath: content:
     writers.makeScriptWriter {
       interpreter = lib.getExe' execline "execlineb" + lib.optionalString (flags != "") (" " + flags);
+      makeWrapperArgs = lib.lists.optionals (runtimeInputs != [ ]) [
+        "--prefix"
+        "PATH"
+        ":"
+        (lib.strings.makeBinPath runtimeInputs)
+      ];
     } nameOrPath content;
 }
