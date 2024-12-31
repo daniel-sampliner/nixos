@@ -27,6 +27,7 @@ let
 
     backtick -E repository { nix eval --raw ''${INSTALLABLE}.meta.repository }
     backtick -E registry { heredoc 0 $repository cut -d/ -f1 }
+    backtick -E github_ref_name_safe { heredoc 0 $GITHUB_REF_NAME tr -cs "[:alnum:]-\n" "-" }
 
     if {
       heredoc -d 0 $GH_TOKEN
@@ -37,7 +38,7 @@ let
     }
 
     if {
-      forx -o 0 -E t { $GITHUB_SHA $GITHUB_REF_NAME }
+      forx -o 0 -E t { $GITHUB_SHA $github_ref_name_safe }
       nix run ''${INSTALLABLE}.copyTo -- --retry-times 5 "docker://''${repository}:''${t}"
     }
 
