@@ -30,7 +30,6 @@
   harfbuzz,
   libdrm,
   libglvnd,
-  libinput,
   librsvg,
   libxkbcommon,
   mariadb-connector-c,
@@ -57,7 +56,6 @@ let
       harfbuzz
       libdrm
       libglvnd
-      libinput
       librsvg
       libxkbcommon
       mariadb-connector-c
