@@ -14,7 +14,6 @@
     checks = lib.pipe outputs.checks.${system} [
       builtins.attrNames
       (builtins.filter (n: !lib.hasPrefix "containers-" n))
-      (builtins.filter (n: !lib.hasPrefix "nixos-" n))
       (builtins.map (n: ".#checks.${system}.${n}"))
     ];
 
