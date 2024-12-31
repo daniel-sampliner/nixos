@@ -86,9 +86,14 @@ jobs:
         run: |
           system=$(nix config show system)
 
-          for attr in checks containers; do
-            echo "$attr=$(nix eval --json ".#github.${system:?}.${attr:?}")"
-          done | tee -a "${GITHUB_OUTPUT:?}"
+          echo "containers=$(nix eval --json ".#github.${system:?}.containers")" \
+            | tee -a "${GITHUB_OUTPUT:?}"
+
+          nix eval --json ".#github.${system:?}.checks" \
+            | jq -r '.[]' \
+            | nix run '.#filter-cached' -- "https://${GITHUB_REPOSITORY_OWNER:?}.cachix.org" \
+            | jq -nRr '"checks=\([inputs])"' \
+            | tee -a "${GITHUB_OUTPUT:?}"
 
   flake-check:
     runs-on: ubuntu-latest
@@ -113,17 +118,7 @@ jobs:
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
           pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
 
-      - name: check binary cache
-        id: binary-cache
-        run: |
-          hit=false
-          if nix path-info --eval-store auto --store "https://${GITHUB_REPOSITORY_OWNER:?}.cachix.org" "${INSTALLABLE:?}"; then
-            hit=true
-          fi
-          echo "cache-hit=$hit" | tee -a "${GITHUB_OUTPUT:?}"
-
       - name: check
-        if: ${{ steps.binary-cache.outputs.cache-hit != 'true' }}
         run: |
           nix -L build --keep-going "${INSTALLABLE:?}"
 
