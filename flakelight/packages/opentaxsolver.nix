@@ -6,15 +6,12 @@
   fetchurl,
   lib,
   stdenv,
-  gtk3,
-  pkg-config,
-  guiSupport ? false,
 }:
 
 let
   edition = "2023";
   version = "21.06";
-  pname = "opentaxsolver_${lib.optionalString guiSupport "gui_"}${edition}";
+  pname = "opentaxsolver_${edition}";
   src = fetchurl {
     url = "mirror://sourceforge/opentaxsolver/OTS_${edition}/v${version}_linux/OpenTaxSolver${edition}_${version}_linux64.tgz";
     hash = "sha256-dvainYJK0yKVVfBMe/kcdv6NFr24IsMfa0EEgNlIqQs=";
@@ -23,22 +20,13 @@ in
 stdenv.mkDerivation {
   inherit pname src version;
 
-  nativeBuildInputs = lib.optionals guiSupport [ pkg-config ];
-  buildInputs = lib.optionals guiSupport [ gtk3 ];
-
   enableParallelBuilding = true;
 
   sourceRoot = (lib.removeSuffix ".tgz" src.name) + "/src";
 
-  patchFlags = [ "-p2" ];
-  patches = lib.optionals guiSupport [ ./make-gui.patch ];
-
   postUnpack = ''
-    (
-      set -e
-      cd "''${sourceRoot:?}/../bin"
-      find . -type f -delete
-    )
+    find "''${sourceRoot:?}/../bin" -type f -delete
+    rm "$sourceRoot/../Run_taxsolve_GUI"
   '';
 
   installPhase = ''
@@ -46,9 +34,9 @@ stdenv.mkDerivation {
 
     install -D -t $out/bin ../bin/*
 
-    cp -r ../tax_form_files $out
-    mkdir -p $out/src
-    cp -r formdata $out/src
+    mkdir -p $out/share/opentaxsolver/src
+    cp -r ../tax_form_files $out/share/opentaxsolver
+    cp -r formdata $out/share/opentaxsolver/src
 
     runHook postInstall
   '';
@@ -59,9 +47,5 @@ stdenv.mkDerivation {
     downloadPage = "https://sourceforge.net/projects/opentaxsolver/";
     license = [ lib.licenses.gpl2 ];
     platforms = lib.platforms.linux;
-
-    mainProgram =
-      assert lib.assertMsg guiSupport "${pname} has no mainProgram, use getExe' instead of getExe";
-      "ots_gui3";
   };
 }
