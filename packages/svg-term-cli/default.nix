@@ -27,7 +27,7 @@ mkYarnPackage {
   packageJSON = ./package.json;
 
   offlineCache = fetchYarnDeps {
-    yarnLock = "${src}/yarn.lock";
+    yarnLock = src + "/yarn.lock";
     hash = "sha256-4Q1NP3VhnACcrZ1XUFPtgSlk1Eh8Kp02rOgijoRJFcI=";
   };
 

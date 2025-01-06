@@ -23,7 +23,7 @@ devshell.mkShell {
     in
     {
       motd = "";
-      name = (import "${src}/flake.nix").description;
+      name = (import (src + "/flake.nix")).description;
       packagesFrom = [ outputs'.formatter.passthru.moduleArgs.config.build.devShell ];
 
       startup.sopsdiffer.text = ''

@@ -10,16 +10,24 @@
   ...
 }:
 let
-  usersDir = "${src}/users";
+  usersDir = src + "/users";
 
   homeDirs = { };
   extraModules = { };
 
-  users = lib.pipe usersDir [
-    builtins.readDir
-    (lib.filterAttrs (n: t: n != "profiles" && t == "directory"))
-    (builtins.mapAttrs (d: _: "${usersDir}/${d}/home.nix"))
-    (lib.filterAttrs (_: f: builtins.pathExists f))
+  users = lib.trivial.pipe usersDir [
+    (lib.fileset.fileFilter ({ name, ... }: name == "home.nix"))
+    lib.fileset.toList
+
+    (builtins.map (
+      f:
+      lib.nameValuePair (lib.pipe f [
+        builtins.dirOf
+        builtins.baseNameOf
+      ]) f
+    ))
+
+    builtins.listToAttrs
   ];
 
   mkHomeConfiguration = system: user: config: {

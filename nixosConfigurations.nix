@@ -11,7 +11,7 @@
   ...
 }:
 let
-  hostsDir = "${src}/hosts";
+  hostsDir = src + "/hosts";
 
   hostSystems = {
     default = "x86_64-linux";
@@ -22,10 +22,18 @@ let
   };
 
   hosts = lib.pipe hostsDir [
-    builtins.readDir
-    (lib.filterAttrs (n: t: n != "profiles" && t == "directory"))
-    (builtins.mapAttrs (d: _: "${hostsDir}/${d}/configuration.nix"))
-    (lib.filterAttrs (_: f: builtins.pathExists f))
+    (lib.fileset.fileFilter ({ name, ... }: name == "configuration.nix"))
+    lib.fileset.toList
+
+    (builtins.map (
+      f:
+      lib.nameValuePair (lib.pipe f [
+        builtins.dirOf
+        builtins.baseNameOf
+      ]) f
+    ))
+
+    builtins.listToAttrs
   ];
 
   mkNixosSystem = host: config-nix: {
