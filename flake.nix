@@ -53,10 +53,10 @@
     let
       inherit (inputs.nixpkgs) lib;
 
-      nixDir = ./flakelight;
-      extraModules = builtins.attrValues (flakelight.lib.importDir "${nixDir}/flakelightModules");
+      nixDir = ./.;
+      extraModules = builtins.attrValues (flakelight.lib.importDir (nixDir + "/flakelightModules"));
     in
-    flakelight.lib.mkFlake.extend extraModules ./. {
+    flakelight.lib.mkFlake.extend extraModules nixDir {
       inherit inputs nixDir;
 
       flakelight.editorconfig = false;
