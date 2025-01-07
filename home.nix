@@ -6,16 +6,13 @@
   config,
   lib,
   outputs,
-  src,
   ...
 }:
 let
-  usersDir = src + "/users";
-
   homeDirs = { };
   extraModules = { };
 
-  users = lib.trivial.pipe usersDir [
+  users = lib.trivial.pipe ./home/users [
     (lib.fileset.fileFilter ({ name, ... }: name == "home.nix"))
     lib.fileset.toList
 
@@ -30,14 +27,17 @@ let
     builtins.listToAttrs
   ];
 
+  profilesPath = ./home/profiles;
   mkHomeConfiguration = system: user: config: {
     inherit system;
+    extraSpecialArgs = { inherit profilesPath; };
 
     modules =
       builtins.attrValues outputs.homeModules or { }
       ++ extraModules.${user} or [ ]
       ++ [
         (_: { home.homeDirectory = homeDirs.${user} or "/home/${user}"; })
+        profilesPath
         config
       ];
   };

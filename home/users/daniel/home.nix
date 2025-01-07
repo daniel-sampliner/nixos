@@ -2,12 +2,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: {
+{ profilesPath, ... }:
+{
   imports = [
-    ../profiles
-    ../profiles/asdf
-    ../profiles/nvim
-    ../profiles/zsh
+    (profilesPath + "/asdf")
+    (profilesPath + "/nvim")
+    (profilesPath + "/zsh")
   ];
 
   home.stateVersion = "22.05";

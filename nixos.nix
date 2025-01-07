@@ -33,7 +33,7 @@ let
     builtins.listToAttrs
   ];
 
-  homes = lib.pipe ./users [
+  homes = lib.pipe ./home/users [
     (lib.fileset.fileFilter ({ name, ... }: name == "home.nix"))
     lib.fileset.toList
 
@@ -49,6 +49,7 @@ let
   ];
 
   profilesPath = ./nixos/profiles;
+  hmProfilesPath = ./home/profiles;
   mkNixosSystem = host: config-nix: {
     specialArgs = { inherit profilesPath; };
     system = hostSystems.${host} or hostSystems.default;
@@ -60,8 +61,12 @@ let
         inputs.home-manager.nixosModules.default
 
         (_: {
-          home-manager.sharedModules = builtins.attrValues outputs.homeModules or { };
-          home-manager.users = builtins.mapAttrs (_: import) homes;
+          home-manager = {
+            extraSpecialArgs.profilesPath = hmProfilesPath;
+            sharedModules = builtins.attrValues outputs.homeModules or { } ++ [ hmProfilesPath ];
+            users = builtins.mapAttrs (_: import) homes;
+          };
+
           networking.hostName = builtins.baseNameOf host;
           nixpkgs.config = config.nixpkgs.config;
         })
