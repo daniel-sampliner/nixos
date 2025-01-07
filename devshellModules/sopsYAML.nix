@@ -36,12 +36,12 @@ let
           ];
         })
         [
-          "^hosts/profiles/"
-          "^users/"
+          "^nixos/profiles/"
+          "^nixos/users/"
         ]
     ++ builtins.map (host: {
       inherit pgp;
-      path_regex = "^hosts/${host}/";
+      path_regex = "^nixos/${host}/";
       age = hostKeys.${host};
     }) (builtins.attrNames hostKeys)
     ++ [ { inherit pgp; } ];

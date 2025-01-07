@@ -2,11 +2,11 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: {
+{ profilesPath, ... }:
+{
   imports = [
-    ../.
-    ../profiles/graphical.nix
-    ../profiles/toolbox.nix
+    (profilesPath + "/graphical.nix")
+    (profilesPath + "/toolbox.nix")
 
     ./disks.nix
     ./hardware-configuration.nix

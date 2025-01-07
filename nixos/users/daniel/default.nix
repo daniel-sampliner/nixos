@@ -8,7 +8,6 @@ let
   uid = 1000;
 in
 {
-  home-manager.users.${name} = import ./home.nix;
   sops.userPasswords.${name} = ./passwd.sops;
   users.groups.${name}.gid = uid;
 
