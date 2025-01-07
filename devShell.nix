@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -26,8 +26,9 @@ devshell.mkShell {
       name = (import (src + "/flake.nix")).description;
       packagesFrom = [ outputs'.formatter.passthru.moduleArgs.config.build.devShell ];
 
-      startup.sopsdiffer.text = ''
-        git config diff.sopsdiffer.textconv "sops -d"
+      startup.gitconfig.text = ''
+        git config --local blame.ignoreRevsFile .git-blame-ignore-revs
+        git config --local diff.sopsdiffer.textconv "sops -d"
       '';
 
       startup.git-hooks.text = git-hooks-check.shellHook;
