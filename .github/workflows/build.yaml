@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
