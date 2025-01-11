@@ -6,32 +6,36 @@
   devshell,
   inputs',
   lib,
-  outputs',
-  src,
+  moduleArgs,
 
   nix-eval-jobs,
   nix-fast-build,
   nix-output-monitor,
   nix-update,
+  stdenvNoCC,
+  ...
 }:
 devshell.mkShell {
   imports = lib.collectDir { } ./devshellModules;
 
   devshell =
     let
-      git-hooks-check = outputs'.checks.git-hooks;
+      pkgs = moduleArgs.pkgsFor.${stdenvNoCC.hostPlatform.system};
+      checks = builtins.mapAttrs (_: c: c pkgs) (moduleArgs.config.checks pkgs);
     in
     {
       motd = "";
-      name = (import (src + "/flake.nix")).description;
-      packagesFrom = [ outputs'.formatter.passthru.moduleArgs.config.build.devShell ];
+      name = moduleArgs.config.description;
+      packagesFrom = [
+        (moduleArgs.config.formatter pkgs).passthru.moduleArgs.config.build.devShell
+      ];
 
       startup.gitconfig.text = ''
         git config --local blame.ignoreRevsFile .git-blame-ignore-revs
         git config --local diff.sopsdiffer.textconv "sops -d"
       '';
 
-      startup.git-hooks.text = git-hooks-check.shellHook;
+      startup.git-hooks.text = checks.git-hooks.shellHook;
 
       packages = [
         nix-eval-jobs
@@ -40,6 +44,6 @@ devshell.mkShell {
         nix-update
 
         inputs'.nix2container.packages.skopeo-nix2container
-      ] ++ git-hooks-check.enabledPackages;
+      ] ++ checks.git-hooks.enabledPackages;
     };
 }
