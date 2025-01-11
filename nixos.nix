@@ -6,7 +6,6 @@
   config,
   inputs,
   lib,
-  outputs,
   ...
 }:
 let
@@ -19,33 +18,13 @@ let
   };
 
   hosts = lib.pipe ./nixos/hosts [
-    (lib.fileset.fileFilter ({ name, ... }: name == "configuration.nix"))
-    lib.fileset.toList
-
-    (builtins.map (
-      f:
-      lib.nameValuePair (lib.pipe f [
-        builtins.dirOf
-        builtins.baseNameOf
-      ]) f
-    ))
-
-    builtins.listToAttrs
+    (config.lib.collectDir { default = "configuration.nix"; })
+    config.lib.treeifyFiles
   ];
 
   homes = lib.pipe ./home/users [
-    (lib.fileset.fileFilter ({ name, ... }: name == "home.nix"))
-    lib.fileset.toList
-
-    (builtins.map (
-      f:
-      lib.nameValuePair (lib.pipe f [
-        builtins.dirOf
-        builtins.baseNameOf
-      ]) f
-    ))
-
-    builtins.listToAttrs
+    (config.lib.collectDir { default = "home.nix"; })
+    config.lib.treeifyFiles
   ];
 
   profilesPath = ./nixos/profiles;
@@ -55,7 +34,7 @@ let
     system = hostSystems.${host} or hostSystems.default;
 
     modules =
-      builtins.attrValues outputs.nixosModules or { }
+      config.lib.collectDir { } ./nixosModules
       ++ extraModules.${host} or [ ]
       ++ [
         inputs.home-manager.nixosModules.default
@@ -63,7 +42,7 @@ let
         (_: {
           home-manager = {
             extraSpecialArgs.profilesPath = hmProfilesPath;
-            sharedModules = builtins.attrValues outputs.homeModules or { } ++ [ hmProfilesPath ];
+            sharedModules = config.lib.collectDir { } ./homeModules ++ [ hmProfilesPath ];
             users = builtins.mapAttrs (_: import) homes;
           };
 

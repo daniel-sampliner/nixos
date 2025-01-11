@@ -4,9 +4,11 @@
 
 _: prev:
 let
-  inherit (prev) lib;
+  lib = prev.lib.extend (_: _: prev.outputs.lib);
 in
 {
+  inherit lib;
+
   nix2container =
     let
       inherit (prev.inputs'.nix2container.packages) nix2container;

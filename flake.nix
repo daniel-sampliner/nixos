@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -52,15 +52,15 @@
     { flakelight, ... }@inputs:
     let
       inherit (inputs.nixpkgs) lib;
-
-      nixDir = ./.;
-      extraModules = builtins.attrValues (flakelight.lib.importDir (nixDir + "/flakelightModules"));
+      myLib = import ./lib.nix { inherit lib; };
     in
-    flakelight.lib.mkFlake.extend extraModules nixDir {
-      inherit inputs nixDir;
+    flakelight.lib.mkFlake ./. {
+      inherit inputs;
 
       flakelight.editorconfig = false;
+      imports = myLib.collectDir { } ./flakelightModules;
       legacyPackages = lib.id;
+      nixDir = ./.;
       systems = [ "x86_64-linux" ];
       withOverlays = [ inputs.devshell.overlays.default ];
     };

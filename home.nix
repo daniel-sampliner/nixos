@@ -5,7 +5,6 @@
 {
   config,
   lib,
-  outputs,
   ...
 }:
 let
@@ -13,39 +12,29 @@ let
   extraModules = { };
 
   users = lib.trivial.pipe ./home/users [
-    (lib.fileset.fileFilter ({ name, ... }: name == "home.nix"))
-    lib.fileset.toList
-
-    (builtins.map (
-      f:
-      lib.nameValuePair (lib.pipe f [
-        builtins.dirOf
-        builtins.baseNameOf
-      ]) f
-    ))
-
-    builtins.listToAttrs
+    (config.lib.collectDir { default = "home.nix"; })
+    config.lib.treeifyFiles
   ];
 
   profilesPath = ./home/profiles;
-  mkHomeConfiguration = system: user: config: {
+  mkHomeConfiguration = system: user: home-nix: {
     inherit system;
     extraSpecialArgs = { inherit profilesPath; };
 
     modules =
-      builtins.attrValues outputs.homeModules or { }
+      config.lib.collectDir { } ./homeModules
       ++ extraModules.${user} or [ ]
       ++ [
         (_: { home.homeDirectory = homeDirs.${user} or "/home/${user}"; })
         profilesPath
-        config
+        home-nix
       ];
   };
 
   mkHomeConfigurations =
     host: system:
     lib.mapAttrs' (
-      user: config: lib.nameValuePair "${user}@${host}" (mkHomeConfiguration system user config)
+      user: home-nix: lib.nameValuePair "${user}@${host}" (mkHomeConfiguration system user home-nix)
     ) users;
 in
 lib.pipe config.nixosConfigurations [

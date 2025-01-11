@@ -4,8 +4,8 @@
 
 {
   devshell,
-  flakelight,
   inputs',
+  lib,
   outputs',
   src,
 
@@ -15,7 +15,7 @@
   nix-update,
 }:
 devshell.mkShell {
-  imports = builtins.attrValues (flakelight.importDir ./devshellModules);
+  imports = lib.collectDir { } ./devshellModules;
 
   devshell =
     let
