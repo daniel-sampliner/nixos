@@ -10,6 +10,8 @@ on:
       - '**'
       - '!.github/**'
       - '.github/workflows/build.yaml'
+      - '.github/workflows/check.yaml'
+      - '.github/workflows/gen-jobs.yaml'
     branches:
       - '**'
 
@@ -66,56 +68,13 @@ jobs:
           echo "regexp=${regexp:?}" | tee -a "${GITHUB_OUTPUT:?}"
 
   gen-checks:
-    runs-on: ubuntu-latest
-    outputs:
-      checks: ${{ steps.list-flake-outputs.outputs.checks }}
+    uses: ./.github/workflows/gen-jobs.yaml
+    secrets: inherit
+    with:
+      type: checks
 
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
-        with:
-          name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-          skipPush: true
-
-      - name: list flake outputs
-        id: list-flake-outputs
-        run: |
-          system=$(nix config show system)
-
-          nix eval --json ".#github.${system:?}.checks" \
-            | jq -r '.[]' \
-            | nix run '.#filter-cached' -- "https://${GITHUB_REPOSITORY_OWNER:?}.cachix.org" \
-            | jq -nRr '"checks=\([inputs])"' \
-            | tee -a "${GITHUB_OUTPUT:?}"
-
-  gen-containers:
-    runs-on: ubuntu-latest
-    outputs:
-      containers: ${{ steps.list-flake-outputs.outputs.containers }}
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
-        with:
-          name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-          skipPush: true
-
-      - name: list flake outputs
-        id: list-flake-outputs
-        run: |
-          system=$(nix config show system)
-
-          echo "containers=$(nix eval --json ".#github.${system:?}.containers")" \
-            | tee -a "${GITHUB_OUTPUT:?}"
-
-  flake-check:
-    runs-on: ubuntu-latest
+  check:
+    if: ${{ needs.gen-checks.outputs.jobs != '[]' }}
     needs:
       - cachix-pushfilter
       - gen-checks
@@ -123,25 +82,70 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        installable: ${{ fromJSON(needs.gen-checks.outputs.checks) }}
-    env:
-      INSTALLABLE: ${{ matrix.installable }}
+        check: ${{ fromJSON(needs.gen-checks.outputs.jobs) }}
 
-    steps:
-      - uses: actions/checkout@v4
+    uses: ./.github/workflows/check.yaml
+    secrets: inherit
+    with:
+      check: ${{ matrix.check }}
+      pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
-        with:
-          name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-          pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
+  gen-nixoss:
+    uses: ./.github/workflows/gen-jobs.yaml
+    secrets: inherit
+    with:
+      nix-eval-jobs: false
+      type: nixoss
 
-      - name: check
-        run: |
-          nix -L build --keep-going "${INSTALLABLE:?}"
+  nixos:
+    if: ${{ needs.gen-nixoss.outputs.jobs != '[]' }}
+    needs:
+      - cachix-pushfilter
+      - gen-nixoss
 
-  build-and-push-containers:
+    strategy:
+      fail-fast: false
+      matrix:
+        check: ${{ fromJSON(needs.gen-nixoss.outputs.jobs) }}
+
+    uses: ./.github/workflows/check.yaml
+    secrets: inherit
+    with:
+      check: ${{ matrix.check }}
+      pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
+
+  gen-homes:
+    uses: ./.github/workflows/gen-jobs.yaml
+    secrets: inherit
+    with:
+      type: homes
+
+  home:
+    if: ${{ needs.gen-homes.outputs.jobs != '[]' }}
+    needs:
+      - cachix-pushfilter
+      - gen-homes
+
+    strategy:
+      fail-fast: false
+      matrix:
+        check: ${{ fromJSON(needs.gen-homes.outputs.jobs) }}
+
+    uses: ./.github/workflows/check.yaml
+    secrets: inherit
+    with:
+      check: ${{ matrix.check }}
+      pushFilter: ${{ needs.cachix-pushfilter.outputs.regexp }}
+
+  gen-containers:
+    uses: ./.github/workflows/gen-jobs.yaml
+    secrets: inherit
+    with:
+      nix-eval-jobs: false
+      type: containers
+
+  containers:
+    if: ${{ needs.gen-containers.outputs.jobs != '[]' }}
     runs-on: ubuntu-latest
 
     permissions:
@@ -154,10 +158,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        installable: ${{ fromJSON(needs.gen-containers.outputs.containers) }}
+        check: ${{ fromJSON(needs.gen-containers.outputs.jobs) }}
 
     env:
-      INSTALLABLE: ${{ matrix.installable }}
+      CHECK: ${{ matrix.check }}
 
     steps:
       - uses: actions/checkout@v4
@@ -170,7 +174,11 @@ jobs:
 
       - name: build
         run: |
-          nix -L build --keep-going "${INSTALLABLE:?}" "$INSTALLABLE.copyTo"
+          system=$(nix config show system)
+          INSTALLABLE=".#checks.${system:?}.${CHECK:?}"
+          nix -L build --keep-going "$INSTALLABLE" "$INSTALLABLE.copyTo"
+
+          echo "INSTALLABLE=$INSTALLABLE" | tee -a "${GITHUB_ENV:?}"
 
       - name: push to ghcr
         env:
@@ -182,11 +190,14 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !cancelled() }}
     needs:
-      - build-and-push-containers
-      - flake-check
+      - check
+      - containers
+      - home
+      - nixos
     steps:
       - name: success
         env:
           RESULTS: ${{ toJSON(needs.*.result) }}
         run: |-
-          jq -e 'length > 0 and all(. == "success")' <<<"${RESULTS:?}"
+          jq -e 'length > 0 and all(. == "success" or . == "skipped")' \
+            <<<"${RESULTS:?}"

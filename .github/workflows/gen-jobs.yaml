@@ -1,0 +1,74 @@
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: gen-jobs
+
+on:
+  workflow_call:
+    inputs:
+      type:
+        required: true
+        type: string
+
+      nix-eval-jobs:
+        default: true
+        type: boolean
+
+    secrets:
+      CACHIX_SIGNING_KEY:
+        required: true
+
+    outputs:
+      jobs:
+        value: ${{ jobs.main.outputs.jobs }}
+
+jobs:
+  main:
+    runs-on: ubuntu-latest
+    outputs:
+      jobs: ${{ steps.main.outputs.jobs }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: enable swap
+        run: |
+          sudo fallocate -l 10G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          skipPush: true
+
+      - name: list attributes
+        id: main
+        env:
+          GC_ROOTS_DIR: ${{ runner.temp }}/gcroots
+          NIX_EVAL_JOBS: ${{ inputs.nix-eval-jobs }}
+          TYPE: ${{ inputs.type }}
+        run: |-
+          system=$(nix config show system)
+          attr=".#github.${system:?}.${TYPE:?}"
+
+          case "${NIX_EVAL_JOBS:?}" in
+          true)
+            nix build .#gen-gh-jobs
+            ./result/bin/gen-gh-jobs "$attr" \
+              | jq -nRr '"jobs=\([inputs])"' \
+              | tee -a "${GITHUB_OUTPUT:?}"
+            ;;
+          false)
+            jobs=$(nix eval --json --apply 'builtins.attrNames' "$attr")
+            echo "jobs=${jobs:?}" | tee -a "${GITHUB_OUTPUT:?}"
+            ;;
+          *)
+            echo "illegal NIX_EVAL_JOBS: $NIX_EVAL_JOBS" >&2
+            exit 1
+            ;;
+          esac
