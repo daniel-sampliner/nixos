@@ -2,11 +2,8 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ pkgs, ... }:
-{
+_: {
   nix = {
-    package = pkgs.nixFlakes;
-
     optimise.automatic = true;
     optimise.dates = [ "daily" ];
 

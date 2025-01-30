@@ -10,6 +10,7 @@
 
     ./disks.nix
     ./hardware-configuration.nix
+    ./nvidia.nix
     ./pritunl.nix
   ];
 

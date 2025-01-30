@@ -24,11 +24,6 @@ let
       modules = [
         {
           name = "github.com/tailscale/caddy-tailscale";
-          # Need to pin to version compatible with caddy 2.7.6
-          version =
-            assert lib.assertMsg (lib.versionOlder caddy.version "2.8")
-              "pinned tailscale plugin version requires caddy < 2.8";
-            "d94fbdcd21fae1e5bbb2dc354917ef642ede6fc6";
         }
       ];
       modulesFile = writeText "modules" (
@@ -75,7 +70,7 @@ let
               + ''
                 cp vendor/smuggle/go.{mod,sum} .
               '';
-            vendorHash = "sha256-7hGpfXDFD+kkBHEjEGxqMzYvwCEZYtsvoS0OPIoVYPg=";
+            vendorHash = "sha256-opg5JHhtcWukAyA1A9iE7s3yoAIzaQZjYAcjZUfCpTA=";
           }
         );
     };
