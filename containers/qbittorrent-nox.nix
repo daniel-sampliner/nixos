@@ -169,7 +169,13 @@ nix2container.buildImage {
       pathsToLink = [ "/bin" ];
     })
 
-    dockerTools.caCertificates
+    (buildEnv {
+      name = "etc";
+      paths = [
+        dockerTools.caCertificates
+      ];
+      pathsToLink = [ "/etc" ];
+    })
   ];
 
   config = {
