@@ -10,11 +10,11 @@
 
 let
   edition = "2024";
-  version = "22.00";
+  version = "22.01";
   pname = "opentaxsolver_${edition}";
   src = fetchurl {
     url = "mirror://sourceforge/opentaxsolver/OTS_${edition}/v${version}_linux/OpenTaxSolver${edition}_${version}_linux64.tgz";
-    hash = "sha256-dPyYNnxbbu1UsZXhpNvL4PNf2UNaqc51GIe6z4q9FaY=";
+    hash = "sha256-T6le03OTBorAtxtwcdII3ElOxtOZyN/UgiT3+smPBEc=";
   };
 in
 stdenv.mkDerivation {
