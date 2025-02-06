@@ -81,6 +81,6 @@ writers.writeExecline
         backtick closed { gh pr view --json closed --jq .closed }
         eltest $closed != false
       }
-      { gh pr create --title $COMMIT_HEADLINE --body-file - }
-    gh pr edit --title $COMMIT_HEADLINE --body-file -
+      { gh pr edit --title $COMMIT_HEADLINE --body-file - }
+    gh pr create --title $COMMIT_HEADLINE --body-file -
   ''
