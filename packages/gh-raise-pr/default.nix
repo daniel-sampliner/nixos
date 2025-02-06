@@ -78,8 +78,8 @@ writers.writeExecline
     ifelse
       {
         redirfd -r 0 /dev/null
-        backtick closed { gh pr view --json closed --jq .closed }
-        eltest $closed != false
+        backtick -E closed { gh pr view --json closed --jq .closed }
+        eltest $closed = false
       }
       { gh pr edit --title $COMMIT_HEADLINE --body-file - }
     gh pr create --title $COMMIT_HEADLINE --body-file -
