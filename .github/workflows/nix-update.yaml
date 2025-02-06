@@ -207,50 +207,21 @@ jobs:
           app-id: ${{ vars.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 
-      - name: commit
+      - name: commit and raise PR
         if: ${{ steps.update.outputs.changed == 'true' }}
         env:
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          user_id=$(gh api "/users/${APP_SLUG:?}[bot]" --jq .id)
-          git config --local user.name "${APP_SLUG}[bot]"
-          git config --local user.email "${user_id:?}+${APP_SLUG}[bot]@users.noreply.github.com"
-
-          readonly branch="nix-flake-update"
-          git switch -C "$branch" HEAD
-          git push --set-upstream origin --force "$branch"
-
-          args=()
-          while read -r _ _ _ _ _ _ _ _ path _; do
-            b64=$(base64 -w0 "${path:?}")
-            args+=("-F" "files[][path]=$path" "-F" "files[][contents]=${b64:?}")
-          done < <(git status --porcelain=v2)
-
-          gh api graphql \
-            -F githubRepository="${GITHUB_REPOSITORY:?}" \
-            -F branchName="$branch" \
-            -F expectedHeadOid="$(git rev-parse HEAD)" \
-            -F commitMessage="chore(nix): update inputs" \
-            "${args[@]}" \
-            -F 'query=@.github/api/createCommitOnBranch.gqls' \
-            && echo
-
-          git stash
-
-      - name: open/update PR
-        if: ${{ steps.update.outputs.changed == 'true' }}
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          NAME: ${{ matrix.package.name }}
+          BRANCH: nix-flake-update
+          COMMIT_HEADLINE: "chore(nix): update inputs"
         run: |-
-          git pull
-
-          cmd=create
-          if gh pr view >/dev/null; then
-            cmd=edit
-          fi
-
-          gh pr "${cmd:?}" \
-            --title "$(git log -1 --format=%s)" \
-            --body-file <(git log -1 --format=%b)
+          COMMIT_BODY_FILE=<(
+            GIT_EXTERNAL_DIFF='jd() { nix run nixpkgs#jd-diff-patch -- -git-diff-driver -f patch "$@"; } jd'
+            GIT_EXTERNAL_DIFF="$GIT_EXTERNAL_DIFF" git diff \
+              jq -r '
+                map(select(.op == "add").path
+                | split("/")[2])
+                | unique
+                | map("* " + .)[]
+              '
+          ) nix run -- .#gh-raise-pr
