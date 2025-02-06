@@ -54,7 +54,20 @@ writers.writeExecline
 
       backtick -E head { git rev-parse HEAD }
 
+      fdmove -c 1 2 foreground {
+        foreground { echo head: $head }
+        foreground { git log -3 }
+      }
+
       if {
+        foreground { fdmove -c 1 2 printf "%q\n" gh api graphql
+          -F githubRepository=$GITHUB_REPOSITORY
+          -F branchName=$BRANCH
+          -F expectedHeadOID=$head
+          -F commitHeadline=$COMMIT_HEADLINE
+          -FcommitBody=@$COMMIT_BODY_FILE
+          $args'
+          -F query=@${./createCommitOnBranch.gqls} }
         if { gh api graphql
           -F githubRepository=$GITHUB_REPOSITORY
           -F branchName=$BRANCH
