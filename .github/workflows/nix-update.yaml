@@ -216,6 +216,12 @@ jobs:
           COMMIT_HEADLINE: "chore(nix): update inputs"
         run: |-
           COMMIT_BODY_FILE=<(
-            GIT_EXTERNAL_DIFF='jd() { nix run nixpkgs#jd-diff-patch -- -git-diff-driver -f patch "$@"; } jd'
-            git diff
+            GIT_EXTERNAL_DIFF='jd() { nix run nixpkgs#jd-diff-patch -- -git-diff-driver -f patch "$@"; } jd' \
+              git diff \
+              | jq -r '
+                  map(select(.op == "add").path
+                  | split("/")[2])
+                  | unique
+                  | map("* " + .)[]
+               '
           ) nix run -- .#gh-raise-pr
