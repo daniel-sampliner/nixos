@@ -54,11 +54,6 @@ writers.writeExecline
 
       backtick -E head { git rev-parse HEAD }
 
-      fdmove -c 1 2 foreground {
-        foreground { echo head: $head }
-        foreground { git log -3 }
-      }
-
       if {
         foreground { fdmove -c 1 2 printf "%q\n" gh api graphql
           -F githubRepository=$GITHUB_REPOSITORY
