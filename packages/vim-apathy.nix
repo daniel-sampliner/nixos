@@ -20,7 +20,7 @@ let
 in
 vimUtils.buildVimPlugin {
   inherit pname src;
-  version = "0-unstable-2021-11-22";
+  version = "unstable-2021-11-22";
 
   meta.license = lib.licenses.vim;
   passthru.updateScript = nix-update-script { extraArgs = [ "--version=branch" ]; };
