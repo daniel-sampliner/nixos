@@ -58,7 +58,7 @@ writers.writeExecline
         foreground { fdmove -c 1 2 printf "%q\n" gh api graphql
           -F githubRepository=$GITHUB_REPOSITORY
           -F branchName=$BRANCH
-          -F expectedHeadOID=$head
+          -F expectedHeadOid=$head
           -F commitHeadline=$COMMIT_HEADLINE
           -FcommitBody=@$COMMIT_BODY_FILE
           $args'
