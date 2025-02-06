@@ -76,7 +76,11 @@ writers.writeExecline
 
     pipeline { git log -1 --format=%b }
     ifelse
-      { redirfd -w 1 /dev/null gh pr view }
-      { gh pr edit --title $COMMIT_HEADLINE --body-file - }
-    gh pr create --title $COMMIT_HEADLINE --body-file -
+      {
+        redirfd -r 0 /dev/null
+        backtick closed { gh pr view --json closed --jq .closed }
+        eltest $closed = true
+      }
+      { gh pr create --title $COMMIT_HEADLINE --body-file - }
+    gh pr edit --title $COMMIT_HEADLINE --body-file -
   ''
