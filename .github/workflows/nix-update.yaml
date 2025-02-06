@@ -223,5 +223,5 @@ jobs:
                   | split("/")[2])
                   | unique
                   | map("* " + .)[]
-               '
+                '
           ) nix run -- .#gh-raise-pr
