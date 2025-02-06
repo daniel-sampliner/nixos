@@ -166,7 +166,7 @@ jobs:
             echo '```'
             cat "${RUNNER_TEMP:?}/commit_body"
             echo '```'
-          } | tee -a "${GITHUB_OUTPUT:?}"
+          } | tee -a "${GITHUB_STEP_SUMMARY:?}"
 
           echo "changed=true" | tee -a "${GITHUB_OUTPUT:?}"
 
