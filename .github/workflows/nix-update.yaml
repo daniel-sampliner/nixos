@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -100,9 +100,9 @@ jobs:
 
           {
             echo "#### $UPDATE_NIX_ATTR_PATH: $old_version -> $new_version"
-            echo "```diff"
+            echo '```diff'
             git diff
-            echo "```"
+            echo '```'
           } | tee -a "${GITHUB_STEP_SUMMARY:?}"
 
           {
@@ -118,53 +118,68 @@ jobs:
           app-id: ${{ vars.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
 
-      - name: commit
+      - name: commit and raise PR
         if: ${{ steps.update.outputs.changed == 'true' }}
         env:
           APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          OLD_VERSION: ${{ steps.update.outputs.old_version }}
-          NEW_VERSION: ${{ steps.update.outputs.new_version }}
-          NAME: ${{ matrix.package.name }}
+
+          BRANCH: nix-update/${{ matrix.package.name }}
+          COMMIT_HEADLINE: >-
+            feat(${{ matrix.package.name }}):
+            ${{ steps.update.outputs.old_version }}
+            -> ${{ steps.update.outputs.new_version }}
         run: |
-          user_id=$(gh api "/users/${APP_SLUG:?}[bot]" --jq .id)
-          git config --local user.name "${APP_SLUG}[bot]"
-          git config --local user.email "${user_id:?}+${APP_SLUG}[bot]@users.noreply.github.com"
+          nix run -- .#gh-raise-pr
 
-          readonly branch="nix-update/${NAME:?}"
-          git switch -C "$branch" HEAD
-          git push --set-upstream origin --force "$branch"
+  flake-update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
 
-          args=()
-          while read -r _ _ _ _ _ _ _ _ path _; do
-            b64=$(base64 -w0 "${path:?}")
-            args+=("-F" "files[][path]=$path" "-F" "files[][contents]=${b64:?}")
-          done < <(git status --porcelain=v2)
+    steps:
+      - uses: actions/checkout@v4
 
-          gh api graphql \
-            -F githubRepository="${GITHUB_REPOSITORY:?}" \
-            -F branchName="$branch" \
-            -F expectedHeadOid="$(git rev-parse HEAD)" \
-            -F commitMessage="feat(${NAME:?}): ${OLD_VERSION:?} -> ${NEW_VERSION:?}" \
-            "${args[@]}" \
-            -F 'query=@.github/api/createCommitOnBranch.gqls' \
-            && echo
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
-          git stash
+      - name: update
+        id: update
+        run: |
+          nix -L flake update \
+            2> >(sed -u '/Updated input/,/→/w '"${RUNNER_TEMP:?}/commit_body" >&2)
 
-      - name: open/update PR
-        if: ${{ steps.update.outputs.changed == 'true' }}
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          NAME: ${{ matrix.package.name }}
-        run: |-
-          git pull
-
-          cmd=create
-          if gh pr view >/dev/null; then
-            cmd=edit
+          if ! git status --porcelain=v2 | grep -q '^1'; then
+            echo "changed=false" | tee -a "${GITHUB_OUTPUT:?}"
+            exit 0
           fi
 
-          gh pr "${cmd:?}" \
-            --title "$(git log -1 --format=%s)" \
-            --body-file <(git log -1 --format=%b)
+          {
+            echo '```'
+            cat "${RUNNER_TEMP:?}/commit_body"
+            echo '```'
+          } >>"${GITHUB_STEP_SUMMARY:?}"
+
+          echo "changed=true" | tee -a "${GITHUB_OUTPUT:?}"
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        if: ${{ steps.update.outputs.changed == 'true' }}
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+
+      - name: commit and raise PR
+        if: ${{ steps.update.outputs.changed == 'true' }}
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+
+          BRANCH: nix-update/flake-lock
+          COMMIT_HEADLINE: "chore(nix): update inputs"
+        run: |-
+          COMMIT_BODY_FILE="${RUNNER_TEMP:?}/commit_body" nix run -- .#gh-raise-pr
