@@ -198,6 +198,8 @@ jobs:
             exit 0
           fi
 
+          echo "changed=true" | tee -a "${GITHUB_OUTPUT:?}"
+
       - uses: actions/create-github-app-token@v1
         id: app-token
         if: ${{ steps.update.outputs.changed == 'true' }}
