@@ -82,17 +82,9 @@ writers.writeExecline
     if { git stash }
     if { git pull }
 
-    fdreserve 2
-    multisubstitute {
-      importas -i fdr FD0
-      importas -i fdw FD1
-    }
-    piperw $fdr $fdw
-
-    background { fdmove -c 1 $fdw git log -1 --format=%b }
-
+    pipeline { git log -1 --format=%b }
     ifelse
       { redirfd -w 1 /dev/null gh pr view }
-      { gh pr edit --title $COMMIT_HEADLINE --body-file=/dev/fd/$fdr }
-    gh pr create --title $COMMIT_HEADLINE --body-file=/dev/fd/$fdr
+      { gh pr edit --title $COMMIT_HEADLINE --body-file - }
+    gh pr create --title $COMMIT_HEADLINE --body-file -
   ''
