@@ -66,7 +66,7 @@ writers.writeExecline
         if { gh api graphql
           -F githubRepository=$GITHUB_REPOSITORY
           -F branchName=$BRANCH
-          -F expectedHeadOID=$head
+          -F expectedHeadOid=$head
           -F commitHeadline=$COMMIT_HEADLINE
           -FcommitBody=@$COMMIT_BODY_FILE
           $args'
