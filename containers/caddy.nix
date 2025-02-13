@@ -4,19 +4,18 @@
 
 {
   buildEnv,
+  buildGoModule,
   dockerTools,
-  inputs',
   lib,
   nix2container,
   runCommandLocal,
   writeText,
 
+  caddy,
   curl-healthchecker,
   mailcap,
 }:
 let
-  inherit (inputs'.nixpkgs.legacyPackages) caddy buildGoModule;
-
   name = caddy.pname;
 
   caddy-w-plugins =
@@ -70,7 +69,7 @@ let
               + ''
                 cp vendor/smuggle/go.{mod,sum} .
               '';
-            vendorHash = "sha256-opg5JHhtcWukAyA1A9iE7s3yoAIzaQZjYAcjZUfCpTA=";
+            vendorHash = "sha256-gE3LH+wDjCElUbqJWP09NCshBAX6DIwcfbpZjWPL+1Q=";
           }
         );
     };
