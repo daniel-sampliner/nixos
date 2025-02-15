@@ -1,0 +1,38 @@
+#!/usr/bin/env nix-shell
+#! nix-shell -i bash -p bash curl htmlq nix-update
+
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+# shellcheck shell=bash
+
+set -eu
+
+readonly baseURL="https://opentaxsolver.sourceforge.net"
+
+get_links() { curl -sSf "$@" | htmlq --base "${baseURL:?}" --attribute href a; }
+
+downloadPage="$(get_links "$baseURL/download.html" | grep -m1 'download[0-9]\+\.html')"
+readonly downloadPage
+
+filename="$(get_links "${downloadPage:?}" \
+	| grep -m1 'linux\b.*/download$')"
+filename=${filename%/*}
+filename=${filename##*/}
+readonly filename
+: "${filename:?}"
+
+edition=${filename#OpenTaxSolver}
+edition=${edition%%_*}
+readonly edition
+: "${edition:?}"
+
+version=${filename#*_}
+version=${version%%_*}
+readonly version
+: "${version:?}"
+
+sed -Ei '/^[[:blank:]]+edition = / s/".*"/"'"$edition"'"/' "${BASH_SOURCE[0]%/*}/default.nix"
+
+exec nix-update "$@" --version "$version"

@@ -69,7 +69,7 @@
 
             build =
               let
-                parts = builtins.match "(/nix/store/[^/]+)/.*" (builtins.head updateScript);
+                parts = builtins.match "(/nix/store/[^/]+)(/.*)?" (builtins.head updateScript);
               in
               builtins.head parts;
           }
