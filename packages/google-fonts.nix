@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+{
+  fetchFromGitHub,
+  nix-update-script,
+  google-fonts,
+}:
+let
+  fonts = [
+    "ofl/atkinsonhyperlegiblemono"
+    "ofl/atkinsonhyperlegiblenext"
+  ];
+in
+google-fonts.overrideAttrs (prev: {
+  src = fetchFromGitHub {
+    owner = "google";
+    repo = "fonts";
+    rev = "a9aa02538768c8283ee91beb22353df444f1cea3";
+
+    sparseCheckout = [ "ofl/adobeblank" ] ++ fonts;
+
+    hash = "sha256-7+SlnYKMYII57wqm+twsxAmz6n5D71l4NpHH5asJC40=";
+  };
+  version = "0.4.9-unstable-2025-02-15";
+
+  postPatch = builtins.replaceStrings [ "rm " ] [ ": rm" ] (prev.postPatch or "");
+
+  passthru.updateScript = nix-update-script { extraArgs = [ "--version=branch=main" ]; };
+})
