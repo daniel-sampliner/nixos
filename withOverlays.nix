@@ -69,17 +69,7 @@ in
     nix2container // { buildImage = buildImage'; };
 
   noopPkg =
-    pkg:
-    let
-      name = lib.pipe pkg [
-        (builtins.getAttr "outPath")
-        (builtins.match "${builtins.storeDir}/[a-z0-9]{32}-(.*)")
-        builtins.head
-      ];
-    in
-    prev.runCommandLocal name { } ''
-      touch $out
-    '';
+    pkg: prev.emptyDirectory.overrideAttrs { name = "${lib.getName pkg}-${lib.getVersion pkg}"; };
 
   vimPlugins = prev.vimPlugins.extend (
     _: _: lib.filterAttrs (_: v: lib.strings.hasPrefix "vimplugin-" v.name) prev.outputs'.packages
