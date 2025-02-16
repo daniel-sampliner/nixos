@@ -1,95 +1,19 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
   buildEnv,
   dockerTools,
-  lib,
   nix2container,
-  noopPkg,
-  replaceDependencies,
   writeText,
   writers,
 
   coreutils,
   curl-healthchecker,
   qbittorrent-nox,
-
-  # unneeded dependencies
-  at-spi2-core,
-  cairo,
-  cups,
-  dbus,
-  dconf,
-  fontconfig,
-  freetype,
-  gdk-pixbuf,
-  gsettings-desktop-schemas,
-  gtk3,
-  harfbuzz,
-  libdrm,
-  libglvnd,
-  librsvg,
-  libxkbcommon,
-  mariadb-connector-c,
-  mtdev,
-  pango,
-  postgresql,
-
-  qt6,
-  xorg,
 }:
 let
-  unneeded =
-    builtins.map lib.getLib [
-      at-spi2-core
-      cairo
-      cups
-      dbus
-      dconf
-      fontconfig
-      freetype
-      gdk-pixbuf
-      gsettings-desktop-schemas
-      gtk3
-      harfbuzz
-      libdrm
-      libglvnd
-      librsvg
-      libxkbcommon
-      mariadb-connector-c
-      mtdev
-      pango
-      postgresql
-
-      qt6.qtdeclarative
-      qt6.qtsvg
-      qt6.qttranslations
-
-      xorg.libICE
-      xorg.libSM
-      xorg.libX11
-      xorg.libxcb
-      xorg.xcbutilcursor
-      xorg.xcbutilimage
-      xorg.xcbutilkeysyms
-      xorg.xcbutilrenderutil
-      xorg.xcbutilwm
-    ]
-    ++ [ dbus.dev ];
-
-  replacements = builtins.map (pkg: {
-    oldDependency = pkg;
-    newDependency = noopPkg pkg;
-  }) unneeded;
-
-  qbt = replaceDependencies {
-    inherit replacements;
-
-    drv = qbittorrent-nox;
-  };
-
   config = writeText "qBittorrent.conf" ''
     [LegalNotice]
     Accepted=true
@@ -152,10 +76,6 @@ nix2container.buildImage {
   name = qbittorrent-nox.pname;
   tag = qbittorrent-nox.version;
 
-  layers = lib.singleton (
-    nix2container.buildLayer { deps = builtins.map (builtins.getAttr "newDependency") replacements; }
-  );
-
   copyToRoot = [
     (buildEnv {
       name = "root";
@@ -164,7 +84,7 @@ nix2container.buildImage {
         curl-healthchecker
         entrypoint
         healthcheck
-        qbt
+        qbittorrent-nox
       ];
       pathsToLink = [ "/bin" ];
     })
@@ -194,10 +114,5 @@ nix2container.buildImage {
       "/var/cache" = { };
       "/var/lib" = { };
     };
-  };
-}
-// {
-  passthru = {
-    inherit qbt;
   };
 }

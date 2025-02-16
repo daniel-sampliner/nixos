@@ -38,7 +38,10 @@
         import inputs.unstable {
           inherit system;
           inherit (config.nixpkgs) config;
-          overlays = config.withOverlays ++ [ config.packageOverlay ];
+          overlays = config.withOverlays ++ [
+            config.packageOverlay
+            config.overlays.slim
+          ];
         }
       );
 
