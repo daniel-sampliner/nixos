@@ -5,6 +5,7 @@
 {
   fetchFromGitHub,
   nix-update-script,
+
   google-fonts,
 }:
 let
@@ -14,6 +15,9 @@ let
   ];
 in
 google-fonts.overrideAttrs (prev: {
+  pname = google-fonts.pname + "-slim";
+  version = "0.4.9-unstable-2025-02-15";
+
   src = fetchFromGitHub {
     owner = "google";
     repo = "fonts";
@@ -23,9 +27,8 @@ google-fonts.overrideAttrs (prev: {
 
     hash = "sha256-7+SlnYKMYII57wqm+twsxAmz6n5D71l4NpHH5asJC40=";
   };
-  version = "0.4.9-unstable-2025-02-15";
 
-  postPatch = builtins.replaceStrings [ "rm " ] [ ": rm" ] (prev.postPatch or "");
+  postPatch = builtins.replaceStrings [ "rm -rv " ] [ "rm -rfv " ] (prev.postPatch or "");
 
   passthru.updateScript = nix-update-script { extraArgs = [ "--version=branch=main" ]; };
 })
