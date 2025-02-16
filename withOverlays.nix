@@ -9,6 +9,16 @@ in
 {
   inherit lib;
 
+  dockerTools = builtins.mapAttrs (
+    _: v:
+    if lib.isDerivation v && v.buildCommand or "" != "" then
+      prev.runCommand v.name { } ''
+        cp -Lr -- "${v.outPath}" "$out"
+      ''
+    else
+      v
+  ) prev.dockerTools;
+
   nix2container =
     let
       inherit (prev.inputs'.nix2container.packages) nix2container;
