@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -31,9 +31,18 @@
         serif = withFallbackSymbols [ "DejaVu Serif" ];
       };
 
-    packages = [
-      pkgs.iosevka-bin
-      (pkgs.nerdfonts.override { fonts = [ "NerdFontsSymbolsOnly" ]; })
-    ];
+    packages =
+      builtins.attrValues {
+        inherit (pkgs)
+          google-fonts-slim
+          ibm-plex
+          iosevka-bin
+          ocr-a-b-fonts
+          overpass
+          ;
+      }
+      ++ [
+        (pkgs.nerdfonts.override { fonts = [ "NerdFontsSymbolsOnly" ]; })
+      ];
   };
 }
