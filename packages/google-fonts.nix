@@ -17,7 +17,7 @@ google-fonts.overrideAttrs (prev: {
   src = fetchFromGitHub {
     owner = "google";
     repo = "fonts";
-    rev = "a9aa02538768c8283ee91beb22353df444f1cea3";
+    rev = "d2ff5d49991dccd0107d7c9464caeb27675415b2";
 
     sparseCheckout = [ "ofl/adobeblank" ] ++ fonts;
 
