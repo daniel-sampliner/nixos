@@ -61,6 +61,10 @@
       legacyPackages = lib.id;
       nixDir = ./.;
       systems = [ "x86_64-linux" ];
-      withOverlays = [ inputs.devshell.overlays.default ];
+
+      withOverlays = [
+        inputs.devshell.overlays.default
+        (_: prev: { pkgsSlim = prev.extend prev.moduleArgs.config.overlays.slim; })
+      ];
     };
 }
