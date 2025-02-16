@@ -121,3 +121,6 @@ nix2container.buildImage {
     WorkingDir = "/srv";
   };
 }
+// {
+  passthru = { inherit caddy-w-plugins; };
+}
