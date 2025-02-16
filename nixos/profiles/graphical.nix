@@ -10,4 +10,5 @@ _: {
 
   gtk.iconCache.enable = true;
   hardware.graphics.enable = true;
+  systemd.services.nix-daemon.serviceConfig.CPUWeight = 1;
 }
