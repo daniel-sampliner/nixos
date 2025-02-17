@@ -93,7 +93,7 @@ in
               libXrender = null;
               libepoxy = null;
               libinput = null;
-              libmysqlclient = prev.emptyDirectory;
+              libmysqlclient = prev.emptyFile;
               libxcb = null;
               libxkbcommon = null;
               qttranslations = null;
@@ -134,16 +134,16 @@ in
 
               postFixup =
                 let
-                  s = "patchelf --add-rpath \"${prev.emptyDirectory}";
+                  s = "patchelf --add-rpath \"${prev.emptyFile}";
                 in
                 builtins.replaceStrings [ s ] [ ": ${s}" ] (prev''.postFixup or "");
             })
           )
         ];
 
-      qtlanguageserver = prev.emptyDirectory;
-      qtshadertools = prev.emptyDirectory;
-      qtsvg = prev.emptyDirectory;
+      qtlanguageserver = prev.emptyFile;
+      qtshadertools = prev.emptyFile;
+      qtsvg = prev.emptyFile;
       wrapQtAppsHook = prev'.wrapQtAppsNoGuiHook;
     }
   );
