@@ -78,8 +78,7 @@ in
     in
     nix2container // { buildImage = buildImage'; };
 
-  noopPkg =
-    pkg: prev.emptyDirectory.overrideAttrs { name = "${lib.getName pkg}-${lib.getVersion pkg}"; };
+  noopPkg = pkg: prev.emptyFile.overrideAttrs { name = "${lib.getName pkg}-${lib.getVersion pkg}"; };
 
   vimPlugins = prev.vimPlugins.extend (
     _: _: lib.filterAttrs (_: v: lib.strings.hasPrefix "vimplugin-" v.name) prev.outputs'.packages
