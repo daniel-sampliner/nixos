@@ -17,13 +17,13 @@ google-fonts.overrideAttrs (prev: {
   src = fetchFromGitHub {
     owner = "google";
     repo = "fonts";
-    rev = "d2ff5d49991dccd0107d7c9464caeb27675415b2";
+    rev = "fc541cab9a1a6991ffb4718382d33e4281dd48c1";
 
     sparseCheckout = [ "ofl/adobeblank" ] ++ fonts;
 
     hash = "sha256-7+SlnYKMYII57wqm+twsxAmz6n5D71l4NpHH5asJC40=";
   };
-  version = "0.4.9-unstable-2025-02-15";
+  version = "0.4.9-unstable-2025-02-16";
 
   postPatch = builtins.replaceStrings [ "rm " ] [ ": rm" ] (prev.postPatch or "");
 
