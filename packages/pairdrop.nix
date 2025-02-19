@@ -10,7 +10,7 @@
   pairdrop,
 }:
 let
-  version = "1.10.11";
+  version = "1.11.0";
 in
 (pairdrop.override {
   buildNpmPackage =
@@ -22,9 +22,9 @@ in
           owner = "schlagmichdoch";
           repo = "PairDrop";
           rev = "v${version}";
-          hash = "sha256-H3XfLBxJZaHzCBnGUKY92EL3ES47IgXkTOUr8zY1sIY=";
+          hash = "sha256-VsRoAM0Mi77WcUt+hr1boe5Hl+fXaTEr5Zh88SAJ9zI=";
         };
-        npmDepsHash = "sha256-CYVcbkpYgY/uqpE5livQQhb+VTMtCdKalUK3slJ3zdQ=";
+        npmDepsHash = "sha256-2fIOfMqz1zK/KOXkrebFiQsTRc8+YotZnwmb0mZxluQ=";
       }
     );
 }).overrideAttrs
