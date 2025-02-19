@@ -86,3 +86,8 @@ in
 
   writers = prev.writers // prev.callPackage ./withOverlays/writers.nix { };
 }
+// lib.optionalAttrs (lib.versionOlder lib.version "25") {
+  pairdrop = prev.pairdrop.overrideAttrs {
+    inherit (prev.inputs'.unstable.legacyPackages.pairdrop) installPhase;
+  };
+}

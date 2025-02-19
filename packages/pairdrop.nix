@@ -28,12 +28,8 @@ in
       }
     );
 }).overrideAttrs
-  (prev: {
+  {
     inherit version;
 
-    installPhase = builtins.replaceStrings [ "index.js" ] [ "server/index.js" ] (
-      prev.installPhase or ""
-    );
-
     passthru.updateScript = nix-update-script { };
-  })
+  }
