@@ -55,23 +55,12 @@
       updateables = lib.pipe outputs.packages.${system} [
         (lib.attrsets.filterAttrs (_: pkg: (pkg.passthru or { }) ? updateScript))
         (lib.attrsets.mapAttrsToList (
-          name: pkg:
-          let
-            inherit (pkg.passthru) updateScript;
-          in
-          {
+          name: pkg: {
             inherit name;
-
             updateScript = builtins.map (builtins.replaceStrings
               [ (builtins.toString src) ]
               [ "/homeless-shelter/" ]
-            ) updateScript;
-
-            build =
-              let
-                parts = builtins.match "(/nix/store/[^/]+)(/.*)?" (builtins.head updateScript);
-              in
-              builtins.head parts;
+            ) pkg.passthru.updateScript;
           }
         ))
       ];

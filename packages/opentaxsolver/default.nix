@@ -6,8 +6,6 @@
   fetchurl,
   lib,
   stdenv,
-
-  nix,
 }:
 
 let
@@ -43,10 +41,7 @@ stdenv.mkDerivation {
     runHook postInstall
   '';
 
-  passthru.updateScript = [
-    (lib.getExe' nix "nix-shell")
-    "${builtins.toString ./update}"
-  ];
+  passthru.updateScript = [ "${builtins.toString ./update}" ];
 
   meta = {
     description = "Calculates income tax form entries, helps do your taxes.";
