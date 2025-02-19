@@ -15,10 +15,9 @@ writers.writeExecline
       gitMinimal
     ];
   }
-  "/bin/gh-raise-pr"
+  "/bin/gh-commit"
   ''
     multisubstitute {
-      importas -iu APP_SLUG APP_SLUG
       importas -iu BRANCH BRANCH
       importas -iu COMMIT_HEADLINE COMMIT_HEADLINE
       importas -iu GITHUB_REPOSITORY GITHUB_REPOSITORY
@@ -26,16 +25,7 @@ writers.writeExecline
       importas -u COMMIT_BODY_FILE COMMIT_BODY_FILE
     }
 
-    backtick -E user_id { gh api "/users/''${APP_SLUG}[bot]" --jq .id }
-    if { eltest -n $app_slug }
-
-    if { git config --local user.name "''${APP_SLUG}[bot}" }
-    if { git config --local user.email "''${user_id}+''${APP_SLUG}[bot]@users.noreply.github.com" }
-
-    if { git switch -C $BRANCH HEAD }
-    if { git push --set-upstream origin --force $BRANCH }
-
-    backtick -E tmpdir { mktemp -d --tmpdir gh-raise-pr.XXXXX }
+    backtick -E tmpdir { mktemp -d --tmpdir gh-commit.XXXXX }
     if { eltest -n $tmpdir }
     if { eltest -d $tmpdir }
 
@@ -69,18 +59,5 @@ writers.writeExecline
 
     importas -iu ret ?
     foreground { rm -rf -- $tmpdir }
-    ifelse { eltest $ret != 0 } { exit $ret }
-
-    if { git stash }
-    if { git pull }
-
-    pipeline { git log -1 --format=%b }
-    ifelse
-      {
-        redirfd -r 0 /dev/null
-        backtick -E closed { gh pr view --json closed --jq .closed }
-        eltest $closed = false
-      }
-      { gh pr edit --title $COMMIT_HEADLINE --body-file - }
-    gh pr create --title $COMMIT_HEADLINE --body-file -
+    exit $ret
   ''
