@@ -1,0 +1,31 @@
+# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
+mutation (
+  $githubRepository: String!
+  $branchName: String!
+  $expectedHeadOid: GitObjectID!
+  $commitBody: String,
+  $commitHeadline: String!,
+  $files: [FileAddition!]!
+) {
+  createCommitOnBranch(
+    input: {
+      branch: {
+        repositoryNameWithOwner: $githubRepository
+        branchName: $branchName
+      }
+      expectedHeadOid: $expectedHeadOid
+      fileChanges: { additions: $files }
+      message: {
+        body: $commitBody
+        headline: $commitHeadline
+      }
+    }
+  ) {
+    commit {
+      url
+    }
+  }
+}
