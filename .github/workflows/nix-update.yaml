@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '0 0 * * *'
 
+  push:
+    branches:
+      - nix-update-all
+
   workflow_dispatch:
 
 concurrency:
