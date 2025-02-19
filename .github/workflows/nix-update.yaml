@@ -265,10 +265,7 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ORIG_COMMIT: ${{ steps.checkout.outputs.commit }}
           PATCHES_DIR: ${{ steps.download-artifact.outputs.download-path }}
-          PR_BRANCH: ${{ github.workflow }}
-        run: |-
-          set -x
-
+        run: |
           git fetch --no-tags --no-recurse-submodules origin "${BRANCH:?}"
           git switch "$BRANCH"
 
@@ -292,9 +289,39 @@ jobs:
             git pull --no-tags --no-recurse-submodules --quiet origin "$BRANCH"
           done
 
+          changed=true
           if git diff --quiet "${ORIG_COMMIT:?}..."; then
-            exit 0
+            changed=false
+          fi
+          echo "changed=$changed" | tee -a "${GITHUB_OUTPUT:?}"
+
+      - name: push and raise PR
+        if: ${{ steps.patch.outputs.changed == 'true' }}
+        env:
+          BRANCH: ${{ github.workflow }}/pr
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORIG_COMMIT: ${{ steps.checkout.outputs.commit }}
+        run: |
+          set -x
+          git branch -m "${BRANCH:?}"
+          git push --force origin "$BRANCH:$BRANCH"
+
+          body="${RUNNER_TEMP:?}/body"
+          git log "${ORIG_COMMIT:?}.." --format='* %s' >"$body"
+
+          commit_type=chore
+          if grep -q '^\* feat\b' "$body"; then
+            commit_type=feat
           fi
 
-          git branch -m "${PR_BRANCH:?}"
-          git push origin ":$BRANCH" "$PR_BRANCH:$PR_BRANCH"
+          cmd=create
+          if [[ "$(gh pr view --json closed --jq .closed)" == false ]]; then
+            cmd=edit
+          fi
+          pr=$(gh pr "$cmd" \
+            --title "$commit_type: nightly update" \
+            --body-file "$body")
+
+      - name: delete temp branch
+        run: |
+          git push origin ":${BRANCH:?}"
