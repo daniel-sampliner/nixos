@@ -120,9 +120,6 @@ jobs:
       - flake-update
       - gen-matrix
 
-    permissions:
-      contents: write
-
     strategy:
       fail-fast: false
       matrix:
@@ -213,7 +210,7 @@ jobs:
             -> ${{ steps.update.outputs.new_version }}
 
           JOB_INDEX: ${{ strategy.job-index }}
-        run: |-
+        run: |
           nix run -- .#gh-bot-config
           git commit --all -m "${COMMIT_HEADLINE:?}"
           git format-patch \
@@ -228,3 +225,76 @@ jobs:
           path: ${{ runner.temp }}/patches
           if-no-files-found: error
           retention-days: 1
+
+  raise-pr:
+    runs-on: ubuntu-latest
+    needs:
+      - flake-update
+      - update
+
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        id: checkout
+
+      - uses: actions/download-artifact@v4
+        id: download-artifact
+        with:
+          path: ${{ runner.temp }}/patches
+          merge-multiple: true
+
+      - uses: cachix/install-nix-action@v30
+      - uses: cachix/cachix-action@v15
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - uses: actions/create-github-app-token@v1
+        id: app-token
+        with:
+          app-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+
+      - name: apply patches
+        id: patch
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          ORIG_COMMIT: ${{ steps.checkout.outputs.commit }}
+          PATCHES_DIR: ${{ steps.download-artifact.outputs.download-path }}
+          PR_BRANCH: ${{ github.workflow }}
+        run: |-
+          set -x
+
+          git fetch --no-tags --no-recurse-submodules origin "${BRANCH:?}"
+          git switch "$BRANCH"
+
+          nix run -- .#gh-bot-config
+          for p in "${PATCHES_DIR:?}"/*.patch; do
+            [[ -e $p ]] || continue
+
+            if ! command -v gh-commit >/dev/null; then
+              gh_commit=$(nix build --no-link --print-out-paths .#gh-commit) || exit 1
+              export PATH="${gh_commit:?}/bin:$PATH"
+            fi
+
+            git am <"$p"
+            git reset --soft HEAD~
+
+            COMMIT_HEADLINE="$(git log -1 --format='%s' 'HEAD@{1}')" \
+            COMMIT_BODY_FILE=<(git log -1 --format='%b' 'HEAD@{1}') \
+              gh-commit
+
+            git reset --hard HEAD
+            git pull --no-tags --no-recurse-submodules --quiet origin "$BRANCH"
+          done
+
+          if git diff --quiet "${ORIG_COMMIT:?}..."; then
+            exit 0
+          fi
+
+          git branch -m "${PR_BRANCH:?}"
+          git push origin ":$BRANCH" "$PR_BRANCH:$PR_BRANCH"
