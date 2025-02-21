@@ -13,6 +13,7 @@
   nix-output-monitor,
   nix-update,
   stdenvNoCC,
+  systemd-sops,
   ...
 }:
 devshell.mkShell {
@@ -28,6 +29,7 @@ devshell.mkShell {
       name = moduleArgs.config.description;
       packagesFrom = [
         (moduleArgs.config.formatter pkgs).passthru.moduleArgs.config.build.devShell
+        systemd-sops
       ];
 
       startup.gitconfig.text = ''

@@ -1,24 +1,78 @@
+// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
 const std = @import("std");
+const builtin = @import("builtin");
 
-pub fn main() !void {
-    // Prints to stderr (it's a shortcut based on `std.io.getStdErr()`)
-    std.debug.print("All your {s} are belong to us.\n", .{"codebase"});
+pub const std_options = .{
+    .logFn = switch (builtin.mode) {
+        .Debug => std.log.defaultLog,
+        .ReleaseFast => syslogFn,
+        .ReleaseSafe => syslogFn,
+        .ReleaseSmall => syslogFn,
+    },
+};
 
-    // stdout is for the actual output of your application, for example if you
-    // are implementing gzip, then only the compressed bytes should be sent to
-    // stdout, not any debugging messages.
-    const stdout_file = std.io.getStdOut().writer();
-    var bw = std.io.bufferedWriter(stdout_file);
-    const stdout = bw.writer();
+/// Print log in syslog(3) format. Adapated from std.log.defaultLog.
+pub fn syslogFn(
+    comptime message_level: std.log.Level,
+    comptime scope: @Type(.EnumLiteral),
+    comptime format: []const u8,
+    args: anytype,
+) void {
+    const level_txt = switch (message_level) {
+        .err => "<3>",
+        .warn => "<4>",
+        .info => "<6>",
+        .debug => "<7>",
+    };
 
-    try stdout.print("Run `zig build test` to run the tests.\n", .{});
+    const prefix2 = if (scope == .default) "" else "(" ++ @tagName(scope) ++ ")";
+    const stderr = std.io.getStdErr().writer();
+    var bw = std.io.bufferedWriter(stderr);
+    const writer = bw.writer();
 
-    try bw.flush(); // don't forget to flush!
+    std.debug.lockStdErr();
+    defer std.debug.unlockStdErr();
+    nosuspend {
+        writer.print(level_txt ++ prefix2 ++ format ++ "\n", args) catch return;
+        bw.flush() catch return;
+    }
 }
 
-test "simple test" {
-    var list = std.ArrayList(i32).init(std.testing.allocator);
-    defer list.deinit(); // try commenting this out and see if zig detects the memory leak!
-    try list.append(42);
-    try std.testing.expectEqual(@as(i32, 42), list.pop());
+pub fn main() !void {
+    var addr: std.os.linux.sockaddr.un = undefined;
+    var addr_len: std.os.linux.socklen_t = @sizeOf(std.os.linux.sockaddr.un);
+
+    const addr_ptr: *std.posix.sockaddr = @ptrCast(&addr);
+
+    try std.posix.getpeername(0, addr_ptr, &addr_len);
+
+    if (addr.family != std.os.linux.AF.UNIX) {
+        return error.SocketNotUNIX;
+    }
+
+    std.log.debug("addr: {any}", .{addr});
+    std.log.debug("addr_len: {d}", .{addr_len});
+    if (addr_len <= 2) {
+        std.log.err("No peer address on socket FD 0", .{});
+        return error.NoPeerAddress;
+    }
+
+    const path = addr.path[1 .. addr_len - 2];
+    std.log.debug("path: {s}", .{path});
+
+    const key = std.fs.path.basename(path);
+    const unit = try if (std.fs.path.dirname(path)) |dir|
+        std.fs.path.basename(dir)
+    else blk: {
+        std.log.err("Could not parse unit from socket path {s}", .{path});
+        break :blk error.CantParseUnit;
+    };
+
+    std.log.info("Received request for secret {s}/{s}", .{ unit, key });
+
+    const writer = std.io.getStdOut().writer();
+    try writer.print("{s}\n", .{key});
 }
