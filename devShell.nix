@@ -28,7 +28,6 @@ devshell.mkShell {
       motd = "";
       name = moduleArgs.config.description;
       packagesFrom = [
-        (moduleArgs.config.formatter pkgs).passthru.moduleArgs.config.build.devShell
         systemd-sops
       ];
 
