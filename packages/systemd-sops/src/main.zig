@@ -6,6 +6,8 @@ const std = @import("std");
 const builtin = @import("builtin");
 const config = @import("config");
 
+const TestExtras = @import("./TestExtras.zig");
+
 pub const std_options = .{
     .logFn = switch (builtin.mode) {
         .Debug => std.log.defaultLog,
@@ -121,23 +123,21 @@ test "credInfoFromSocket" {
 
     const allocator = arena.allocator();
 
-    var tmp_dir = std.testing.tmpDir(.{});
-    defer tmp_dir.cleanup();
+    var listen_socket_path: [TestExtras.random_string_len + 1]u8 = undefined;
+    listen_socket_path[0] = 0;
+    _ = TestExtras.randomString(listen_socket_path[1..]);
 
-    const socket_parent_dir = try tmp_dir.dir.realpathAlloc(allocator, ".");
-    const listen_socket_path = try std.fs.path.join(allocator, &[_][]const u8{ socket_parent_dir, "socket" });
-    log.debug("listen_socket_path: {s}", .{listen_socket_path});
-
-    const server_addr = try std.net.Address.initUnix(listen_socket_path);
+    const server_addr = try std.net.Address.initUnix(&listen_socket_path);
     var server = try std.net.Address.listen(server_addr, .{});
     defer server.deinit();
+    log.debug("listen_socket_path: {0s} {0any}", .{listen_socket_path});
     log.debug("server: {}", .{server});
 
     const cred_info = "service/key";
     const client_thread = try std.Thread.spawn(
         .{ .allocator = allocator },
-        socketConnect,
-        .{ allocator, cred_info, listen_socket_path },
+        TestExtras.socketConnect,
+        .{ allocator, cred_info, &listen_socket_path },
     );
     defer client_thread.join();
 
@@ -146,50 +146,6 @@ test "credInfoFromSocket" {
     const cred_info_got = try credInfoFromSocket(connection.stream.handle, &buffer);
     log.debug("cred_info_got: {s}", .{cred_info_got});
     try std.testing.expectEqualStrings("/" ++ cred_info, cred_info_got);
-}
-
-fn socketConnect(allocator: std.mem.Allocator, cred_info: []const u8, path: []const u8) !void {
-    const log = std.log.scoped(.socketConnect);
-
-    const sockfd = try std.posix.socket(
-        std.posix.AF.UNIX,
-        std.posix.SOCK.STREAM | std.posix.SOCK.CLOEXEC,
-        0,
-    );
-    defer std.net.Stream.close(.{ .handle = sockfd });
-    try ioctl_FIONREAD(sockfd);
-    _ = try std.posix.fcntl(sockfd, std.posix.F.SETFD, std.posix.FD_CLOEXEC);
-
-    log.debug("cred_info: {0s} {0any}", .{cred_info});
-
-    const rand = std.crypto.random;
-    var nameBase = "0123456789abcdef".*;
-    rand.shuffle(u8, &nameBase);
-    const name = try std.mem.concat(allocator, u8, &[_][]const u8{ "\x00", &nameBase, "/unit/", cred_info });
-    log.debug("name: {0s} {0any}", .{name});
-
-    const addr = try std.net.Address.initUnix(name);
-    try std.posix.bind(
-        sockfd,
-        &addr.any,
-        @truncate(@sizeOf(std.posix.sa_family_t) + name.len),
-    );
-
-    const remote_addr = try std.net.Address.initUnix(path);
-    try std.posix.connect(sockfd, &remote_addr.any, remote_addr.getOsSockLen());
-}
-
-fn ioctl_FIONREAD(fd: std.posix.fd_t) !void {
-    var arg: usize = 0;
-    while (true) {
-        switch (std.posix.errno(std.os.linux.ioctl(fd, std.posix.T.FIONREAD, @intFromPtr(&arg)))) {
-            .SUCCESS => return,
-            .INVAL => unreachable,
-            .NOTTY => return error.NotATerminal,
-            .PERM => return error.AccessDenied,
-            else => |err| return std.posix.unexpectedErrno(err),
-        }
-    }
 }
 
 test "sopsFile" {
@@ -274,43 +230,3 @@ fn sopsFile(buf: [:0]u8, socket_path: []const u8, sops_base_dir: []const u8) !vo
     buf[end] = 0;
     return;
 }
-
-// test "foo" {
-//     const log = std.log.scoped(.test_foo);
-//
-//     // const sops_base_dir = try (std.posix.getenv("SOPS_BASE_DIR") orelse blk: {
-//     //     std.log.debug("die", .{});
-//     //     break :blk error.die;
-//     // });
-//     //
-//     const sops_base_dir = "/sops";
-//     log.debug("sops_base_dir: {}", .{@TypeOf(sops_base_dir)});
-//     log.debug("sops_base_dir: {s}", .{sops_base_dir});
-//
-//     var sops_file: [std.fs.MAX_PATH_BYTES:0]u8 = undefined;
-//     try sopsFile(&sops_file, "foo/bar", sops_base_dir);
-//
-//     var cmd = [_:null]?[*:0]const u8{ "echo".ptr, std.mem.sliceTo(&sops_file, 0).ptr };
-//     const argv: [*:null]?[*:0]const u8 = &cmd;
-//
-//     const envp: [*:null]const ?[*:0]const u8 = @ptrCast(std.os.environ.ptr);
-//
-//     log.debug("{}", .{@TypeOf(std.os.environ)});
-//     // std.log.debug("{}", .{@TypeOf(std.mem.sliceTo(std.os.environ, null))});
-//
-//     // for (std.os.environ) |e| {
-//     //     std.log.debug("{s}", .{e});
-//     // }
-//
-//     const stdout = try std.posix.dup(1);
-//
-//     try std.posix.dup2(2, 1);
-//     defer std.posix.dup2(stdout, 1) catch {};
-//
-//     _ = argv;
-//     _ = envp;
-//
-//     // const ret = std.posix.execvpeZ(argv[0].?, argv, envp);
-//     // std.log.debug("{any}", .{ret});
-//     // return ret;
-// }
