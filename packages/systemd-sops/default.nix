@@ -11,18 +11,11 @@ stdenv.mkDerivation {
   pname = "systemd-sops";
   version = "0.0.1";
 
-  src =
-    let
-      fs = lib.fileset.toSource {
-        root = ./.;
-        fileset = lib.fileset.difference ./. ./default.nix;
-      };
-    in
-    fs;
+  src = lib.fileset.toSource {
+    root = ./.;
+    fileset = lib.fileset.difference ./. ./default.nix;
+  };
 
-  nativeBuildInputs = [
-    zig
-    zig.hook
-  ];
-
+  nativeBuildInputs = [ zig.hook ];
+  doCheck = true;
 }

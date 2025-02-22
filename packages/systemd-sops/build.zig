@@ -55,17 +55,49 @@ pub fn build(b: *std.Build) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
+    const test_filters = b.option(
+        []const []const u8,
+        "test-filter",
+        "Skip tests that do not match any filter",
+    ) orelse &[0][]const u8{};
+
+    const test_log_level = b.option(
+        std.log.Level,
+        "test-log-level",
+        "Log level to use within tests",
+    ) orelse std.testing.log_level;
+
+    const test_single_threaded = b.option(
+        bool,
+        "test-single-threaded",
+        "Run tests in single-threaded mode",
+    ) orelse false;
+
+    // const test_filters = b.option([]const []const u8, "test-filter", "Skip tests that do not match any filter") orelse &[0][]const u8{};
     const exe_unit_tests = b.addTest(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .filters = test_filters,
+        .single_threaded = test_single_threaded,
     });
 
+    const test_options = b.addOptions();
+    test_options.addOption(std.log.Level, "test_log_level", test_log_level);
+    exe_unit_tests.root_module.addOptions("config", test_options);
+
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
+    run_exe_unit_tests.has_side_effects = true;
+
+    const install_exe_unit_tests = b.addInstallArtifact(
+        exe_unit_tests,
+        .{ .dest_dir = .{ .override = std.Build.InstallDir{ .custom = "../zig-test-out" } } },
+    );
 
     // Similar to creating the run step earlier, this exposes a `test` step to
     // the `zig build --help` menu, providing a way for the user to request
     // running the unit tests.
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
+    test_step.dependOn(&install_exe_unit_tests.step);
 }

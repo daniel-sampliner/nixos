@@ -20,6 +20,7 @@ let
 
       taplo.enable = true;
       yamlfmt.enable = true;
+      zig.enable = true;
     };
 
     settings = {
