@@ -8,6 +8,8 @@ const config = @import("config");
 
 const TestExtras = @import("./TestExtras.zig");
 
+const buffer_size = 128;
+
 pub const std_options = .{
     .logFn = switch (builtin.mode) {
         .Debug => std.log.defaultLog,
@@ -50,7 +52,8 @@ pub fn syslogFn(
 
 pub fn main() !void {
     var sops_file_idx: usize = 0;
-    var sops_file: [std.fs.MAX_PATH_BYTES:0]u8 = undefined;
+    // var sops_file: [std.fs.MAX_PATH_BYTES:0]u8 = undefined;
+    var sops_file: [buffer_size:0]u8 = undefined;
     @memset(&sops_file, 0);
 
     if (std.posix.getenv("SOPS_BASE_DIR")) |sops_base_dir| {
@@ -159,7 +162,8 @@ fn execSops(
     }
 
     const sops_age_key_file_env = "SOPS_AGE_KEY_FILE";
-    var buffer: [std.fs.MAX_PATH_BYTES + sops_age_key_file_env.len + 1:0]u8 = undefined;
+    // var buffer: [std.fs.MAX_PATH_BYTES + sops_age_key_file_env.len + 1:0]u8 = undefined;
+    var buffer: [buffer_size:0]u8 = undefined;
     @memset(&buffer, 0);
     @memcpy(buffer[0..sops_age_key_file_env.len], sops_age_key_file_env.ptr);
     buffer[sops_age_key_file_env.len] = '=';
