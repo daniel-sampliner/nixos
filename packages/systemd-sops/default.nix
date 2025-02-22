@@ -5,10 +5,16 @@
 {
   lib,
   stdenv,
+
+  makeBinaryWrapper,
+  sops,
   zig,
 }:
-stdenv.mkDerivation {
+let
   pname = "systemd-sops";
+in
+stdenv.mkDerivation {
+  inherit pname;
   version = "0.0.1";
 
   src = lib.fileset.toSource {
@@ -16,6 +22,15 @@ stdenv.mkDerivation {
     fileset = lib.fileset.difference ./. ./default.nix;
   };
 
-  nativeBuildInputs = [ zig.hook ];
+  nativeBuildInputs = [
+    makeBinaryWrapper
+    zig
+    zig.hook
+  ];
+
+  postInstall = ''
+    wrapProgram "$out/bin/${pname}" --suffix PATH : "${lib.makeBinPath [ sops ]}"
+  '';
+
   doCheck = true;
 }
