@@ -31,7 +31,7 @@ pub fn socketConnect(allocator: std.mem.Allocator, cred_info: []const u8, path: 
     var nameBase: [random_string_len]u8 = undefined;
     _ = randomString(&nameBase);
 
-    const name = try std.mem.concat(allocator, u8, &[_][]const u8{ "\x00", &nameBase, "/unit/", cred_info });
+    const name = try std.mem.concat(allocator, u8, &[_][]const u8{ "\x00", &nameBase, "/unit/service/", cred_info });
     log.debug("name: {0s} {0any}", .{name});
 
     const addr = try std.net.Address.initUnix(name);

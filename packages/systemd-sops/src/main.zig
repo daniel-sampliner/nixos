@@ -8,7 +8,8 @@ const config = @import("config");
 
 const TestExtras = @import("./TestExtras.zig");
 
-const buffer_size = 128;
+// const buffer_size = std.fs.MAX_PATH_BYTES;
+const buffer_size = 256;
 
 pub const std_options = .{
     .logFn = switch (builtin.mode) {
@@ -52,7 +53,6 @@ pub fn syslogFn(
 
 pub fn main() !void {
     var sops_file_idx: usize = 0;
-    // var sops_file: [std.fs.MAX_PATH_BYTES:0]u8 = undefined;
     var sops_file: [buffer_size:0]u8 = undefined;
     @memset(&sops_file, 0);
 
@@ -63,9 +63,10 @@ pub fn main() !void {
         std.log.err("Missing required environment variable SOPS_BASE_DIR", .{});
         return error.InvalidConfiguration;
     }
+    sops_file[sops_file_idx] = '/';
     std.log.debug("sops_file: {s}", .{sops_file});
 
-    _ = try credInfoFromSocket(0, sops_file[sops_file_idx..]);
+    _ = try credInfoFromSocket(0, sops_file[sops_file_idx + 1 ..]);
     std.log.debug("sops_file: {s}", .{sops_file});
 
     return execSops(&sops_file, .{ .command = "echo" });
@@ -83,7 +84,7 @@ fn credInfoFromSocket(fd: std.posix.socket_t, buffer: []u8) ![]u8 {
         switch (addr.family) {
             std.posix.AF.INET => log.err("fd {} is INET socket", .{fd}),
             std.posix.AF.INET6 => log.err("fd {} is INET6 socket", .{fd}),
-            else => log.err("fd {} is {} socket", .{ fd, addr.family }),
+            else => log.err("fd {} is unknown {} socket", .{ fd, addr.family }),
         }
 
         return error.SocketNotUnix;
@@ -95,17 +96,11 @@ fn credInfoFromSocket(fd: std.posix.socket_t, buffer: []u8) ![]u8 {
 
     const abstract_address = addr.path[1..];
 
-    const end_idx = try (std.mem.indexOfScalar(u8, abstract_address, 0) orelse error.InvalidPeerName);
-    const first_slash_idx = try (std.mem.indexOfScalar(u8, abstract_address, '/') orelse error.InvalidPeerName);
-    const begin_idx = try (std.mem.indexOfScalarPos(u8, abstract_address, first_slash_idx + 1, '/') orelse error.InvalidPeerName);
+    const end = std.mem.indexOfScalar(u8, abstract_address, 0) orelse abstract_address.len;
+    const key = std.fs.path.basename(abstract_address[0..end]);
 
-    const length = end_idx - begin_idx;
-    if (length < 4) {
-        return error.InvalidPeerName;
-    }
-
-    const ret = buffer[0..length];
-    @memcpy(ret, abstract_address[begin_idx..end_idx]);
+    const ret = buffer[0..key.len];
+    @memcpy(ret, key);
     log.debug("ret: {0s} {0any}", .{ret});
 
     return ret;
@@ -134,7 +129,7 @@ test "credInfoFromSocket" {
     log.debug("listen_socket_path: {0s} {0any}", .{listen_socket_path});
     log.debug("server: {}", .{server});
 
-    const cred_info = "service/key";
+    const cred_info = "key";
     const client_thread = try std.Thread.spawn(
         .{ .allocator = allocator },
         TestExtras.socketConnect,
@@ -146,7 +141,7 @@ test "credInfoFromSocket" {
     var buffer: [@sizeOf(std.posix.sockaddr.un)]u8 = undefined;
     const cred_info_got = try credInfoFromSocket(connection.stream.handle, &buffer);
     log.debug("cred_info_got: {s}", .{cred_info_got});
-    try std.testing.expectEqualStrings("/" ++ cred_info, cred_info_got);
+    try std.testing.expectEqualStrings(cred_info, cred_info_got);
 }
 
 fn execSops(
@@ -158,11 +153,10 @@ fn execSops(
     const argv = [_:null]?[*:0]const u8{ options.command.ptr, "--decrypt".ptr, sops_file.ptr };
     log.debug("argv: {any}", .{argv});
     for (argv, 0..) |arg, idx| {
-        std.log.debug("  {}: {?s}", .{ idx, arg });
+        log.debug("  {}: {?s}", .{ idx, arg });
     }
 
     const sops_age_key_file_env = "SOPS_AGE_KEY_FILE";
-    // var buffer: [std.fs.MAX_PATH_BYTES + sops_age_key_file_env.len + 1:0]u8 = undefined;
     var buffer: [buffer_size:0]u8 = undefined;
     @memset(&buffer, 0);
     @memcpy(buffer[0..sops_age_key_file_env.len], sops_age_key_file_env.ptr);
@@ -177,7 +171,7 @@ fn execSops(
         null,
     };
 
-    std.log.debug("envp: {any}", .{envp});
+    log.debug("envp: {any}", .{envp});
     for (envp, 0..) |env, idx| {
         log.debug("  {}: {?s}", .{ idx, env });
     }
@@ -189,14 +183,16 @@ fn execSops(
 }
 
 test "execSops" {
-    const log = std.log.scoped(.execSops);
+    const log = std.log.scoped(.test_execSops);
 
     var sops_file: [std.fs.MAX_PATH_BYTES:0]u8 = undefined;
     @memset(&sops_file, 0);
-    {
-        const s = "/sops/service/key";
+
+    const expected = blk: {
+        const s = "/sops/dir/base";
         @memcpy(sops_file[0..s.len], s);
-    }
+        break :blk "--decrypt " ++ s;
+    };
 
     const read_fd, const write_fd = try std.posix.pipe();
     const fork_pid = try std.posix.fork();
@@ -226,5 +222,5 @@ test "execSops" {
     try std.testing.expectEqual(0, ret.status);
 
     const stdout = fbs.getWritten();
-    try std.testing.expectEqualStrings(std.mem.sliceTo(&sops_file, 0), stdout);
+    try std.testing.expectEqualStrings(expected, stdout);
 }
