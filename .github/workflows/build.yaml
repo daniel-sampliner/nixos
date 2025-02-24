@@ -23,7 +23,7 @@ concurrency:
   cancel-in-progress: true
   group: >-
     ${{ github.workflow }}-
-    ${{ github.ref_name == 'main'
+    ${{ contains(fromJSON('["main", "nix-update/pr"]'), github.ref_name)
       && github.ref
       || github.sha }}
 
