@@ -106,7 +106,6 @@ in
               xcbutilwm = null;
               xorg = nullAttrs prev.xorg;
 
-              libGLSupported = false;
               withGtk3 = false;
             }
           )
@@ -118,6 +117,7 @@ in
             in
             qtbase.override (
               lib.mergeAttrsList [
+                (lib.optionalAttrs (fArgs ? "libGLSupported") { libGLSupported = false; })
                 (lib.optionalAttrs (fArgs ? "libpq") { libpq = null; })
                 (lib.optionalAttrs (fArgs ? "postgresql") { postgresql = null; })
               ]
