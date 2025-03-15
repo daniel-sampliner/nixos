@@ -99,6 +99,7 @@ in
               qttranslations = null;
               unixODBC = null;
               unixODBCDrivers = nullAttrs prev.unixODBCDrivers;
+              vulkan-loader = prev.emptyFile;
               xcbutil = null;
               xcbutilimage = null;
               xcbutilkeysyms = null;
