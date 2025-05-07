@@ -14,6 +14,12 @@
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "unstable";
 
+    nix2container = {
+      url = "github:nlewo/nix2container";
+      inputs.flake-utils.follows = "flake-utils";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "unstable";
 
@@ -36,7 +42,7 @@
     {
       lib = import ./lib { inherit lib self; };
       nixosModules = self.lib.collectDirAttrs { } ./nixosModules;
-      overlays.default = import ./overlays.nix { inherit lib self; };
+      overlays.default = import ./overlays { inherit lib self; };
     }
     // flake-utils.lib.eachSystem systems (
       system:
@@ -55,6 +61,12 @@
           inherit pkgs self';
           inherit (pkgs) lib;
         };
+
+        containers = import ./containers {
+          inherit pkgs;
+          inherit (pkgs) lib;
+        };
+
         devShells.default = import ./devShell.nix { inherit lib pkgs self'; };
         formatter = treefmtConfiguration.config.build.wrapper;
         packages = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation) pkgs.flakePackages;

@@ -32,12 +32,11 @@ let
         packageNames =
           lib.pipe
             {
-              callPackage = path: args: path;
+              callPackage = path: _: path;
               inherit directory;
             }
             [
               packagesFromDirectoryRecursive
-              (lib.attrsets.filterAttrs (_: builtins.isPath))
               builtins.attrNames
             ];
 

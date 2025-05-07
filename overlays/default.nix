@@ -5,9 +5,10 @@
 { lib, self }:
 lib.composeManyExtensions [
   self.inputs.devshell.overlays.default
+  (_: prev: { inherit (self.inputs.nix2container.packages.${prev.system}) nix2container; })
 
   (_: prev: {
-    flakePackages = self.lib.mkScope prev ./packages;
+    flakePackages = self.lib.mkScope prev (self + "/packages");
 
     pkgsUnstable = self.lib.mkNixpkgs self.inputs.unstable prev.system {
       overlays = [
@@ -18,22 +19,23 @@ lib.composeManyExtensions [
   })
 
   (
-    _: prev:
+    final: prev:
     let
       inherit (prev) flakePackages;
       assignAttrs = builtins.mapAttrs (_: lib.const);
     in
     self.lib.infuse prev (
       {
-        lib = _: flakePackages.lib;
+        lib.__assign = flakePackages.lib;
         vimPlugins.__extend = (_: _: flakePackages.vimPlugins-extra.passthru.plugins);
 
-        writers = lib.pipe flakePackages.writers-extra [
+        writers = lib.trivial.pipe flakePackages.writers-extra [
           (lib.attrsets.filterAttrs (n: _: lib.strings.hasPrefix "write" n))
           assignAttrs
         ];
       }
       // assignAttrs flakePackages.passthru.packages
+      // import ./containers.nix final prev
     )
   )
 ]
