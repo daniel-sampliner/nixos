@@ -26,6 +26,7 @@ lib.composeManyExtensions [
     self.lib.infuse prev (
       {
         lib = _: flakePackages.lib;
+        vimPlugins.__extend = (_: _: flakePackages.vimPlugins-extra.passthru.plugins);
 
         writers = lib.pipe flakePackages.writers-extra [
           (lib.attrsets.filterAttrs (n: _: lib.strings.hasPrefix "write" n))
