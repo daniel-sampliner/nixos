@@ -6,3 +6,6 @@
 .nixos-test-history
 result
 result-*
+
+.zig-cache
+zig-out

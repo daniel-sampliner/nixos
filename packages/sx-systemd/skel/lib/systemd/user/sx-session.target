@@ -1,0 +1,10 @@
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+[Unit]
+Description=sx session
+
+DefaultDependencies=no
+BindsTo=graphical-session.target
+Before=graphical-session.target
