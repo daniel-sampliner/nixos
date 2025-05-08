@@ -5,11 +5,15 @@
 {
   lib,
   pkgs,
+  self',
 }:
+let
+  pkgs' = pkgs.pkgsUnstable.extend self'.overlays.slim;
+in
 lib.trivial.pipe ./. [
   (lib.collectDirAttrs {
     exclude = ./default.nix;
   })
 
-  (builtins.mapAttrs (_: lib.trivial.flip pkgs.callPackage { }))
+  (builtins.mapAttrs (_: lib.trivial.flip pkgs'.callPackage { }))
 ]

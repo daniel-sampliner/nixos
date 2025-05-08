@@ -42,7 +42,7 @@
     {
       lib = import ./lib { inherit lib self; };
       nixosModules = self.lib.collectDirAttrs { } ./nixosModules;
-      overlays.default = import ./overlays { inherit lib self; };
+      overlays = import ./overlays { inherit lib self; };
     }
     // flake-utils.lib.eachSystem systems (
       system:
@@ -63,7 +63,7 @@
         };
 
         containers = import ./containers {
-          inherit pkgs;
+          inherit pkgs self';
           inherit (pkgs) lib;
         };
 
