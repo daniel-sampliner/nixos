@@ -8,8 +8,10 @@
   inputs = {
     nixpkgs.url = "github:nixos/nixpkgs/nixos-24.11";
     unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
     flake-compat.url = "github:nix-community/flake-compat";
+    impermanence.url = "github:nix-community/impermanence";
 
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "unstable";
@@ -32,6 +34,7 @@
       self,
       nixpkgs,
       flake-utils,
+      impermanence,
       treefmt-nix,
       ...
     }:
@@ -41,7 +44,11 @@
     in
     {
       lib = import ./lib { inherit lib self; };
-      nixosModules = self.lib.collectDirAttrs { } ./nixosModules;
+
+      nixosModules = {
+        impermanence = impermanence + "/nixos.nix";
+      } // self.lib.collectDirAttrs { } ./nixosModules;
+
       overlays = import ./overlays { inherit lib self; };
     }
     // flake-utils.lib.eachSystem systems (
