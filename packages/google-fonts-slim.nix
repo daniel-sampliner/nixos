@@ -16,12 +16,12 @@ let
 in
 google-fonts.overrideAttrs (prev: {
   pname = google-fonts.pname + "-slim";
-  version = "0.4.9-unstable-2025-05-02";
+  version = "0.4.9-unstable-2025-05-09";
 
   src = fetchFromGitHub {
     owner = "google";
     repo = "fonts";
-    rev = "54bbd6880add9f874368d5c266790d7af9c94b66";
+    rev = "bcc7728b619035379330e8a404e0ba6051126414";
 
     sparseCheckout = [ "ofl/adobeblank" ] ++ fonts;
 
