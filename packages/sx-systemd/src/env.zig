@@ -48,7 +48,7 @@ test "getMap" {
     var env_map = try getMap(allocator);
     defer env_map.deinit();
 
-    std.log.debug("env_map: {}", .{fmtEnvMap(env_map)});
+    std.log.debug("env_map: {??s}", .{fmtEnvMap(env_map)});
 
     for (changed, 0..) |env, idx| {
         try std.testing.expectEqualStrings(want[idx], try get(&env_map, env));
@@ -74,12 +74,11 @@ pub fn formatEnvMap(
     options: std.fmt.FormatOptions,
     writer: anytype,
 ) !void {
-    _ = fmt;
-    _ = options;
-
     try writer.writeAll("{ ");
     for (changed, 0..) |e, idx| {
-        try std.fmt.format(writer, "{s}={!s}", .{ e, get(&em, e) });
+        try writer.writeAll(e);
+        try writer.writeAll("=");
+        try std.fmt.formatType(em.get(e), fmt, options, writer, std.options.fmt_max_depth - 1);
         if (idx < changed.len - 1) {
             try writer.writeAll(", ");
         }

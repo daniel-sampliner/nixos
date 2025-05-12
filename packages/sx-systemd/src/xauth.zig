@@ -39,7 +39,7 @@ test "add" {
     try env_map.put("DISPLAY", ":9");
     try env_map.put("XAUTHORITY", xauthority);
 
-    var ret: anyerror!void = undefined;
+    var ret: @TypeOf(add(alloc, &env_map)) = undefined;
 
     const read_stdout_fd, const write_stdout_fd = try std.posix.pipe();
     const read_stderr_fd, const write_stderr_fd = try std.posix.pipe();

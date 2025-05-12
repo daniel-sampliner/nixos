@@ -20,7 +20,7 @@ pub fn main() !void {
     var env_map = try env.getMap(allocator);
     defer env_map.deinit();
 
-    std.log.debug("env_map: {}", .{env.fmtEnvMap(env_map)});
+    std.log.debug("env_map: {??s}", .{env.fmtEnvMap(env_map)});
 
     // const xdg_runtime_dir = try env.get(&env_map, "XDG_RUNTIME_DIR");
     // {

@@ -34,34 +34,11 @@ pub fn run(allocator: std.mem.Allocator, env_map: *const std.process.EnvMap) !vo
         "-verbose",
         "3",
     };
-    std.log.debug("argv: {}", .{fmtArgvp(&argv)});
+    std.log.debug("argv: {???s}", .{&argv});
 
     const envp = try std.process.createEnvironFromMap(allocator, env_map, .{});
 
     const err = std.posix.execvpeZ(argv[0].?, &argv, envp);
-    std.log.err("failed to execvpeZ {}", .{fmtArgvp(&argv)});
+    std.log.err("failed to execvpeZ {???s}", .{&argv});
     return err;
-}
-
-fn fmtArgvp(slice: [:null]const ?[*:0]const u8) std.fmt.Formatter(formatArgvp) {
-    return .{ .data = slice };
-}
-
-fn formatArgvp(
-    slice: [:null]const ?[*:0]const u8,
-    comptime fmt: []const u8,
-    options: std.fmt.FormatOptions,
-    writer: anytype,
-) !void {
-    _ = fmt;
-    _ = options;
-
-    try writer.writeAll("{ ");
-    for (slice, 0..) |s, idx| {
-        try std.fmt.format(writer, "{?s}", .{s});
-        if (idx < slice.len - 1) {
-            try writer.writeAll(", ");
-        }
-    }
-    try writer.writeAll(" }");
 }
