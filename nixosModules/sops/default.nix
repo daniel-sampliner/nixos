@@ -113,9 +113,38 @@ in
               LoadCredentialEncrypted = [ "age_key:${cfg.keyDir}/age_key" ];
               StandardInput = "socket";
               StandardError = "journal";
+
+              User = "sops-nix";
+              DynamicUser = true;
+
+              CapabilityBoundingSet = [ ];
+
+              LockPersonality = true;
+              MemoryDenyWriteExecute = true;
+              PrivateDevices = true;
+              PrivateIPC = true;
+              PrivateNetwork = true;
+              PrivateUsers = true;
+              ProcSubset = "pid";
+              ProtectClock = true;
+              ProtectControlGroups = true;
+              ProtectHome = "tmpfs";
+              ProtectHostname = true;
+              ProtectKernelLogs = true;
+              ProtectKernelModules = true;
+              ProtectKernelTunables = true;
+              ProtectProc = "invisible";
+              ProtectSystem = "strict";
+              RestrictAddressFamilies = "none";
+              RestrictRealtime = true;
+              SystemCallArchitectures = "native";
+              SystemCallFilter = [ "@basic-io" ];
+              UMask = "777";
             };
 
-            unitConfig.CollectMode = "inactive";
+            unitConfig = {
+              CollectMode = "inactive";
+            };
           };
 
           sops-nix-chpasswd = lib.optionalAttrs (cfg.chpasswd != null) {
