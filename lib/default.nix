@@ -57,6 +57,7 @@ let
           lib.attrsets.mapAttrsRecursiveCond cond func self;
 
         passthru.packages = lib.attrsets.getAttrs packageNames packages;
+        passthru.prev = pkgs;
       }
     );
 
