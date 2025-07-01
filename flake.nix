@@ -37,7 +37,6 @@
 
     nix2container = {
       url = "github:nlewo/nix2container";
-      inputs.flake-utils.follows = "flake-utils";
       inputs.nixpkgs.follows = "nixpkgs";
     };
 
