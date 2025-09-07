@@ -4,7 +4,7 @@
 
 {
   buildEnv,
-  buildGoModule,
+  buildGo125Module,
   dockerTools,
   lib,
   nix2container,
@@ -38,9 +38,9 @@ let
       '';
     in
     caddy.override {
-      buildGoModule =
+      buildGo125Module =
         args:
-        buildGoModule (
+        buildGo125Module (
           args
           // {
             inherit src;
@@ -69,7 +69,7 @@ let
               + ''
                 cp vendor/smuggle/go.{mod,sum} .
               '';
-            vendorHash = "sha256-+8V59qFe4jtQkj93Dz0jmAbCOuqkoF2AOV4b0S373I4=";
+            vendorHash = "sha256-/dC7vSPHl3qH+tQIj8VfaJshrmpYSPx1pwlLjTXm/dA=";
           }
         );
     };
