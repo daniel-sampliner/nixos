@@ -68,51 +68,50 @@ in
           sopsUserPasswords = {
             deps = [ "specialfs" ];
             supportsDryActivation = true;
-            text =
-              ''
-                (
-                set -e
-                if [[ $NIXOS_ACTION == dry-activate ]]; then
-                  export PS4="+[''${BASH_SOURCE[0]##*/}:$LINENO] "
-                  set -x
-                  readonly dry=1
-                fi
+            text = ''
+              (
+              set -e
+              if [[ $NIXOS_ACTION == dry-activate ]]; then
+                export PS4="+[''${BASH_SOURCE[0]##*/}:$LINENO] "
+                set -x
+                readonly dry=1
+              fi
 
-                umask 0277
+              umask 0277
 
-                if [[ ! -e "${sshHostKey}" ]]; then
-                  ''${dry:+:} ${lib.getExe' pkgs.dmidecode "dmidecode"} -t 11 \
-                    | while read -r line; do
-                      if [[ $line != *${smbiosKey}=* ]]; then
-                        continue
-                      fi
-                      ''${dry:+:} mkdir -p "${builtins.dirOf sshHostKey}"
-                      ''${dry:+:} base64 -d <<<"''${line#*${smbiosKey}=}" >"${sshHostKey}"
-                      break
-                    done
-                fi
+              if [[ ! -e "${sshHostKey}" ]]; then
+                ''${dry:+:} ${lib.getExe' pkgs.dmidecode "dmidecode"} -t 11 \
+                  | while read -r line; do
+                    if [[ $line != *${smbiosKey}=* ]]; then
+                      continue
+                    fi
+                    ''${dry:+:} mkdir -p "${builtins.dirOf sshHostKey}"
+                    ''${dry:+:} base64 -d <<<"''${line#*${smbiosKey}=}" >"${sshHostKey}"
+                    break
+                  done
+              fi
 
-                export SOPS_AGE_KEY_FILE="${builtins.dirOf sshHostKey}/age"
-                ''${dry:+:} ${lib.getExe pkgs.ssh-to-age} \
-                  -i "${sshHostKey}" \
-                  -o "$SOPS_AGE_KEY_FILE" \
-                  -private-key
+              export SOPS_AGE_KEY_FILE="${builtins.dirOf sshHostKey}/age"
+              ''${dry:+:} ${lib.getExe pkgs.ssh-to-age} \
+                -i "${sshHostKey}" \
+                -o "$SOPS_AGE_KEY_FILE" \
+                -private-key
 
-              ''
-              + (lib.pipe cfg.userPasswords [
-                (lib.mapAttrsToList (
-                  user: encrypted: ''
-                    ''${dry:+:} ${lib.getExe pkgs.sops} \
-                      --decrypt \
-                      --output "${sopsMountpoint}/${user}.passwd" \
-                      "${encrypted}"
-                  ''
-                ))
-                lib.concatLines
-              ])
-              + ''
-                )
-              '';
+            ''
+            + (lib.pipe cfg.userPasswords [
+              (lib.mapAttrsToList (
+                user: encrypted: ''
+                  ''${dry:+:} ${lib.getExe pkgs.sops} \
+                    --decrypt \
+                    --output "${sopsMountpoint}/${user}.passwd" \
+                    "${encrypted}"
+                ''
+              ))
+              lib.concatLines
+            ])
+            + ''
+              )
+            '';
           };
 
           unmountSops = {

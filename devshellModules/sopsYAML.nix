@@ -18,33 +18,32 @@ let
     thiccpad = "age1m3zxw4mjty2ckd06g7mghdmf36n7qcd0xqljljjjer8h836maa8qf5tgmm";
   };
 
-  settings.creation_rules =
-    [
-      {
-        inherit pgp;
-        path_regex = ''(^|/)build-vm\.'';
-        age = buildVMKey;
-      }
-    ]
-    ++
-      builtins.map
-        (path_regex: {
-          inherit path_regex pgp;
-          age = lib.pipe hostKeys [
-            builtins.attrValues
-            (lib.concatStringsSep " ")
-          ];
-        })
-        [
-          "^nixos/profiles/"
-          "^nixos/users/"
-        ]
-    ++ builtins.map (host: {
+  settings.creation_rules = [
+    {
       inherit pgp;
-      path_regex = "^nixos/${host}/";
-      age = hostKeys.${host};
-    }) (builtins.attrNames hostKeys)
-    ++ [ { inherit pgp; } ];
+      path_regex = ''(^|/)build-vm\.'';
+      age = buildVMKey;
+    }
+  ]
+  ++
+    builtins.map
+      (path_regex: {
+        inherit path_regex pgp;
+        age = lib.pipe hostKeys [
+          builtins.attrValues
+          (lib.concatStringsSep " ")
+        ];
+      })
+      [
+        "^nixos/profiles/"
+        "^nixos/users/"
+      ]
+  ++ builtins.map (host: {
+    inherit pgp;
+    path_regex = "^nixos/${host}/";
+    age = hostKeys.${host};
+  }) (builtins.attrNames hostKeys)
+  ++ [ { inherit pgp; } ];
 
   settingsFormat = pkgs.formats.yaml { };
 in

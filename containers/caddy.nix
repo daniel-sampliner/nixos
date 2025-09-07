@@ -45,30 +45,24 @@ let
           // {
             inherit src;
             overrideModAttrs = old: {
-              preBuild =
-                old.preBuild or ""
-                + ''
-                  cp go.mod go.mod.old
-                  cp go.sum go.sum.old
-                  go get ${
-                    lib.escapeShellArgs (
-                      builtins.map (m: m.name + lib.optionalString (m ? version) "@${m.version}") modules
-                    )
-                  }
-                  go mod tidy
-                '';
-
-              postInstall =
-                old.postInstall or ""
-                + ''
-                  install -Dm0644 -t "$out/smuggle" go.mod go.sum
-                '';
-            };
-            postConfigure =
-              caddy.postConfigure or ""
-              + ''
-                cp vendor/smuggle/go.{mod,sum} .
+              preBuild = old.preBuild or "" + ''
+                cp go.mod go.mod.old
+                cp go.sum go.sum.old
+                go get ${
+                  lib.escapeShellArgs (
+                    builtins.map (m: m.name + lib.optionalString (m ? version) "@${m.version}") modules
+                  )
+                }
+                go mod tidy
               '';
+
+              postInstall = old.postInstall or "" + ''
+                install -Dm0644 -t "$out/smuggle" go.mod go.sum
+              '';
+            };
+            postConfigure = caddy.postConfigure or "" + ''
+              cp vendor/smuggle/go.{mod,sum} .
+            '';
             vendorHash = "sha256-/dC7vSPHl3qH+tQIj8VfaJshrmpYSPx1pwlLjTXm/dA=";
           }
         );

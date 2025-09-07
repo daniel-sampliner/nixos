@@ -48,11 +48,12 @@ in
       environment.persistence.${cfg.store} = {
         hideMounts = true;
 
-        directories =
-          [ "/var/lib/systemd" ]
-          ++ (lib.optional config.hardware.bluetooth.enable "/var/lib/bluetooth")
-          ++ (lib.optional config.networking.wireless.iwd.enable "/var/lib/iwd")
-          ++ (lib.optional config.services.flatpak.enable "/var/lib/flatpak");
+        directories = [
+          "/var/lib/systemd"
+        ]
+        ++ (lib.optional config.hardware.bluetooth.enable "/var/lib/bluetooth")
+        ++ (lib.optional config.networking.wireless.iwd.enable "/var/lib/iwd")
+        ++ (lib.optional config.services.flatpak.enable "/var/lib/flatpak");
 
         files = [
           "/etc/adjtime"
