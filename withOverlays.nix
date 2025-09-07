@@ -55,7 +55,8 @@ in
                   "org.opencontainers.image.created" = isoDate;
                   "org.opencontainers.image.source" = "https://github.com/${repo}";
                   "org.opencontainers.image.licenses" = "AGPL-3.0-or-later";
-                } // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
+                }
+                // lib.optionalAttrs (rev != null) { "org.opencontainers.image.revision" = rev; };
               } args.config or { };
 
               created = args.created or isoDate;

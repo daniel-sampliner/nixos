@@ -44,6 +44,7 @@ devshell.mkShell {
         nix-update
 
         inputs'.nix2container.packages.skopeo-nix2container
-      ] ++ checks.git-hooks.enabledPackages;
+      ]
+      ++ checks.git-hooks.enabledPackages;
     };
 }

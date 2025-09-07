@@ -149,7 +149,11 @@ in
     }
   );
 
-  util-linux = prev.util-linux.override { translateManpages = false; };
+  util-linux = prev.util-linux.override {
+    translateManpages = false;
+    withLastlog = false;
+  };
+
   wayland = prev.wayland.override { withDocumentation = false; };
   wrapGAppsHook3 = prev.wrapGAppsNoGuiHook;
   wrapGAppsHook4 = prev.wrapGAppsHook4.override { isGraphical = false; };

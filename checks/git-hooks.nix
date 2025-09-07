@@ -27,14 +27,13 @@ let
   };
 in
 run.overrideAttrs (prev: {
-  buildPhase =
-    ''
-      {
-        echo .cache/pre-commit
-        echo .gitconfig
-      } >>.gitignore
-    ''
-    + prev.buildPhase;
+  buildPhase = ''
+    {
+      echo .cache/pre-commit
+      echo .gitconfig
+    } >>.gitignore
+  ''
+  + prev.buildPhase;
 })
 // {
   inherit (run) config shellHook;
