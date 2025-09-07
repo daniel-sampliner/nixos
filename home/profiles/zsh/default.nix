@@ -47,7 +47,7 @@ in
       setopt NO_GLOBAL_RCS
     '';
 
-    initExtra = lib.mkAfter ''
+    initContent = lib.mkAfter ''
       ttyctl -f
     '';
   };

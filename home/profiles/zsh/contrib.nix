@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 _: {
-  programs.zsh.initExtra = ''
+  programs.zsh.initContent = ''
     autoloadContribs() {
       emulate -L zsh
       setopt ERR_RETURN

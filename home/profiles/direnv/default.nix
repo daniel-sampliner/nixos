@@ -52,7 +52,7 @@ in
 
     git.ignores = [ ".direnv" ];
 
-    zsh.initExtra = ''
+    zsh.initContent = ''
       ${sourceHook "zsh"}
 
       ${builtins.readFile ./direnv_completion.zsh}

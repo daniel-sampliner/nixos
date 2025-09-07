@@ -31,18 +31,18 @@
         serif = withFallbackSymbols [ "DejaVu Serif" ];
       };
 
-    packages =
-      builtins.attrValues {
-        inherit (pkgs)
-          google-fonts-slim
-          ibm-plex
-          iosevka-bin
-          ocr-a-b-fonts
-          overpass
-          ;
-      }
-      ++ [
-        (pkgs.nerdfonts.override { fonts = [ "NerdFontsSymbolsOnly" ]; })
-      ];
+    packages = builtins.attrValues {
+      inherit (pkgs)
+        google-fonts-slim
+        ibm-plex
+        iosevka-bin
+        ocr-a-b-fonts
+        overpass
+        ;
+
+      inherit (pkgs.nerd-fonts)
+        symbols-only
+        ;
+    };
   };
 }

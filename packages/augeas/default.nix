@@ -4,6 +4,8 @@
 
 { augeas }:
 augeas.overrideAttrs (prev: {
+  __intentionallyOverridingVersion = true;
+
   version = prev.version + "-1";
   patches = prev.patches or [ ] ++ [ ./dnsmasq-key-optional-space.patch ];
 })

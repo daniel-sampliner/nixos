@@ -16,7 +16,7 @@
       size = 110000;
     };
 
-    initExtra =
+    initContent =
       let
         options = [
           # Changing Directories

@@ -9,7 +9,7 @@
       [[ -v ZPROF ]] && zmodload zsh/zprof
     '';
 
-    initExtra = lib.mkOrder 9999 ''
+    initContent = lib.mkOrder 9999 ''
       [[ -v ZPROF ]] && zprof
     '';
   };

@@ -30,6 +30,7 @@ in
 }).overrideAttrs
   {
     inherit version;
+    __intentionallyOverridingVersion = true;
 
     passthru.updateScript = nix-update-script { };
   }
