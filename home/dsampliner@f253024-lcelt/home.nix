@@ -6,6 +6,7 @@
 {
   imports = [
     (myModulesPath + "/profiles/zsh")
+    ./kitty.nix
   ];
 
   home.stateVersion = "25.05";
