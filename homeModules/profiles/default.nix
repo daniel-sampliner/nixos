@@ -6,6 +6,7 @@
 {
   imports = [
     ./git.nix
+    ./nvim.nix
   ];
 
   manual.manpages.enable = true;
