@@ -6,6 +6,8 @@
 {
   imports = [
     (myModulesPath + "/profiles/zsh")
+
+    ./gpgkey.nix
     ./kitty.nix
   ];
 
