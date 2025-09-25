@@ -10,38 +10,41 @@
     ./nvim.nix
   ];
 
+  home = {
+    packages = builtins.attrValues {
+      inherit (pkgs)
+        age
+        coreutils-full
+        execline
+        eza
+        fd
+        file
+        fzf
+        hyperfine
+        jq
+        less
+        man-pages
+        man-pages-posix
+        nix-output-monitor
+        nixfmt-rfc-style
+        parallel
+        pv
+        ripgrep
+        rsync
+        shellcheck
+        shfmt
+        sops
+        ;
+    };
+
+    preferXdgDirectories = true;
+
+    sessionVariables = {
+      PAGER = "less";
+    };
+  };
+
   manual.manpages.enable = true;
   programs.home-manager.enable = true;
-
-  home.packages = builtins.attrValues {
-    inherit (pkgs)
-      age
-      coreutils-full
-      execline
-      eza
-      fd
-      file
-      fzf
-      hyperfine
-      jq
-      less
-      man-pages
-      man-pages-posix
-      nix-output-monitor
-      nixfmt-rfc-style
-      parallel
-      pv
-      ripgrep
-      rsync
-      shellcheck
-      shfmt
-      sops
-      ;
-  };
-
-  home.sessionVariables = {
-    PAGER = "less";
-  };
-
   xdg.enable = true;
 }
