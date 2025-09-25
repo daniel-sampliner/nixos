@@ -5,6 +5,7 @@
 { pkgs, ... }:
 {
   imports = [
+    ./fonts.nix
     ./git.nix
     ./nvim.nix
   ];
