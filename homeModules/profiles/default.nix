@@ -4,6 +4,10 @@
 
 { pkgs, ... }:
 {
+  imports = [
+    ./git.nix
+  ];
+
   manual.manpages.enable = true;
   programs.home-manager.enable = true;
 
