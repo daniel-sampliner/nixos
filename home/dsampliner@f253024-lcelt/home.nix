@@ -18,6 +18,7 @@
 
       ./gpgkey.nix
       ./kitty.nix
+      ./ssh.nix
     ];
 
   programs.command-not-found.enable = true;

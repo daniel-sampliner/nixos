@@ -9,6 +9,7 @@
     ./fonts.nix
     ./git.nix
     ./nvim.nix
+    ./ssh.nix
   ];
 
   home = {

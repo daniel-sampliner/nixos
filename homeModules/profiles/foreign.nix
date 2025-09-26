@@ -15,6 +15,8 @@
     ];
   };
 
+  programs.ssh.package = lib.mkForce null;
+
   programs.zsh.initContent = lib.mkOrder 0 ''
     if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
       . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
