@@ -17,9 +17,15 @@
 
   programs.ssh.package = lib.mkForce null;
 
-  programs.zsh.initContent = lib.mkOrder 0 ''
-    if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
-      . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-    fi
-  '';
+  programs.zsh.initContent = lib.mkMerge [
+    (lib.mkOrder 550 ''
+      fpath+=(/usr/share/zsh/site-functions /usr/share/zsh/vendor-functions)
+    '')
+
+    (lib.mkOrder 0 ''
+      if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+        . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+      fi
+    '')
+  ];
 }
