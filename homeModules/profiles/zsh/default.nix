@@ -13,11 +13,21 @@
 
   programs.zsh = {
     enable = true;
-
-    initContent = lib.mkAfter ''
-      ttyctl -f
-    '';
-
     dotDir = ".config/zsh";
+
+    initContent = lib.mkMerge [
+      ''
+        typeset -aUT XDG_DATA_DIRS xdg_data_dirs
+        typeset -aUT XDG_CONFIG_DIRS xdg_config_dirs
+      ''
+
+      (lib.mkAfter ''
+        ttyctl -f
+      '')
+    ];
+
+    shellGlobalAliases = {
+      yolosshopts = "-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no";
+    };
   };
 }
