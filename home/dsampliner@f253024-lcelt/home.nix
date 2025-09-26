@@ -8,6 +8,7 @@
     let
       profiles = [
         "foreign.nix"
+        "jujutsu.nix"
         "zsh"
       ];
     in
