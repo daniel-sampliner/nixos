@@ -17,5 +17,7 @@
       ./kitty.nix
     ];
 
+  programs.command-not-found.enable = true;
+
   home.stateVersion = "25.05";
 }

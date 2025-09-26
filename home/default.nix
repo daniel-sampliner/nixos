@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
-  lib,
   inputs,
+  lib,
   withSystem,
   ...
 }:
@@ -32,6 +32,38 @@
               (_: {
                 home.username = username;
                 home.homeDirectory = "/home/${username}";
+
+                nix =
+                  let
+                    copyInputs = [
+                      "nixpkgs"
+                      "unstable"
+                    ];
+
+                    mkNixPath = input: "${input}=${inputs.${input}.outPath}";
+
+                    mkRegistry =
+                      input:
+                      lib.attrsets.nameValuePair input {
+                        exact = true;
+
+                        from = {
+                          id = input;
+                          type = "indirect";
+                        };
+
+                        to = {
+                          type = "path";
+                          path = inputs.${input}.outPath;
+                        };
+                      };
+                  in
+                  {
+                    nixPath = copyInputs |> builtins.map mkNixPath;
+                    registry = copyInputs |> builtins.map mkRegistry |> builtins.listToAttrs;
+                  };
+
+                programs.command-not-found.dbPath = "${inputs.nixpkgs}/programs.sqlite";
               })
 
               ../homeModules
