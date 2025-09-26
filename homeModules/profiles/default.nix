@@ -42,7 +42,10 @@
     preferXdgDirectories = true;
 
     sessionVariables = {
+      LESS = "-Ri";
+      LESSCHARSET = "utf-8";
       PAGER = "less";
+      SYSTEMD_LESS = "FRSMi";
     };
   };
 
