@@ -5,6 +5,7 @@
 { pkgs, ... }:
 {
   imports = [
+    ./aliases
     ./fonts.nix
     ./git.nix
     ./nvim.nix
