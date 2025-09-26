@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ config, ... }:
+{ config, pkgs, ... }:
 let
   cacheDir = "${config.xdg.cacheHome}/zsh";
   zcompdump = "${cacheDir}/zcompdump";
@@ -11,6 +11,8 @@ in
   home.file."${config.programs.zsh.dotDir}/.zshrc".onChange = ''
     $DRY_RUN_CMD rm -f $VERBOSE_ARG -- "${zcompdump}"
   '';
+
+  home.packages = [ pkgs.zsh-completions ];
 
   programs.zsh.enableCompletion = true;
   programs.zsh.completionInit = ''
