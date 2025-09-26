@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ myModulesPath, ... }:
+{ dgxModulesPath, myModulesPath, ... }:
 {
   imports =
     let
@@ -14,6 +14,8 @@
     in
     builtins.map (p: myModulesPath + "/profiles/${p}") profiles
     ++ [
+      (dgxModulesPath + "/profiles")
+
       ./gpgkey.nix
       ./kitty.nix
     ];

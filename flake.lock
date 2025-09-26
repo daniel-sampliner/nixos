@@ -20,6 +20,24 @@
         "type": "github"
       }
     },
+    "dgx": {
+      "flake": false,
+      "locked": {
+        "host": "gitlab-master.nvidia.com",
+        "lastModified": 1758862012,
+        "narHash": "sha256-lMxZa4fvyCcqUT31SGPBhtriOMfneOqGif6M8V0yBEg=",
+        "owner": "dsampliner",
+        "repo": "nix-config",
+        "rev": "76930ecc5af26f3bd8db7227f663906f474ea2fc",
+        "type": "gitlab"
+      },
+      "original": {
+        "host": "gitlab-master.nvidia.com",
+        "owner": "dsampliner",
+        "repo": "nix-config",
+        "type": "gitlab"
+      }
+    },
     "flake-parts": {
       "inputs": {
         "nixpkgs-lib": [
@@ -77,6 +95,7 @@
     "root": {
       "inputs": {
         "devshell": "devshell",
+        "dgx": "dgx",
         "flake-parts": "flake-parts",
         "home-manager": "home-manager",
         "nixpkgs": "nixpkgs",

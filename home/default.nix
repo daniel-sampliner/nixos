@@ -71,6 +71,7 @@
               path
             ];
 
+            extraSpecialArgs.dgxModulesPath = "${inputs.dgx}/homeModules";
             extraSpecialArgs.myModulesPath = ../homeModules;
           }
         );

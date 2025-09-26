@@ -12,6 +12,9 @@
     devshell.url = "github:numtide/devshell";
     devshell.inputs.nixpkgs.follows = "unstable";
 
+    dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
+    dgx.flake = false;
+
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "unstable";
 
