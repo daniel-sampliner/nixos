@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ dgxModulesPath, myModulesPath, ... }:
+{
+  dgxModulesPath,
+  myModulesPath,
+  pkgs,
+  ...
+}:
 {
   imports =
     let
@@ -20,6 +25,13 @@
       ./kitty.nix
       ./ssh.nix
     ];
+
+  home.packages = builtins.attrValues {
+    inherit (pkgs)
+      bat
+      glow
+      ;
+  };
 
   programs.command-not-found.enable = true;
 
