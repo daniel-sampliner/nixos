@@ -33,6 +33,7 @@
       imports = [
         ./devshell.nix
         ./home
+        ./nixpkgs.nix
         ./treefmt.nix
       ];
 

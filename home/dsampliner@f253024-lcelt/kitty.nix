@@ -13,7 +13,7 @@
       #
       # We can force kitty to be used instead by simply symlinking it as
       # "gnome-terminal"
-      gnomeTerminalHack =
+      gnome-terminal-hack =
         let
           wrapper = pkgs.execline.passthru.writeScript "gnome-terminal-hack-wrapper" "-WS0" ''
             kitty $@
@@ -24,7 +24,8 @@
         '';
     in
     [
-      gnomeTerminalHack
+      gnome-terminal-hack
+      pkgs.pkgsExtra.copy-terminfo
     ];
 
   programs.git.extraConfig = {
