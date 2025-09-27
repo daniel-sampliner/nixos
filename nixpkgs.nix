@@ -36,16 +36,26 @@ in
       _module.args.pkgs = import inputs.nixpkgs {
         inherit system;
         overlays = [
-          (final: prev: {
-            pkgsUnstable = import inputs.unstable {
-              inherit system;
-              overlays = [
-                (final: prev: { pkgsExtra = mkPkgSet prev; })
-              ];
-            };
+          (
+            final: prev:
+            let
+              pkgsUnstable = import inputs.unstable {
+                inherit system;
+                overlays = [
+                  (final: prev: { pkgsExtra = mkPkgSet prev; })
+                ];
+              };
+            in
+            {
+              inherit pkgsUnstable;
 
-            pkgsExtra = mkPkgSet prev;
-          })
+              inherit (pkgsUnstable)
+                vimPlugins
+                ;
+
+              pkgsExtra = mkPkgSet prev;
+            }
+          )
         ];
       };
 

@@ -9,6 +9,15 @@
   perSystem.treefmt = {
     programs = {
       nixfmt.enable = true;
+
+      stylua = {
+        enable = true;
+        settings = {
+          indent_type = "Tabs";
+          indent_width = 8;
+          sort_requires.enabled = true;
+        };
+      };
     };
   };
 }
