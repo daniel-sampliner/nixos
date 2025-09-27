@@ -10,6 +10,9 @@
     programs = {
       nixfmt.enable = true;
 
+      shfmt.enable = true;
+      shfmt.indent_size = null;
+
       stylua = {
         enable = true;
         settings = {

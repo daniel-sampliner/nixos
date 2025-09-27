@@ -14,6 +14,7 @@
       profiles = [
         "foreign.nix"
         "jujutsu"
+        "starship"
         "zsh"
       ];
     in
@@ -34,6 +35,7 @@
   };
 
   programs.command-not-found.enable = true;
+  programs.starship.settings.shell.zsh_indicator = "";
 
   home.stateVersion = "25.05";
 }
