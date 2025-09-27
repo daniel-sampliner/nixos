@@ -1,0 +1,34 @@
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+multisubstitute {
+	define left $1
+	define right $2
+}
+
+if { rm -f ${right}/JJ-INSTRUCTIONS }
+if { git -C $left init -q }
+if { git -C $left add -A }
+if { git -C $left commit -q -m baseline --allow-empty }
+if { mv ${left}/.git $right }
+if { git -C $right add --intent-to-add -A }
+if { execline-cd $right nvim $@ }
+
+if {
+	ifelse
+		{ git -C $right diff-index --quiet --cached HEAD }
+		{
+			foreground {
+				fdmove -c 1 2
+				echo "No changes done, aborting split."
+			}
+			exit 1
+		}
+		exit 0
+}
+
+if { git -C $right commit -q -m split }
+if { git -C $right restore . }
+if { git -C $right reset . }
+git -C $right clean -q -df
