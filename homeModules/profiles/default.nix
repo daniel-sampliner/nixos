@@ -8,6 +8,7 @@
     ./aliases
     ./fonts.nix
     ./git.nix
+    ./mise
     ./nvim.nix
     ./ssh.nix
   ];

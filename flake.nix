@@ -9,9 +9,6 @@
     nixpkgs.url = "https://channels.nixos.org/nixos-25.05/nixexprs.tar.xz";
     unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
 
-    devshell.url = "github:numtide/devshell";
-    devshell.inputs.nixpkgs.follows = "unstable";
-
     dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
     dgx.flake = false;
 
@@ -31,7 +28,7 @@
       debug = true;
 
       imports = [
-        ./devshell.nix
+        ./devShell.nix
         ./home
         ./nixpkgs.nix
         ./treefmt.nix
