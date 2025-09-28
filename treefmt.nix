@@ -21,6 +21,8 @@
           sort_requires.enabled = true;
         };
       };
+
+      taplo.enable = true;
     };
   };
 }
