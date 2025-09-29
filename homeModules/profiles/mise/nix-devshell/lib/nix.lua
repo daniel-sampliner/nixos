@@ -7,24 +7,22 @@ local file = require("file")
 local json = require("json")
 local strings = require("strings")
 
+local file_extra = require("file_extra")
 local log = require("log")
 
 local M = {}
 
-function M.get_base_dir()
 function M.get_mise_config()
-	local mise_config = json.decode(cmd.exec("mise config ls --json"))[1].path
-	return mise_config
-end
-
-function M.get_base_dir(mise_config)
-	local mise_dir = mise_config:match("(.*/)")
-	if string.len(mise_dir) < 1 then
-		error("could not locate mise base dir")
-		return nil
+	local mise_configs = json.decode(cmd.exec("mise config ls --json"))
+	for _, mise_config in ipairs(mise_configs) do
+		local dir = file_extra.dirname(mise_config.path)
+		local flake = file.join_path(dir, "flake.nix")
+		if file_extra.exists(flake) then
+			return dir, mise_config.path
+		end
 	end
 
-	return mise_dir
+	return nil, nil
 end
 
 function M.get_hash(options, base_dir)
@@ -53,28 +51,27 @@ end
 function M.dev_env(options)
 	local needs_update = true
 
-	local mise_config = M.get_mise_config()
-	local base_dir = M.get_base_dir(mise_config)
+	local base_dir, mise_config = M.get_mise_config()
 	local cache_dir = file.join_path(base_dir, ".mise-nix-devshell")
 	local profile = file.join_path(cache_dir, "dev-env")
 	local cached_hash = file.join_path(cache_dir, "hash")
-
 	local hash = M.get_hash(options, base_dir)
-	local profile_f = io.open(profile, "r")
-	if profile_f then
+
+	if file_extra.exists(profile) then
 		log.debug("profile exists")
 		cmd.exec("nix profile wipe-history --quiet --profile " .. profile)
-		hash_f = io.open(cached_hash, "r")
+
+		local hash_f = io.open(cached_hash, "r")
 		if hash_f then
 			log.debug("previous hash exists")
 			prev_hash = hash_f:read("*l")
+			hash_f:close()
+
 			if hash and prev_hash == hash then
 				log.debug("hash matches previous; no update necessary")
 				needs_update = false
 			end
-			hash_f:close()
 		end
-		profile_f:close()
 	end
 
 	if needs_update then
