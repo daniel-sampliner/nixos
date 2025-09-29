@@ -27,6 +27,8 @@ in
     enableZshIntegration = false;
 
     settings = {
+      add_newline = false;
+
       battery.display = [
         {
           threshold = 33;
