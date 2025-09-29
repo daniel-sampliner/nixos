@@ -30,6 +30,19 @@
 
             modules = [
               (_: {
+                home.packages =
+                  let
+                    input-paths = pkgs.writeTextFile {
+                      name = "input-paths";
+                      text =
+                        lib.attrsets.mapAttrsToList (_: v: v.outPath) inputs
+                        |> builtins.concatStringsSep "\n"
+                        |> (s: s + "\n");
+                      destination = "/share/home-manager/inputs.txt";
+                    };
+                  in
+                  [ input-paths ];
+
                 home.username = username;
                 home.homeDirectory = "/home/${username}";
 
