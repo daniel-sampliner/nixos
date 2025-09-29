@@ -13,12 +13,11 @@ function PLUGIN:MisePath(ctx)
 	end
 
 	local env = nix.dev_env(ctx.options)
-	for key, value in pairs(env) do
-		if key == "PATH" then
-			log.debug("PATH=" .. value)
-			return strings.split(value, ":")
-		end
+	local path = env["PATH"]
+	if not path then
+		return {}
 	end
 
-	return {}
+	log.debug("PATH=" .. path)
+	return strings.split(path, ":")
 end
