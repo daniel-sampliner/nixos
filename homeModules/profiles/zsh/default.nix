@@ -16,10 +16,10 @@
     dotDir = ".config/zsh";
 
     initContent = lib.mkMerge [
-      ''
+      (lib.mkBefore ''
         typeset -aUT XDG_DATA_DIRS xdg_data_dirs
         typeset -aUT XDG_CONFIG_DIRS xdg_config_dirs
-      ''
+      '')
 
       (lib.mkAfter ''
         ttyctl -f

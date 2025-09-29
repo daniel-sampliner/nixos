@@ -19,7 +19,12 @@
 
   programs.zsh.initContent = lib.mkMerge [
     (lib.mkOrder 550 ''
-      fpath+=(/usr/share/zsh/site-functions /usr/share/zsh/vendor-functions)
+      () {
+        emulate -L zsh
+        setopt rcexpandparam
+        local dirs=(site-functions vendor-functions vendor-completions)
+        fpath+=( "/usr/share/zsh/''${dirs[@]}" )
+      }
     '')
 
     (lib.mkOrder 0 ''
