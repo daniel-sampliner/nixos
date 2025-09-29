@@ -29,6 +29,9 @@
             inherit pkgs;
 
             modules = [
+              inputs.dgx.homeModules.default
+              ../homeModules
+
               (_: {
                 home.packages =
                   let
@@ -79,8 +82,7 @@
                 programs.command-not-found.dbPath = "${inputs.nixpkgs}/programs.sqlite";
               })
 
-              ../homeModules
-
+              (_: { dgx.inputs = builtins.mapAttrs (_: v: v.outPath) inputs.dgx.inputs; })
               path
             ];
 

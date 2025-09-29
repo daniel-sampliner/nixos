@@ -10,7 +10,7 @@
     unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
 
     dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
-    dgx.flake = false;
+    dgx.inputs.nixpkgs.follows = "unstable";
 
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "unstable";
