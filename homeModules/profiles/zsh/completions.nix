@@ -4,27 +4,24 @@
 
 { config, pkgs, ... }:
 let
-  cacheDir = "${config.xdg.cacheHome}/zsh";
-  zcompdump = "${cacheDir}/zcompdump";
+  zcompdump_dir = "\${XDG_RUNTIME_DIR:-/run/\${UID:?}}/zsh";
+  zcompdump = "${zcompdump_dir}/zcompdump";
 in
 {
   home.file."${config.programs.zsh.dotDir}/.zshrc".onChange = ''
-    $DRY_RUN_CMD rm -f $VERBOSE_ARG -- "${zcompdump}"
+    $DRY_RUN_CMD rm -f $VERBOSE_ARG -- "${zcompdump}" "${zcompdump}".*
   '';
 
   home.packages = [ pkgs.zsh-completions ];
 
   programs.zsh.enableCompletion = true;
   programs.zsh.completionInit = ''
-    zstyle ':completion:*' cache-path "${cacheDir}"
+    zstyle ':completion:*' cache-path "${zcompdump_dir}"
     zstyle ':completion:*' use-cache on
 
-    if autoload -RUz compinit; then
-      if [[ ! -s "${zcompdump}" ]]; then compinit -d "${zcompdump}"
-      else compinit -C -d "${zcompdump}"
-      fi
-    fi
+    . ${./xdg_fpath.zsh}
+    _xdg_fpath_hook
   '';
 
-  systemd.user.tmpfiles.rules = [ "D ${cacheDir} 0700 - - 24h" ];
+  systemd.user.tmpfiles.rules = [ "D %t/zsh 0700 - - 24h" ];
 }

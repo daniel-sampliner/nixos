@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ pkgs, ... }:
+{ lib, pkgs, ... }:
 {
   home.packages =
     let
@@ -32,12 +32,13 @@
     difftool.kitty.cmd = "kitten diff $LOCAL $REMOTE";
   };
 
-  programs.zsh.initContent = ''
+  programs.zsh.initContent = lib.mkOrder 550 ''
     if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
       export KITTY_SHELL_INTEGRATION=no-rc
       autoload -RUz -- "$KITTY_INSTALLATION_DIR/shell-integration/zsh/kitty-integration"
       kitty-integration
       unfunction kitty-integration
+      fpath=("$KITTY_INSTALLATION_DIR/shell-integration/zsh/completions" $fpath)
     fi
   '';
 
