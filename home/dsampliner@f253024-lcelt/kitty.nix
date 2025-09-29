@@ -32,6 +32,13 @@
     difftool.kitty.cmd = "kitten diff $LOCAL $REMOTE";
   };
 
+  programs.bash.initExtra = ''
+    if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
+      export KITTY_SHELL_INTEGRATION=no-rc
+      . "$KITTY_INSTALLATION_DIR/shell-integration/bash/kitty.bash"
+    fi
+  '';
+
   programs.zsh.initContent = lib.mkOrder 550 ''
     if [[ -n "$KITTY_INSTALLATION_DIR" ]]; then
       export KITTY_SHELL_INTEGRATION=no-rc

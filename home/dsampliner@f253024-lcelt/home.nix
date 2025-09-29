@@ -34,6 +34,7 @@
       ;
   };
 
+  programs.bash.enable = true;
   programs.command-not-found.enable = true;
   programs.starship.settings.shell.zsh_indicator = "";
 

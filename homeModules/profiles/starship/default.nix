@@ -83,14 +83,14 @@ in
 
   programs.bash.initExtra = ''
     if [[ $TERM != dumb ]]; then
-      . "${starship-inits}/share/starship/shell_init/starship.bash
+      . "${starship-inits}/share/starship/shell_init/starship.bash"
       PS2="$(STARSHIP_CONTINUATION=true $(which starship) prompt --continuation)"
     fi
   '';
 
   programs.fish.${if cfg.enableInteractive then "interactiveShellInit" else "shellInitLast"} = ''
     if test "$TERM" != "dumb"
-      source "${starship-inits}/share/starship/shell_init/starship.fish
+      source "${starship-inits}/share/starship/shell_init/starship.fish"
       ${lib.optionalString cfg.enableTransience "enable_transience"}
     end
   '';
