@@ -51,6 +51,15 @@
   };
 
   manual.manpages.enable = true;
+
+  nix.gc = {
+    automatic = true;
+    frequency = "daily";
+    options = "--delete-older-than 30d";
+    persistent = true;
+    randomizedDelaySec = "6hours";
+  };
+
   programs.home-manager.enable = true;
   xdg.enable = true;
 }
