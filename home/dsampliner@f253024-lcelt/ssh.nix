@@ -2,7 +2,10 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: {
+{ config, ... }:
+{
+  dgx.mc-ssh-configs = "${config.home.homeDirectory}/projects/nvidia/mc-ssh-configs";
+
   programs.ssh = {
     matchBlocks = {
       "github.com" = {

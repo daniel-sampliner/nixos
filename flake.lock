@@ -1,19 +1,14 @@
 {
   "nodes": {
     "dgx": {
-      "inputs": {
-        "mc-ssh-configs": "mc-ssh-configs",
-        "nixpkgs": [
-          "unstable"
-        ]
-      },
+      "flake": false,
       "locked": {
         "host": "gitlab-master.nvidia.com",
-        "lastModified": 1759194190,
-        "narHash": "sha256-VAFtzWXs+hkPEHE+Z4on+EN9pl1FlfUfesF6Y6YQaL8=",
+        "lastModified": 1759338129,
+        "narHash": "sha256-0SpWuLCQYosvzTWAqBOBStRh/GcNxf68cLKrJZWr3c0=",
         "owner": "dsampliner",
         "repo": "nix-config",
-        "rev": "76162b8d8f313db7bfe2a9dc24abe720cce0bb53",
+        "rev": "3781916b99bcf9d3c82cc1d30e30683862572c19",
         "type": "gitlab"
       },
       "original": {
@@ -62,24 +57,6 @@
         "ref": "release-25.05",
         "repo": "home-manager",
         "type": "github"
-      }
-    },
-    "mc-ssh-configs": {
-      "flake": false,
-      "locked": {
-        "host": "gitlab-master.nvidia.com",
-        "lastModified": 1759194141,
-        "narHash": "sha256-zi6qL5LOUJeMwDSHTL693qdxtXcSYSugIztQfqAWuOw=",
-        "owner": "dsampliner",
-        "repo": "mc-ssh-configs",
-        "rev": "3d1e19f32ecd46762816cfcdba81fe4328073db2",
-        "type": "gitlab"
-      },
-      "original": {
-        "host": "gitlab-master.nvidia.com",
-        "owner": "dsampliner",
-        "repo": "mc-ssh-configs",
-        "type": "gitlab"
       }
     },
     "nixpkgs": {
