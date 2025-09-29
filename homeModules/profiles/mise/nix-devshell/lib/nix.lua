@@ -12,7 +12,12 @@ local log = require("log")
 local M = {}
 
 function M.get_base_dir()
+function M.get_mise_config()
 	local mise_config = json.decode(cmd.exec("mise config ls --json"))[1].path
+	return mise_config
+end
+
+function M.get_base_dir(mise_config)
 	local mise_dir = mise_config:match("(.*/)")
 	if string.len(mise_dir) < 1 then
 		error("could not locate mise base dir")
@@ -47,7 +52,9 @@ end
 
 function M.dev_env(options)
 	local needs_update = true
-	local base_dir = M.get_base_dir()
+
+	local mise_config = M.get_mise_config()
+	local base_dir = M.get_base_dir(mise_config)
 	local cache_dir = file.join_path(base_dir, ".mise-nix-devshell")
 	local profile = file.join_path(cache_dir, "dev-env")
 	local cached_hash = file.join_path(cache_dir, "hash")
@@ -78,6 +85,7 @@ function M.dev_env(options)
 			profile,
 			base_dir,
 		}, " "))
+		cmd.exec(strings.join({ "touch", mise_config }, " "))
 		log.debug("profile updated")
 	end
 
