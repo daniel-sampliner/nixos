@@ -14,6 +14,7 @@
       profiles = [
         "foreign.nix"
         "jujutsu"
+        "rnnoise.nix"
         "starship"
         "zsh"
       ];
