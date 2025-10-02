@@ -59,7 +59,9 @@ function M.dev_env(options)
 
 	if file_extra.exists(profile) then
 		log.debug("profile exists")
-		cmd.exec("nix profile wipe-history --quiet --profile " .. profile)
+		local comm = ("nix profile wipe-history --quiet --profile " .. profile)
+		log.debug("running command: " .. comm)
+		cmd.exec(comm)
 
 		local hash_f = io.open(cached_hash, "r")
 		if hash_f then
@@ -77,11 +79,16 @@ function M.dev_env(options)
 	if needs_update then
 		cmd.exec("mkdir -p -- " .. cache_dir)
 		log.info("dumping devshell")
-		cmd.exec(strings.join({
+
+		local flakeref = '"' .. (options.flakeref or base_dir) .. '"'
+		local comm = strings.join({
 			"nix print-dev-env --quiet --profile",
 			profile,
-			base_dir,
-		}, " "))
+			flakeref,
+		}, " ")
+		log.debug("running command: " .. comm)
+		cmd.exec(comm)
+
 		cmd.exec(strings.join({ "touch", mise_config }, " "))
 		log.debug("profile updated")
 	end
