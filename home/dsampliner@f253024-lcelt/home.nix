@@ -31,7 +31,9 @@
   home.packages = builtins.attrValues {
     inherit (pkgs)
       bat
+      delta
       glow
+      spacer
       ;
   };
 
