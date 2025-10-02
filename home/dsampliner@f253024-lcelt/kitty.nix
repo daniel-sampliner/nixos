@@ -28,6 +28,10 @@
       pkgs.pkgsExtra.copy-terminfo
     ];
 
+  home.sessionSearchVariables = {
+    "TERMINFO_DIRS" = lib.mkBefore [ "/usr/lib64/kitty/terminfo" ];
+  };
+
   programs.git.extraConfig = {
     difftool.kitty.cmd = "kitten diff $LOCAL $REMOTE";
   };
