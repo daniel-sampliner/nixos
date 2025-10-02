@@ -26,10 +26,12 @@ in
 
         cmd_duration.format = "[󱦟$duration]($style)";
         custom.continuation.format = "([$symbol$output;]($style) )";
+        hostname.format = "[$hostname]($style) ";
         nix_shell.format = "([$symbol$state(\\($name)\\)]($style) )";
         nix_shell.impure_msg = "";
         shell.format = "$indicator";
         shlvl.format = "[$shlvl$symbol]($style)";
+        username.format = "[$user]($style)@";
       }
     ];
 }
