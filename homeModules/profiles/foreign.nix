@@ -5,6 +5,10 @@
 { lib, ... }:
 {
   home.sessionSearchVariables = {
+    TERMINFO_DIRS = lib.mkAfter [
+      "/usr/share/terminfo"
+    ];
+
     XDG_DATA_DIRS = [
       "$HOME/.local/share/flatpak/exports/share"
       "/var/lib/flatpak/exports/share"
