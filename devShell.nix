@@ -34,15 +34,18 @@
               builder = lib.meta.getExe pkgs.bash;
               outputs = [ "out" ];
 
+              PATH = lib.strings.makeBinPath allPackages;
               XDG_DATA_DIRS =
-                builtins.map (p: p + "/share") allPackages
+                allPackages
+                |> builtins.map (p: lib.attrsets.getAttrs p.meta.outputsToInstall p)
+                |> builtins.map builtins.attrValues
+                |> lib.lists.flatten
+                |> builtins.map (p: p + "/share")
                 |> builtins.filter lib.filesystem.pathIsDirectory
                 |> builtins.concatStringsSep ":";
 
               stdenv = pkgs.writeTextDir "setup" ''
-                PATH="${lib.strings.makeBinPath allPackages}"
                 export PATH
-
                 export XDG_DATA_DIRS
               '';
 
