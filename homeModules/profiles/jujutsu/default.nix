@@ -56,6 +56,8 @@
         };
 
         git = {
+          colocate = false;
+
           private-commits =
             [
               "wip"
@@ -68,6 +70,7 @@
             |> lib.lists.flatten
             |> builtins.map (p: ''description(glob-i:"${p}*")'')
             |> lib.strings.concatStringsSep " | ";
+
           sign-on-push = true;
         };
 
