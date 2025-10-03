@@ -24,6 +24,7 @@
       (dgxModulesPath + "/profiles")
 
       ./gpgkey.nix
+      ./hide-fleet-icon
       ./kitty.nix
       ./ssh.nix
     ];
