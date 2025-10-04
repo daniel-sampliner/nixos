@@ -14,6 +14,7 @@
       profiles = [
         "foreign.nix"
         "jujutsu"
+        "kitty.nix"
         "rnnoise.nix"
         "starship"
         "zsh"
@@ -25,7 +26,6 @@
 
       ./gpgkey.nix
       ./hide-fleet-icon
-      ./kitty.nix
       ./ssh.nix
     ];
 

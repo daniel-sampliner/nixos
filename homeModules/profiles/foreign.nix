@@ -2,11 +2,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ lib, ... }:
+{ lib, pkgs, ... }:
 {
   home.sessionSearchVariables = {
-    TERMINFO_DIRS = lib.mkAfter [
-      "/usr/share/terminfo"
+    TERMINFO_DIRS = lib.mkMerge [
+      (lib.mkBefore [ "/usr/lib64/kitty/terminfo" ])
+      (lib.mkAfter [ "/usr/share/terminfo" ])
     ];
 
     XDG_DATA_DIRS = [
@@ -19,22 +20,30 @@
     ];
   };
 
-  programs.ssh.package = lib.mkForce null;
+  programs = {
+    kitty.package = lib.mkForce pkgs.emptyDirectory;
+    ssh.package = lib.mkForce null;
 
-  programs.zsh.initContent = lib.mkMerge [
-    (lib.mkOrder 550 ''
-      () {
-        emulate -L zsh
-        setopt rcexpandparam
-        local dirs=(site-functions vendor-functions vendor-completions)
-        fpath+=( "/usr/share/zsh/''${dirs[@]}" )
-      }
-    '')
+    zsh.initContent = lib.mkMerge [
+      (lib.mkOrder 550 ''
+        fpath=(
+          ''${KITTY_INSTALLATION_DIR:+"$KITTY_INSTALLATION_DIR"/shell-integration/zsh/completions}
+          $fpath
+        )
 
-    (lib.mkOrder 0 ''
-      if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
-        . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
-      fi
-    '')
-  ];
+        () {
+          emulate -L zsh
+          setopt rcexpandparam
+          local dirs=(site-functions vendor-functions vendor-completions)
+          fpath+=( "/usr/share/zsh/''${dirs[@]}" )
+        }
+      '')
+
+      (lib.mkOrder 0 ''
+        if [[ -e /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh ]]; then
+          . /nix/var/nix/profiles/default/etc/profile.d/nix-daemon.sh
+        fi
+      '')
+    ];
+  };
 }
