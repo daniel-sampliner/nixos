@@ -134,61 +134,6 @@ fn ready() !void {
     try stream.writeAll("READY=1");
 }
 
-fn filterNotifications(
-    allocator: std.mem.Allocator,
-    options: struct {
-        app: []const u8 = config.app_filter,
-        body: []const u8 = config.body_prefix,
-        bus_wait_usec: u64 = std.math.maxInt(u64),
-    },
-) !void {
-    const logger = scoped(.filterNotifications);
-    var monitor = sd_bus.Bus{};
-    try monitor.init(.monitor);
-    defer monitor.free();
-
-    var call_cookies = std.AutoHashMap(u64, void).init(allocator);
-    defer call_cookies.deinit();
-
-    while (true) {
-        errdefer if (config.use_debugger) @breakpoint();
-
-        var message = sd_bus.Message{};
-        defer message.free();
-
-        const more = try monitor.process(&message);
-        if (!message.isNull()) {
-            switch (try message.getType()) {
-                .method_call => handleCall(
-                    &message,
-                    &call_cookies,
-                    options.app,
-                    options.body,
-                ) catch |err| logger.err("{}", .{err}),
-
-                .method_return => handleReturn(
-                    &message,
-                    &call_cookies,
-                ) catch |err| {
-                    logger.err("{}", .{err});
-                    switch (err) {
-                        error.DBusCallFailed => return err,
-                        else => {},
-                    }
-                },
-
-                else => {},
-            }
-        }
-
-        if (more) {
-            continue;
-        }
-
-        try monitor.wait(options.bus_wait_usec);
-    }
-}
-
 fn handleCall(
     message: *sd_bus.Message,
     cookies: *std.AutoHashMap(u64, void),
@@ -213,26 +158,50 @@ fn handleCall(
         },
     );
 
-    if (std.mem.eql(u8, std.mem.span(app_buf), app)) {
-        if (std.mem.startsWith(u8, std.mem.span(body_buf), body)) {
-            logger.debug("app: {s}, body: {s}", .{ app, std.fmt.fmtSliceEscapeLower(body) });
-            logger.debug(
-                "cookie: {d}, app: {s}, subject: \"{s}\", body: \"{s}\"",
-                .{
-                    cookie,
-                    app_buf,
-                    std.fmt.fmtSliceEscapeLower(std.mem.span(subject_buf)),
-                    std.fmt.fmtSliceEscapeLower(std.mem.span(body_buf)),
-                },
-            );
+    if (!std.mem.eql(u8, std.mem.span(app_buf), app)) {
+        return;
+    }
 
-            try cookies.put(cookie, {});
-            if (builtin.mode == .Debug) {
-                var iter = cookies.keyIterator();
-                while (iter.next()) |k| {
-                    logger.debug("cookie: {d}", .{k.*});
-                }
-            }
+    var should_close = false;
+
+    try message.skip("as");
+    try message.enterContainer('a', "{sv}");
+    while (!try message.atEnd(false)) {
+        try message.enterContainer('e', "sv");
+
+        const key = try message.readString();
+        if (!std.mem.eql(u8, key, "x-kde-origin-name")) {
+            try message.skip("v");
+            try message.exitContainer();
+            continue;
+        }
+
+        var origin: [*:0]u8 = undefined;
+        try message.read("v", .{ "s", &origin });
+        should_close = std.mem.startsWith(u8, std.mem.span(origin), " ");
+        try message.exitContainer();
+    }
+    try message.exitContainer();
+
+    if (!should_close) {
+        return;
+    }
+
+    logger.debug(
+        "cookie: {d}, app: {s}, subject: \"{s}\", body: \"{s}\"",
+        .{
+            cookie,
+            app_buf,
+            std.fmt.fmtSliceEscapeLower(std.mem.span(subject_buf)),
+            std.fmt.fmtSliceEscapeLower(std.mem.span(body_buf)),
+        },
+    );
+
+    try cookies.put(cookie, {});
+    if (builtin.mode == .Debug) {
+        var iter = cookies.keyIterator();
+        while (iter.next()) |k| {
+            logger.debug("cookie: {d}", .{k.*});
         }
     }
 }

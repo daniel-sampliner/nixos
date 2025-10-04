@@ -38,7 +38,10 @@ pub extern fn sd_bus_error_free(e: *sd_bus_error) void;
 pub extern fn sd_bus_error_is_set(e: *const sd_bus_error) c_int;
 
 pub extern fn sd_bus_message_append_basic(m: ?*sd_bus_message, @"type": u8, p: ?*const anyopaque) c_int;
+pub extern fn sd_bus_message_at_end(m: ?*sd_bus_message, complete: c_int) c_int;
 pub extern fn sd_bus_message_close_container(m: ?*sd_bus_message) c_int;
+pub extern fn sd_bus_message_enter_container(m: ?*sd_bus_message, @"type": u8, contents: [*:0]const u8) c_int;
+pub extern fn sd_bus_message_exit_container(m: ?*sd_bus_message) c_int;
 pub extern fn sd_bus_message_get_cookie(m: ?*sd_bus_message, cookie: *u64) c_int;
 pub extern fn sd_bus_message_get_interface(m: ?*sd_bus_message) [*:0]const u8;
 pub extern fn sd_bus_message_get_member(m: ?*sd_bus_message) [*:0]const u8;
@@ -50,4 +53,5 @@ pub extern fn sd_bus_message_new_method_call(bus: ?*sd_bus, m: *?*sd_bus_message
 pub extern fn sd_bus_message_open_container(m: ?*sd_bus_message, @"type": u8, contents: [*:0]const u8) c_int;
 pub extern fn sd_bus_message_read(m: ?*sd_bus_message, types: [*:0]const u8, ...) c_int;
 pub extern fn sd_bus_message_read_basic(m: ?*sd_bus_message, @"type": u8, p: ?*anyopaque) c_int;
+pub extern fn sd_bus_message_skip(m: ?*sd_bus_message, types: [*:0]const u8) c_int;
 pub extern fn sd_bus_message_unref(m: ?*sd_bus_message) ?*sd_bus_message;
