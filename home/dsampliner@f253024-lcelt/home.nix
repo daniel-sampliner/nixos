@@ -15,6 +15,7 @@
         "foreign.nix"
         "jujutsu"
         "kitty.nix"
+        "notify-cancel.nix"
         "rnnoise.nix"
         "starship"
         "zsh"

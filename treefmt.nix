@@ -23,6 +23,7 @@
       };
 
       taplo.enable = true;
+      zig.enable = true;
     };
   };
 }
