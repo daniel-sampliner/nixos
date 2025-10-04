@@ -103,6 +103,42 @@ pub fn closeContainer(m: *Message) !void {
     }
 }
 
+pub fn enterContainer(m: *Message, dbus_type: u8, contents: [*:0]const u8) !void {
+    const r = c.sd_bus_message_enter_container(m.sd_bus_message, dbus_type, contents);
+    if (r < 0) {
+        logger.err("failed to enter {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        return error.DBusAllocationFailed;
+    }
+}
+
+pub fn exitContainer(m: *Message) !void {
+    const r = c.sd_bus_message_exit_container(m.sd_bus_message);
+    if (r < 0) {
+        logger.err("failed to exit {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        return error.DBusAllocationFailed;
+    }
+}
+
+pub fn skip(m: *Message, dbus_types: [:0]const u8) !void {
+    const r = c.sd_bus_message_skip(m.sd_bus_message, dbus_types);
+    if (r < 0) {
+        logger.err("failed to skip fields in message: {s}", .{Error.fmtSdRetCode(r)});
+        return error.DBusMessageReadFailed;
+    }
+}
+
+pub fn atEnd(m: *Message, complete: bool) !bool {
+    const r = c.sd_bus_message_at_end(m.sd_bus_message, @intFromBool(complete));
+    if (r > 0) {
+        return true;
+    } else if (r == 0) {
+        return false;
+    } else {
+        logger.err("failed to check end of {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        return error.DBusAllocationFailed;
+    }
+}
+
 pub fn appendString(m: *Message, s: [:0]const u8) !void {
     const r = c.sd_bus_message_append_basic(m.sd_bus_message, 's', s.ptr);
     if (r < 0) {
