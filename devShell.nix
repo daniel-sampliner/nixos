@@ -12,62 +12,20 @@
       ...
     }:
     {
-      devShells.default =
-        let
-          mkShellMinimal =
-            {
-              name,
-              packages ? [ ],
-              inputsFrom ? [ ],
-            }:
-            let
-              allPackages =
-                lib.attrsets.catAttrs "nativeBuildInputs" inputsFrom
-                |> lib.lists.flatten
-                |> lib.subtractLists inputsFrom
-                |> (p: packages ++ p);
+      devShells.default = pkgs.mkShellNoCC {
+        name = (import ./flake.nix).description;
+        inputsFrom = [ config.treefmt.build.devShell ];
 
-            in
-            builtins.derivation {
-              inherit name system;
+        packages = builtins.attrValues {
+          inherit (pkgs)
+            home-manager
+            nix-output-monitor
+            ;
 
-              builder = lib.meta.getExe pkgs.bash;
-              outputs = [ "out" ];
-
-              PATH = lib.strings.makeBinPath allPackages;
-              XDG_DATA_DIRS =
-                allPackages
-                |> builtins.map (p: lib.attrsets.getAttrs p.meta.outputsToInstall p)
-                |> builtins.map builtins.attrValues
-                |> lib.lists.flatten
-                |> builtins.map (p: p + "/share")
-                |> builtins.filter lib.filesystem.pathIsDirectory
-                |> builtins.concatStringsSep ":";
-
-              stdenv = pkgs.writeTextDir "setup" ''
-                export PATH
-                export XDG_DATA_DIRS
-              '';
-
-              args = [
-                (pkgs.writeText "builder.sh" (pkgs.mkShellNoCC { }).buildPhase)
-              ];
-            };
-        in
-        mkShellMinimal {
-          name = (import ./flake.nix).description;
-          inputsFrom = [ config.treefmt.build.devShell ];
-
-          packages = builtins.attrValues {
-            inherit (pkgs)
-              home-manager
-              nix-output-monitor
-              ;
-
-            inherit (pkgs.pkgsUnstable)
-              reuse
-              ;
-          };
+          inherit (pkgs.pkgsUnstable)
+            reuse
+            ;
         };
+      };
     };
 }
