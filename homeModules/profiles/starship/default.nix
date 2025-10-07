@@ -16,6 +16,7 @@ in
   imports = [
     ./format.nix
     ./nerd-fonts.nix
+    ./starship-jj.nix
   ];
 
   home.packages = [ starship-inits ];
@@ -59,7 +60,14 @@ in
         min_time_to_notify = 30000;
       };
 
-      custom.continuation.style = "bright-black";
+      custom.continuation = {
+        command = ./continuation.sh;
+        shell = [ "${lib.getExe pkgs.dash}" ];
+        style = "bright-black";
+        unsafe_no_escape = true;
+        use_stdin = false;
+        when = true;
+      };
 
       shell = {
         disabled = false;

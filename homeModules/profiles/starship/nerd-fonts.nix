@@ -16,18 +16,9 @@ in
     (lib.importTOML "${cfg.package}/share/starship/presets/nerd-font-symbols.toml")
 
     {
+      custom.continuation.symbol = ": ";
       directory.truncation_symbol = "…/";
       shlvl.symbol = "";
-
-      continuation_prompt = "\${custom.continuation}";
-      custom.continuation = {
-        command = ./continuation.sh;
-        shell = [ "${lib.getExe pkgs.dash}" ];
-        symbol = ": ";
-        unsafe_no_escape = true;
-        use_stdin = false;
-        when = true;
-      };
     }
   ];
 }
