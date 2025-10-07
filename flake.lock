@@ -4,11 +4,11 @@
       "flake": false,
       "locked": {
         "host": "gitlab-master.nvidia.com",
-        "lastModified": 1759771963,
-        "narHash": "sha256-Kul8tKS3MGwMo1iPp8T1gYGMwLfMFe0eVJmhH61BWPQ=",
+        "lastModified": 1759852859,
+        "narHash": "sha256-clNS2eXrqk2cltFX/PZhXK41Bi84gPqaSdzMHiToMJ8=",
         "owner": "dsampliner",
         "repo": "nix-config",
-        "rev": "6b2551cd7511604536056e58a2a68033b323a15a",
+        "rev": "52ffc06ae0a6d676f1fa48370c2b05047c62e584",
         "type": "gitlab"
       },
       "original": {
@@ -61,11 +61,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1759633302,
-        "narHash": "sha256-cpnHwkg38yJfgrAuvmKeO1m/hTnghAd/D9NWuB40qaU=",
-        "rev": "3bcc93c5f7a4b30335d31f21e2f1281cba68c318",
+        "lastModified": 1759799646,
+        "narHash": "sha256-1WvIF4N7Jj1ppU9ocZZBpsQdiVsHVzVxNt9L2+7FwPM=",
+        "rev": "20c4598c84a671783f741e02bf05cbfaf4907cff",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/25.05/nixos-25.05.810767.3bcc93c5f7a4/nixexprs.tar.xz?rev=3bcc93c5f7a4b30335d31f21e2f1281cba68c318"
+        "url": "https://releases.nixos.org/nixos/25.05/nixos-25.05.810859.20c4598c84a6/nixexprs.tar.xz?rev=20c4598c84a671783f741e02bf05cbfaf4907cff"
       },
       "original": {
         "type": "tarball",
@@ -104,11 +104,11 @@
     },
     "unstable": {
       "locked": {
-        "lastModified": 1759441831,
-        "narHash": "sha256-1yCvOeEMQX/0WqpVtxtKFI2rlfq9W/bxOTGJtRuQv7g=",
-        "rev": "7df7ff7d8e00218376575f0acdcc5d66741351ee",
+        "lastModified": 1759815669,
+        "narHash": "sha256-oYRpn8l1jvM8jLe63qimuJASRwCjBzlqGngOToUW2FA=",
+        "rev": "8913c168d1c56dc49a7718685968f38752171c3b",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/unstable/nixos-25.11pre870157.7df7ff7d8e00/nixexprs.tar.xz?rev=7df7ff7d8e00218376575f0acdcc5d66741351ee"
+        "url": "https://releases.nixos.org/nixos/unstable/nixos-25.11pre873256.8913c168d1c5/nixexprs.tar.xz?rev=8913c168d1c56dc49a7718685968f38752171c3b"
       },
       "original": {
         "type": "tarball",
