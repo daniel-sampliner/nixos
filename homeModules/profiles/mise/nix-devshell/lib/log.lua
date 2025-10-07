@@ -29,4 +29,10 @@ function M.info(msg)
 	io.stderr:write(strings.join({ ansi.ESC, ansi.dim, "mise-nix-devshell ", ansi.ESC, ansi.reset, msg, "\n" }, ""))
 end
 
+function M.error(msg)
+	io.stderr:write(
+		strings.join({ ansi.ESC, ansi.bright, "mise-nix-devshell ", ansi.ESC, ansi.reset, msg, "\n" }, "")
+	)
+end
+
 return M

@@ -4,5 +4,5 @@
 
 [env._.nix-devshell]
 enable = true
-flakeref = "$(jj flakeref)"
+args = '"$(jj flakeref)"'
 watch_files = ["flake.lock", "flake.nix", "devShell.nix", "treefmt.nix"]
