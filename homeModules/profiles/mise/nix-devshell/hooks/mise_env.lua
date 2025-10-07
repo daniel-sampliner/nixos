@@ -31,6 +31,10 @@ function PLUGIN:MiseEnv(ctx)
 	end
 
 	local env = nix.dev_env(ctx.options)
+	if not env then
+		return {}
+	end
+
 	local val
 	local ret = {}
 	for key, value in pairs(env) do

@@ -13,6 +13,10 @@ function PLUGIN:MisePath(ctx)
 	end
 
 	local env = nix.dev_env(ctx.options)
+	if not env then
+		return {}
+	end
+
 	local path = env["PATH"]
 	if not path then
 		return {}
