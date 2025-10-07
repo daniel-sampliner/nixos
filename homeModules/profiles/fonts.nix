@@ -8,8 +8,9 @@
     enable = true;
     defaultFonts = {
       monospace = [
-        "Iosevka Light"
-        "Symbols Nerd Font"
+        "Iosevka"
+        "Noto Sans Mono"
+        "Symbols Nerd Font Mono"
       ];
       sansSerif = [
         "Noto Sans"
