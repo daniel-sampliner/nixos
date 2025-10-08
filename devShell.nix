@@ -23,6 +23,8 @@
             ;
 
           inherit (pkgs.pkgsUnstable)
+            dix
+            nix-update
             reuse
             ;
         };
