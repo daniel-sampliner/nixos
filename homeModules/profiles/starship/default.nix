@@ -110,5 +110,5 @@ in
     fi
   '';
 
-  systemd.user.tmpfiles.rules = [ "D ${config.xdg.cacheHome}/starship 0755 - - 3d" ];
+  systemd.user.tmpfiles.rules = [ "d ${config.xdg.cacheHome}/starship 0755 - - 3d" ];
 }
