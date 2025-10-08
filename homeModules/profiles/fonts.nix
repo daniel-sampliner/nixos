@@ -33,21 +33,19 @@
             inherit (pkgs)
               atkinson-hyperlegible-next
               iosevka-bin
-              ocr-a
               ;
 
             inherit (pkgs.nerd-fonts) symbols-only;
+            inherit (pkgs.pkgsExtra) ocr-a-b-fonts;
           };
 
           pathsToLink = [ "/share/fonts" ];
         };
       in
       "${fontsEnv}/share/fonts";
-
-    recursive = true;
   };
 
   home.sessionVariables = {
-    LESSUTFCHARDEF= "e000-f8ff:p,f0001-fffff:p";
+    LESSUTFCHARDEF = "e000-f8ff:p,f0001-fffff:p";
   };
 }
