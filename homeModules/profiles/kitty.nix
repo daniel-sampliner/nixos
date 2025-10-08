@@ -57,4 +57,17 @@
       prompt = false;
     };
   };
+
+  programs.jujutsu.settings = {
+    merge-tools.kitten = {
+      program = "kitten";
+      edit-args = [ ];
+
+      diff-args = [
+        "diff"
+        "$left"
+        "$right"
+      ];
+    };
+  };
 }
