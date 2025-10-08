@@ -46,4 +46,8 @@
 
     recursive = true;
   };
+
+  home.sessionVariables = {
+    LESSUTFCHARDEF= "e000-f8ff:p,f0001-fffff:p";
+  };
 }
