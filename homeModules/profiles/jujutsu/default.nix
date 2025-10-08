@@ -35,7 +35,7 @@
                   set -eu
 
                   git_root="$(jj git root)"
-                  git_ref="$(jj show -T commit_id --no-patch)"
+                  git_ref="$(jj show -T commit_id --no-patch "''${1:-@}")"
                   echo "git+file://''${git_root:?}?ref=refs/jj/keep/''${git_ref:?}"
                 '';
 
