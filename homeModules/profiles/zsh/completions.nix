@@ -23,5 +23,5 @@ in
     _xdg_fpath_hook
   '';
 
-  systemd.user.tmpfiles.rules = [ "D %t/zsh 0700 - - 24h" ];
+  systemd.user.tmpfiles.rules = [ "d %t/zsh 0700 - - 24h" ];
 }
