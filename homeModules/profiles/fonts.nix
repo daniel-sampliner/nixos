@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   fonts.fontconfig = {
     enable = true;
@@ -22,6 +22,20 @@
       ];
     };
   };
+
+  systemd.user.tmpfiles.rules =
+    let
+      kdeWorkaround = pkgs.writeText "00-kde-local.conf" ''
+        <?xml version='1.0'?>
+        <!-- workaround for https://bugs.kde.org/show_bug.cgi?id=498694 -->
+        <!DOCTYPE fontconfig SYSTEM 'urn:fontconfig:fonts.dtd'>
+        <fontconfig>
+        </fontconfig>
+      '';
+    in
+    [
+      "C ${config.xdg.configHome}/fontconfig/conf.d/00-kde-local.conf - - - - ${kdeWorkaround}"
+    ];
 
   xdg.dataFile.fonts = {
     source =
