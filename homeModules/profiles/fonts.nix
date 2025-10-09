@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ pkgs, ... }:
+{ config, pkgs, ... }:
 {
   fonts.fontconfig = {
     enable = true;
@@ -22,6 +22,10 @@
       ];
     };
   };
+
+  systemd.user.tmpfiles.rules = [
+    "f ${config.xdg.configHome}/fontconfig/conf.d/00-kde-local.conf - - - - -"
+  ];
 
   xdg.dataFile.fonts = {
     source =
