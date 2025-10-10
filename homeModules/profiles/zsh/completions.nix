@@ -8,10 +8,6 @@ let
   zcompdump = "${zcompdump_dir}/zcompdump";
 in
 {
-  home.file."${config.programs.zsh.dotDir}/.zshrc".onChange = ''
-    $DRY_RUN_CMD rm -f $VERBOSE_ARG -- "${zcompdump}" "${zcompdump}".*
-  '';
-
   home.packages = [ pkgs.zsh-completions ];
 
   programs.zsh.enableCompletion = true;
@@ -23,5 +19,5 @@ in
     _xdg_fpath_hook
   '';
 
-  systemd.user.tmpfiles.rules = [ "d %t/zsh 0700 - - 24h" ];
+  systemd.user.tmpfiles.rules = [ "d ${config.xdg.cacheHome}/zsh 0700 - - 7d" ];
 }

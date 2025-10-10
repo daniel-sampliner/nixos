@@ -33,7 +33,7 @@ _xdg_fpath_compinit() {
 	local hash
 	hash=$(xxhsum -H3 <<<"${FPATH:?}")
 	
-	local dumpfile=${XDG_RUNTIME_DIR:?}/zsh/zcompdump.xdg_fpath.${${hash%% *}:?}
+	local dumpfile=${XDG_CACHE_HOME:?}/zsh/zcompdump.xdg_fpath.${${hash%% *}:?}
 	if autoload -RUz compinit; then
 		if [[ ! -s $dumpfile.zwc ]]; then
 			compinit -w -d "$dumpfile" 2> >(_xdg_fpath_log_info "${(%)_xdg_fpath_log_prefix}")
