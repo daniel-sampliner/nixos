@@ -37,6 +37,10 @@
       glow
       spacer
       ;
+
+    inherit (pkgs.pkgsExtra)
+      clustershell-nativessh
+      ;
   };
 
   programs.bash.enable = true;
