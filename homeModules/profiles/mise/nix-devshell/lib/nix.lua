@@ -99,7 +99,7 @@ function M.dev_env(options)
 		log.info("dumping devshell")
 
 		local comm = strings.join({
-			"nix print-dev-env --quiet --profile",
+			"nix print-dev-env --quiet --no-write-lock-file --profile",
 			profile,
 			(options.args or "'" .. base_dir .. "'"),
 		}, " ")
