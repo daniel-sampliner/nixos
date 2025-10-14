@@ -13,6 +13,7 @@
     let
       profiles = [
         "foreign.nix"
+        "fzf.nix"
         "jujutsu"
         "kitty.nix"
         "notify-cancel.nix"
