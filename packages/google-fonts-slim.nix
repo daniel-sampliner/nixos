@@ -16,16 +16,16 @@ let
 in
 google-fonts.overrideAttrs (prev: {
   pname = google-fonts.pname + "-slim";
-  version = "0.4.9-unstable-2025-10-15";
+  version = "0.4.9-unstable-2025-10-17";
 
   src = fetchFromGitHub {
     owner = "google";
     repo = "fonts";
-    rev = "c826dd07cf23a6c901ab672b68d650a63133180f";
+    rev = "601944d2ee97e76d4c456dc3d790db358c0c6ec5";
 
     sparseCheckout = [ "ofl/adobeblank" ] ++ fonts;
 
-    hash = "sha256-6NYEK5ljVjk11FdL/t97sPw2izeRLhBR2/B/3lVVsRM=";
+    hash = "sha256-Ikej5hf1M4zc96ClI4r92yOMQskduHCeYmxxrtUDyNE=";
   };
 
   postPatch = builtins.replaceStrings [ "rm -rv " ] [ "rm -rfv " ] (prev.postPatch or "");
