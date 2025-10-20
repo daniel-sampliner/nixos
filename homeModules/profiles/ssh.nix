@@ -7,7 +7,7 @@ _: {
     enable = true;
 
     matchBlocks = {
-      yolo = {
+      zzz_yolo = {
         match = "tagged yolo";
         extraOptions = {
           UserKnownHostsFile = "/dev/null";
