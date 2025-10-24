@@ -38,6 +38,10 @@
       name = "Iosevka Term Light";
     };
 
+    keybindings = {
+      "ctrl+shift+n" = "new_os_window_with_cwd";
+    };
+
     settings = {
       disable_ligatures = "cursor";
 
