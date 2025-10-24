@@ -76,7 +76,6 @@
   };
 
   xdg.configFile."kitty/ssh.conf".text = ''
-    share_connections no
     shell_integration enabled
   '';
 }
