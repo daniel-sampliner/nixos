@@ -2,9 +2,11 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: {
+{ config, ... }:
+{
   programs.ssh = {
     enable = true;
+    controlPath = "\${XDG_RUNTIME_DIR}/ssh/control-%C";
 
     matchBlocks = {
       zzz_yolo = {
@@ -16,4 +18,8 @@ _: {
       };
     };
   };
+
+  systemd.user.tmpfiles.rules = [
+    "d %t/ssh - - -"
+  ];
 }
