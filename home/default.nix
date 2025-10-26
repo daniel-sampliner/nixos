@@ -21,7 +21,11 @@
         path:
         let
           dir = builtins.dirOf path;
-          username = builtins.baseNameOf dir |> builtins.split "@" |> builtins.head;
+          username = lib.trivial.pipe dir [
+            builtins.baseNameOf
+            (builtins.split "@")
+            builtins.head
+          ];
         in
         withSystem (import (dir + "/system.nix")) (
           { pkgs, ... }:
@@ -37,10 +41,11 @@
                   let
                     input-paths = pkgs.writeTextFile {
                       name = "input-paths";
-                      text =
-                        lib.attrsets.mapAttrsToList (_: v: v.outPath) inputs
-                        |> builtins.concatStringsSep "\n"
-                        |> (s: s + "\n");
+                      text = lib.trivial.pipe inputs [
+                        (lib.attrsets.mapAttrsToList (_: v: v.outPath))
+                        (builtins.concatStringsSep "\n")
+                        (s: s + "\n")
+                      ];
                       destination = "/share/home-manager/inputs.txt";
                     };
                   in
@@ -75,8 +80,11 @@
                       };
                   in
                   {
-                    nixPath = copyInputs |> builtins.map mkNixPath;
-                    registry = copyInputs |> builtins.map mkRegistry |> builtins.listToAttrs;
+                    nixPath = builtins.map mkNixPath copyInputs;
+                    registry = lib.trivial.pipe copyInputs [
+                      (builtins.map mkRegistry)
+                      builtins.listToAttrs
+                    ];
                   };
 
                 programs.command-not-found.dbPath = "${inputs.nixpkgs}/programs.sqlite";
@@ -90,12 +98,13 @@
           }
         );
 
-      homes =
-        lib.fileset.toList homeFileset
-        |> builtins.map (
-          path: lib.attrsets.nameValuePair (dirOf path |> baseNameOf) (mkHomeConfiguration path)
-        )
-        |> builtins.listToAttrs;
+      homes = lib.trivial.pipe homeFileset [
+        lib.fileset.toList
+        (builtins.map (
+          path: lib.attrsets.nameValuePair (baseNameOf (dirOf path)) (mkHomeConfiguration path)
+        ))
+        builtins.listToAttrs
+      ];
     in
     homes;
 }
