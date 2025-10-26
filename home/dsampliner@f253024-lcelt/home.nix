@@ -26,6 +26,7 @@
     ++ [
       (dgxModulesPath + "/profiles")
 
+      ./clush.nix
       ./gpgkey.nix
       ./hide-fleet-icon
       ./ssh.nix
@@ -37,10 +38,6 @@
       delta
       glow
       spacer
-      ;
-
-    inherit (pkgs.pkgsExtra)
-      clustershell-nativessh
       ;
   };
 
