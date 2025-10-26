@@ -32,11 +32,11 @@ in
   programs = {
     mise = {
       enable = true;
-      package =
-        pkgs.pkgsUnstable.mise.meta.position
-        |> lib.strings.splitStringBy (prev: cur: cur == ":") false
-        |> builtins.head
-        |> lib.trivial.flip pkgs.callPackage { };
+      package = lib.trivial.pipe pkgs.pkgsUnstable.mise.meta.position [
+        (lib.strings.splitStringBy (prev: cur: cur == ":") false)
+        builtins.head
+        (lib.trivial.flip pkgs.callPackage { })
+      ];
 
       enableBashIntegration = false;
       enableFishIntegration = false;

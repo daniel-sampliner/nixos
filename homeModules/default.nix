@@ -7,11 +7,12 @@ let
   defaultNix =
     path: lib.fileset.fileFilter ({ name, type, ... }: name == "default.nix" && type == "regular") path;
 
-  modules =
-    defaultNix ./profiles
-    |> lib.fileset.union ./default.nix
-    |> lib.fileset.difference (defaultNix ./.)
-    |> lib.fileset.toList;
+  modules = lib.trivial.pipe ./profiles [
+    defaultNix
+    (lib.fileset.union ./default.nix)
+    (lib.fileset.difference (defaultNix ./.))
+    (lib.fileset.toList)
+  ];
 in
 {
   imports = modules ++ [ ./profiles ];

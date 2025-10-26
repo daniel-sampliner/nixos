@@ -8,14 +8,6 @@
   withSystem,
   ...
 }:
-let
-  mkPkgSet =
-    pkgs:
-    lib.filesystem.packagesFromDirectoryRecursive {
-      inherit (pkgs) callPackage newScope;
-      directory = ./pkgs;
-    };
-in
 {
   perSystem =
     {
@@ -59,6 +51,6 @@ in
         ];
       };
 
-      packages = mkPkgSet pkgs |> lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation);
+      packages = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation) (mkPkgSet pkgs);
     };
 }

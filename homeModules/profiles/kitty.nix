@@ -14,15 +14,14 @@
       # We can force kitty to be used instead by simply symlinking it as
       # "gnome-terminal"
       gnome-terminal-hack =
-        pkgs.execline.passthru.writeScript "gnome-terminal-hack-wrapper" "-WS0" ''
-          kitty $@
-        ''
-        |> (
-          p:
-          pkgs.runCommand "gnome-terminal-hack" { } ''
-            install -Dv -- "${p}" "$out/bin/gnome-terminal"
-          ''
-        );
+        let
+          script = pkgs.execline.passthru.writeScript "gnome-terminal-hack-wrapper" "-WS0" ''
+            kitty $@
+          '';
+        in
+        pkgs.runCommand "gnome-terminal-hack" { } ''
+          install -Dv -- "${script}" "$out/bin/gnome-terminal"
+        '';
     in
     [
       gnome-terminal-hack

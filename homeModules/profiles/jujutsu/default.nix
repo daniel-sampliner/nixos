@@ -59,17 +59,20 @@
           colocate = false;
 
           private-commits =
-            [
-              "wip"
-              "private"
-            ]
-            |> builtins.map (p: [
-              "${p}:"
-              "${p}("
-            ])
-            |> lib.lists.flatten
-            |> builtins.map (p: ''description(glob-i:"${p}*")'')
-            |> lib.strings.concatStringsSep " | ";
+            lib.trivial.pipe
+              [
+                "wip"
+                "private"
+              ]
+              [
+                (builtins.map (p: [
+                  "${p}:"
+                  "${p}("
+                ]))
+                lib.lists.flatten
+                (builtins.map (p: ''description(glob-i:"${p}*")''))
+                (lib.strings.concatStringsSep " | ")
+              ];
 
           sign-on-push = true;
         };
@@ -151,17 +154,19 @@
 
   programs.neovim.plugins =
     let
-      pluginConfigs =
-        lib.fileset.fileFilter ({ type, hasExt, ... }: type == "regular" && hasExt "lua") ./.
-        |> lib.fileset.toList
-        |> builtins.map (f: {
-          plugin =
-            builtins.baseNameOf f
-            |> lib.strings.removeSuffix ".lua"
-            |> lib.trivial.flip builtins.getAttr pkgs.vimPlugins;
+      pluginConfigs = lib.trivial.pipe ./. [
+        (lib.fileset.fileFilter ({ type, hasExt, ... }: type == "regular" && hasExt "lua"))
+        lib.fileset.toList
+        (builtins.map (f: {
+          plugin = lib.trivial.pipe f [
+            builtins.baseNameOf
+            (lib.strings.removeSuffix ".lua")
+            (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
+          ];
 
           config = "luafile ${f}";
-        });
+        }))
+      ];
     in
     builtins.attrValues {
       inherit (pkgs.vimPlugins)
