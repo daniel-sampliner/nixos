@@ -16,7 +16,6 @@ in
 {
   home.shellAliases =
     mkAliasAttrs "--color=auto" [
-      "clush"
       "dir"
       "diff"
       "dmesg"
