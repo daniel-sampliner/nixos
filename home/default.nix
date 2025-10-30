@@ -58,6 +58,7 @@
                   let
                     copyInputs = [
                       "nixpkgs"
+                      "treefmt-nix"
                       "unstable"
                     ];
 
