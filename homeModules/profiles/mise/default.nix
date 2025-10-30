@@ -44,6 +44,7 @@ in
 
       globalConfig.settings = {
         disable_backends = [ "asdf" ];
+        idiomatic_version_file_enable_tools = [ ];
         paranoid = true;
 
         status = {
