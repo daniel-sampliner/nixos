@@ -33,7 +33,8 @@
 
     packages = builtins.attrValues {
       inherit (pkgs)
-        google-fonts-slim
+        atkinson-hyperlegible-mono
+        atkinson-hyperlegible-next
         ibm-plex
         iosevka-bin
         ocr-a-b-fonts
