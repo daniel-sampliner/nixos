@@ -12,6 +12,7 @@
       zzz_yolo = {
         match = "tagged yolo";
         extraOptions = {
+          LogLevel = "ERROR";
           UserKnownHostsFile = "/dev/null";
           StrictHostKeyChecking = "no";
         };
