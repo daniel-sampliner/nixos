@@ -74,7 +74,7 @@
     };
   };
 
-  xdg.configFile."kitty/ssh.conf".text = ''
+  xdg.configFile."kitty/ssh.conf".text = lib.mkBefore ''
     shell_integration enabled
   '';
 }
