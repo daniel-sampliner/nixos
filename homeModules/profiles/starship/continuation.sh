@@ -9,6 +9,8 @@ if test "$STARSHIP_CONTINUATION" != true; then
 fi
 
 case $STARSHIP_SHELL in
-zsh) exec zsh -fdc 'printf '\''%s'\'' '\''%_'\''' ;;
-bash) printf '%s' '∙' ;;
+zsh) promptchars='%_' ;;
+bash | *) promptchars='⮡' ;;
 esac
+
+printf '%s' "$promptchars"
