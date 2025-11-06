@@ -62,6 +62,7 @@ in
 
       custom.continuation = {
         command = ./continuation.sh;
+        description = "continuation prompt";
         shell = [ "${lib.getExe pkgs.dash}" ];
         style = "bright-black";
         unsafe_no_escape = true;
@@ -92,7 +93,7 @@ in
   programs.bash.initExtra = ''
     if [[ $TERM != dumb ]]; then
       . "${starship-inits}/share/starship/shell_init/starship.bash"
-      PS2="$(STARSHIP_CONTINUATION=true $(which starship) prompt --continuation)"
+      PS2="$(STARSHIP_CONTINUATION=true ${lib.getExe cfg.package} prompt --continuation)"
     fi
   '';
 
@@ -106,7 +107,7 @@ in
   programs.zsh.initContent = ''
     if [[ $TERM != dumb ]]; then
       . "${starship-inits}/share/starship/shell_init/starship.zsh"
-      PROMPT2="$(STARSHIP_CONTINUATION=true $(which starship) prompt --continuation)"
+      PROMPT2="$(STARSHIP_CONTINUATION=true ${lib.getExe cfg.package} prompt --continuation)"
     fi
   '';
 

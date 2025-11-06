@@ -13,4 +13,4 @@ zsh) promptchars='%_' ;;
 bash | *) promptchars='⮡' ;;
 esac
 
-printf '%s' "$promptchars"
+printf ': %s' "$promptchars"

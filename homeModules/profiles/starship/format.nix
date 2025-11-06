@@ -19,7 +19,7 @@ in
 
       cmd_duration.format = "[󱦟 $duration]($style)";
       continuation_prompt = "\${custom.continuation}";
-      custom.continuation.format = "([$symbol$output;]($style) )";
+      custom.continuation.format = "([$output;]($style) )";
       hostname.format = "[$hostname]($style) ";
       nix_shell.format = "([$symbol$state(\\($name)\\)]($style) )";
       nix_shell.impure_msg = "";

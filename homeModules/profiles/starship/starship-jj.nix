@@ -11,6 +11,7 @@ in
 
   programs.starship.settings.custom.jj = {
     command = "prompt";
+    description = "jujutsu";
     format = "([$symbol$output]($style) )";
     ignore_timeout = true;
 

@@ -17,7 +17,6 @@ in
       (lib.importTOML "${cfg.package}/share/starship/presets/nerd-font-symbols.toml")
       {
         aws.symbol = " ";
-        custom.continuation.symbol = ": ";
         directory.truncation_symbol = "…/";
         directory.read_only = " 󰌾 ";
         gcloud.symbol = " ";
