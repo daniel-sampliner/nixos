@@ -134,6 +134,17 @@
           "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())";
         };
 
+        "--scope" = [
+          {
+            "--when".commands = [ "help" ];
+
+            ui.pager = [
+              "glow"
+              "-p"
+            ];
+          }
+        ];
+
         templates = {
           config_list = "builtin_config_list_detailed";
         };
