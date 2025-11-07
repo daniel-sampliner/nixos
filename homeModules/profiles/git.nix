@@ -24,6 +24,7 @@
 
       branch.sort = "-committerdate";
       core.askPass = "false";
+      core.pager = "less -FRi";
 
       diff = {
         algorithm = "histogram";
