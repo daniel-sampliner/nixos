@@ -14,13 +14,13 @@
 }:
 let
   pname = "qnap8528";
-  version = "1.14";
+  version = "1.15";
 
   src = fetchFromGitHub {
     owner = "0xGiddi";
     repo = pname;
     rev = "v${version}";
-    sha256 = "sha256-VJjN4HpQRpHt4ftG6L2CVHPfZMLvyQnjI2wpyws7Jus=";
+    sha256 = "sha256-nG6P9M3gT980K7n/YvOH51hvI7ZtSQsqFIcsCdB/Rz4=";
   };
 
   kdir = "lib/modules/${kernel.modDirVersion}";
