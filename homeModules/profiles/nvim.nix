@@ -9,9 +9,22 @@
   programs.neovim = {
     enable = true;
 
+    extraLuaConfig = ''
+
+      vim.filetype.add({
+        extension = {
+          ipd = 'bzl',
+          star = 'bzl',
+          starlark = 'bzl',
+        },
+      })
+    '';
+
     plugins = builtins.attrValues {
       inherit (pkgs.vimPlugins)
+        indent-o-matic
         vim-apathy
+        vim-characterize
         vim-easy-align
         vim-fugitive
         vim-nix
