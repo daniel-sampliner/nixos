@@ -29,14 +29,9 @@
         fpath=(
           ''${KITTY_INSTALLATION_DIR:+"$KITTY_INSTALLATION_DIR"/shell-integration/zsh/completions}
           $fpath
+          /usr/share/zsh/site-functions
+          /usr/share/zsh/vendor-completions
         )
-
-        () {
-          emulate -L zsh
-          setopt rcexpandparam
-          local dirs=(site-functions vendor-functions vendor-completions)
-          fpath+=( "/usr/share/zsh/''${dirs[@]}" )
-        }
       '')
 
       (lib.mkOrder 0 ''

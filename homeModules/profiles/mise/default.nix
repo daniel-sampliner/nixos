@@ -69,7 +69,9 @@ in
     '';
 
     zsh.initContent = ''
-      . ${mise-inits}/share/mise/shell_init/mise.zsh
+      if [[ -e "${mise-inits}/share/mise/shell_init/mise.zsh" ]]; then
+        . "${mise-inits}/share/mise/shell_init/mise.zsh"
+      fi
     '';
   };
 

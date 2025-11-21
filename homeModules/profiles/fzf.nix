@@ -26,7 +26,7 @@ in
   '';
 
   programs.zsh.initContent = lib.mkOrder 910 ''
-    if [[ $options[zle] = on ]]; then
+    if [[ $options[zle] = on && -e "${fzf-inits}/share/fzf/shell_init/fzf.zsh" ]]; then
       . "${fzf-inits}/share/fzf/shell_init/fzf.zsh"
     fi
   '';

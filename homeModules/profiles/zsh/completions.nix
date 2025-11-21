@@ -8,15 +8,17 @@ let
   zcompdump = "${zcompdump_dir}/zcompdump";
 in
 {
-  home.packages = [ pkgs.zsh-completions ];
+  home.packages = [
+    pkgs.zsh-completions
+    pkgs.pkgsExtra.zsh-xdg-fpath
+  ];
 
   programs.zsh.enableCompletion = true;
   programs.zsh.completionInit = ''
     zstyle ':completion:*' cache-path "${zcompdump_dir}"
     zstyle ':completion:*' use-cache on
 
-    . ${./xdg_fpath.zsh}
-    _xdg_fpath_hook
+    autoload -RUz _xdg_fpath_init && _xdg_fpath_init
   '';
 
   systemd.user.tmpfiles.rules = [ "d ${config.xdg.cacheHome}/zsh 0700 - - 7d" ];

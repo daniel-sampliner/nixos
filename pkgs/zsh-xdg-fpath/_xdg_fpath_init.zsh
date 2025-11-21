@@ -1,0 +1,123 @@
+# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+zstyle ':xdg-fpath' dir "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+
+readonly -g _xdg_fpath_log_prefix='%N:'
+readonly -ga _xdg_fpath_extra_dirs=(site-functions vendor-completions)
+
+typeset -gaUT _XDG_FPATH_OLD_XDG_DATA_DIRS _xdg_fpath_old_xdg_data_dirs=()
+typeset -gaUT _XDG_FPATH_OLD_FPATH _xdg_fpath_old_fpath=()
+
+_xdg_fpath_xdg_to_fpath() {
+	local fpath_var="${1:?}"
+	local xdg_dirs="${2:-xdg_data_dirs}"
+
+	local tmp_fpath=()
+	local xdg_dir fpath_dir
+	for xdg_dir in "${(@P)xdg_dirs}"; do
+		for fpath_dir in "$xdg_dir/zsh/${_xdg_fpath_extra_dirs[@]}"; do
+			if [[ -d $fpath_dir ]]; then
+				tmp_fpath+=("$fpath_dir")
+			fi
+		done
+	done
+
+	: "${(PA)fpath_var::="${tmp_fpath[@]}"}"
+}
+
+_xdg_fpath_log_info() {
+	local line
+	while read -r line; do
+		print -P "%F{8}$1%f $line"
+	done
+}
+
+_xdg_fpath_compinit() {
+	if ! autoload -RUz compinit; then
+		return 0
+	fi
+
+	local dumpdir
+	zstyle -s ':xdg-fpath' dir dumpdir
+	mkdir -p "${dumpdir:?}"
+
+	local hash
+	hash=$(xxhsum -H3 --tag <<<"${FPATH:?}")
+
+	local dumpfile=$dumpdir/zcompdump.xdg_fpath.${${hash##* }:?}
+	if [[ ! -s $dumpfile.zwc ]]; then
+		compinit -w -d "$dumpfile" 2> >(_xdg_fpath_log_info "${(%)_xdg_fpath_log_prefix}")
+		print -l "# generated with fpath:" "#   ${fpath[@]}" \
+			| sed -i '1r /dev/stdin' "$dumpfile"
+		zcompile -Uz "$dumpfile" 2> >(_xdg_fpath_log_info "${(%)_xdg_fpath_log_prefix}")
+	else
+		compinit -C -d "$dumpfile" 2> >(_xdg_fpath_log_info "${(%)_xdg_fpath_log_prefix}")
+	fi
+
+	_XDG_FPATH_OLD_FPATH="$FPATH"
+}
+
+_xdg_fpath_hook() {
+	emulate -L zsh
+	setopt warn_create_global rcexpandparam
+
+	if [[ -z $_XDG_FPATH_OLD_XDG_DATA_DIRS ]]; then
+		local -aU xdg_fpath=()
+		_xdg_fpath_xdg_to_fpath xdg_fpath
+
+		if [[ -n "$xdg_fpath" ]]; then
+			local -aU tmp_fpath=(${(aO)fpath})
+			local fpath_dir
+			for fpath_dir in ${(aO)xdg_fpath}; do
+				tmp_fpath+=("$fpath_dir")
+			done
+			fpath=(${(aO)tmp_fpath})
+		fi
+
+		_XDG_FPATH_OLD_XDG_DATA_DIRS="$XDG_DATA_DIRS"
+
+	elif [[ $_XDG_FPATH_OLD_XDG_DATA_DIRS != "$XDG_DATA_DIRS" ]]; then
+		local -a removed_xdg_data_dirs=("${_xdg_fpath_old_xdg_data_dirs[@]:|xdg_data_dirs}")
+		if [[ -n "$removed_xdg_data_dirs" ]]; then
+			local -a removed_xdg_fpaths=()
+			_xdg_fpath_xdg_to_fpath removed_xdg_fpaths removed_xdg_data_dirs
+			if [[ -n "$removed_xdg_fpaths" ]]; then
+				fpath=("${fpath[@]:|removed_xdg_fpaths}")
+			fi
+		fi
+		
+		local -a added_xdg_data_dirs=("${xdg_data_dirs[@]:|_xdg_fpath_old_xdg_data_dirs}")
+		if [[ -n "$added_xdg_data_dirs" ]]; then
+			local -a added_xdg_fpaths=()
+			_xdg_fpath_xdg_to_fpath added_xdg_fpaths added_xdg_data_dirs
+			if [[ -n "$added_xdg_fpaths" ]]; then
+				local -aU tmp_fpath=(${(aO)fpath})
+				local fpath_dir
+				for fpath_dir in ${(aO)added_xdg_fpaths}; do
+					tmp_fpath+=("$fpath_dir")
+				done
+				fpath=(${(aO)tmp_fpath})
+			fi
+		fi
+
+		_XDG_FPATH_OLD_XDG_DATA_DIRS="$XDG_DATA_DIRS"
+	fi
+
+	if [[ -z $_XDG_FPATH_OLD_FPATH ]]; then
+		_xdg_fpath_compinit
+	elif [[ $_XDG_FPATH_OLD_FPATH != "$FPATH" ]]; then
+		_xdg_fpath_compinit
+	fi
+}
+
+if ! (( ${chpwd_functions[(I)_xdg_fpath_hook]} )); then
+	chpwd_functions[${precmd_functions[(I)_mise_hook]}+1,0]=_xdg_fpath_hook
+fi
+
+if ! (( ${precmd_functions[(I)_xdg_fpath_hook]} )); then
+	precmd_functions[${precmd_functions[(I)_mise_hook]}+1,0]=_xdg_fpath_hook
+fi
+
+unfunction _xdg_fpath_init

@@ -22,6 +22,10 @@
         typeset -aUT XDG_CONFIG_DIRS xdg_config_dirs
       '')
 
+      ''
+        PS4='+%1x:%I %1N:%i> '
+      ''
+
       (lib.mkAfter ''
         ttyctl -f
       '')
