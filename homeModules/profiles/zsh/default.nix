@@ -8,6 +8,7 @@
     ./completions.nix
     ./contrib.nix
     ./options.nix
+    ./zle.nix
     ./zprof.nix
   ];
 
