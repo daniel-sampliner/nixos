@@ -29,6 +29,7 @@
       ./clush.nix
       ./gpgkey.nix
       ./hide-fleet-icon
+      ./mpv
       ./ssh.nix
     ];
 
