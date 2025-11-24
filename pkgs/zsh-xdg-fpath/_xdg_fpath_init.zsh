@@ -3,6 +3,7 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 zstyle ':xdg-fpath' dir "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+zstyle ':xdg-fpath:hash' cmd xxhsum -H3
 
 readonly -g _xdg_fpath_log_prefix='%N:'
 readonly -ga _xdg_fpath_extra_dirs=(site-functions vendor-completions)
@@ -43,10 +44,11 @@ _xdg_fpath_compinit() {
 	zstyle -s ':xdg-fpath' dir dumpdir
 	mkdir -p "${dumpdir:?}"
 
-	local hash
-	hash=$(xxhsum -H3 --tag <<<"${FPATH:?}")
+	local hash hash_cmd
+	zstyle -a ':xdg-fpath:hash' cmd hash_cmd
+	hash=$("${hash_cmd[@]:?}" <<<"${FPATH:?}")
 
-	local dumpfile=$dumpdir/zcompdump.xdg_fpath.${${hash##* }:?}
+	local dumpfile=$dumpdir/zcompdump.xdg_fpath.${${hash%% *}:?}
 	if [[ ! -s $dumpfile.zwc ]]; then
 		compinit -w -d "$dumpfile" 2> >(_xdg_fpath_log_info "${(%)_xdg_fpath_log_prefix}")
 		print -l "# generated with fpath:" "#   ${fpath[@]}" \
