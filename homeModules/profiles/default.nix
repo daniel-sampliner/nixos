@@ -9,7 +9,7 @@
     ./fonts.nix
     ./git.nix
     ./mise
-    ./nvim.nix
+    ./nvim
     ./ssh.nix
   ];
 
