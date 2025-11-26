@@ -4,7 +4,8 @@
 
 { lib, pkgs, ... }:
 let
-  inherit (pkgs.pkgsExtra) mise-inits;
+  inherit (pkgs.pkgsUnstable) mise;
+  mise-inits = pkgs.pkgsExtra.mise-inits.override { inherit mise; };
 in
 {
   home.packages =
@@ -32,11 +33,7 @@ in
   programs = {
     mise = {
       enable = true;
-      package = lib.trivial.pipe pkgs.pkgsUnstable.mise.meta.position [
-        (lib.strings.splitStringBy (prev: cur: cur == ":") false)
-        builtins.head
-        (lib.trivial.flip pkgs.callPackage { })
-      ];
+      package = mise;
 
       enableBashIntegration = false;
       enableFishIntegration = false;
