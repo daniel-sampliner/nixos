@@ -3,23 +3,24 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 { config, pkgs, ... }:
-let
-  zcompdump_dir = "\${XDG_RUNTIME_DIR:-/run/\${UID:?}}/zsh";
-  zcompdump = "${zcompdump_dir}/zcompdump";
-in
 {
-  home.packages = [
-    pkgs.zsh-completions
-    pkgs.pkgsExtra.zsh-xdg-fpath
-  ];
+  home.packages = builtins.attrValues {
+    inherit (pkgs.pkgsExtra) zsh-completions-compiled zsh-xdg-fpath;
+  };
 
   programs.zsh.enableCompletion = true;
   programs.zsh.completionInit = ''
-    zstyle ':completion:*' cache-path "${zcompdump_dir}"
+    _week_caching_policy() {
+      # rebuild if cache is more than a week old
+      local -a oldp
+      oldp=( "$1"(Nm+7) )
+      (( $#oldp ))
+    }
+
+    zstyle ':completion:*' cache-path "${config.xdg.cacheHome}/zsh/zcompcache"
+    zstyle ':completion:*' cache-policy _week_caching_policy
     zstyle ':completion:*' use-cache on
 
     autoload -RUz _xdg_fpath_init && _xdg_fpath_init
   '';
-
-  systemd.user.tmpfiles.rules = [ "d ${config.xdg.cacheHome}/zsh 0700 - - 7d" ];
 }

@@ -35,14 +35,35 @@ _xdg_fpath_log_info() {
 	done
 }
 
+_xdg_fpath_log_error() {
+	local line
+	while read -r line; do
+		print -P "%F{1}$1%f $line"
+	done
+}
+
 _xdg_fpath_compinit() {
-	if ! autoload -RUz compinit; then
-		return 0
+	if ! autoload -RUz compinit 2> >(_xdg_fpath_log_error "${(%)_xdg_fpath_log_prefix}"); then
+		return 1
 	fi
 
 	local dumpdir
 	zstyle -s ':xdg-fpath' dir dumpdir
-	mkdir -p "${dumpdir:?}"
+	if [[ ! -d "${dumpdir:?}" ]]; then
+		(
+			zmodload -F zsh/files b:mkdir \
+				&& mkdir -m 0700 -p "$dumpdir"
+		) 2> >(_xdg_fpath_log_error "${(%)_xdg_fpath_log_prefix}") \
+			|| return 1
+	else
+		(
+			old=( "$dumpdir"/*(.Nm+7) )
+			(( #old )) || return 0
+			zmodload -F zsh/files b:rm \
+				&& rm -f -- "${old[@]}"
+		) 2> >(_xdg_fpath_log_error "${(%)_xdg_fpath_log_prefix}")
+
+	fi
 
 	local hash hash_cmd
 	zstyle -a ':xdg-fpath:hash' cmd hash_cmd
