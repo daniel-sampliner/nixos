@@ -19,6 +19,7 @@
         "notify-cancel.nix"
         "rnnoise.nix"
         "starship"
+        "watchman.nix"
         "zsh"
       ];
     in
@@ -36,6 +37,7 @@
   home.packages = builtins.attrValues {
     inherit (pkgs)
       bat
+      btop-cuda
       delta
       glow
       spacer
