@@ -9,6 +9,10 @@
   ...
 }:
 {
+  imports = [
+    ./tug.nix
+  ];
+
   programs.jujutsu = {
     enable = true;
     package = pkgs.pkgsUnstable.jujutsu;
@@ -22,7 +26,7 @@
       in
       {
         aliases = {
-          "flakeref" =
+          flakeref =
             let
               shell = lib.getExe pkgs.dash;
 
