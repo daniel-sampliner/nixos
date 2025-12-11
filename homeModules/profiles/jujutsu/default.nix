@@ -42,6 +42,9 @@
       };
 
       revset-aliases = {
+        "bough()" = "bough(@)";
+        "bough(x)" = "bough(x, trunk())";
+        "bough(x, m)" = "descendants(ancestors(x) ~ ancestors(m))";
         "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())";
       };
 
