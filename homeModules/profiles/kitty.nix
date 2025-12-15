@@ -51,6 +51,8 @@
       initial_window_width = "132c";
       remember_window_size = "no";
       resize_in_steps = "yes";
+
+      notify_on_cmd_finish = "unfocused 30 notify-bell focus";
     };
   };
 
