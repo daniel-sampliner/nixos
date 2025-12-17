@@ -6,24 +6,30 @@
 {
   imports = [ inputs.treefmt-nix.flakeModule ];
 
-  perSystem.treefmt = {
-    programs = {
-      nixfmt.enable = true;
+  perSystem =
+    { inputs', ... }:
+    {
+      treefmt = {
+        pkgs = inputs'.unstable.legacyPackages;
 
-      shfmt.enable = true;
-      shfmt.indent_size = null;
+        programs = {
+          nixfmt.enable = true;
 
-      stylua = {
-        enable = true;
-        settings = {
-          indent_type = "Tabs";
-          indent_width = 8;
-          sort_requires.enabled = true;
+          shfmt.enable = true;
+          shfmt.indent_size = null;
+
+          stylua = {
+            enable = true;
+            settings = {
+              indent_type = "Tabs";
+              indent_width = 8;
+              sort_requires.enabled = true;
+            };
+          };
+
+          taplo.enable = true;
+          zig.enable = true;
         };
       };
-
-      taplo.enable = true;
-      zig.enable = true;
     };
-  };
 }

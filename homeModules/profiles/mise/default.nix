@@ -33,7 +33,7 @@ in
   programs = {
     mise = {
       enable = true;
-      package = mise;
+      package = pkgs.pkgsUnstable.mise.override { inherit (pkgs) git; };
 
       enableBashIntegration = false;
       enableFishIntegration = false;
