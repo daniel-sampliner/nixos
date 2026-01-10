@@ -64,6 +64,15 @@
 
       templates = {
         config_list = "builtin_config_list_detailed";
+
+        duplicate_description = ''
+          concat(
+            description,
+            "\n(cherry picked from commit ",
+            commit_id,
+            ")",
+          )
+        '';
       };
 
       ui = {
