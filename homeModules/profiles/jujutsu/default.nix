@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -46,6 +46,9 @@
         "bough(x)" = "bough(x, trunk())";
         "bough(x, m)" = "descendants(ancestors(x) ~ ancestors(m))";
         "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())";
+        "user(x)" = "author(x) | committer(x)";
+        "user_email(x)" = "author_email(x) | committer_email(x)";
+        "user_name(x)" = "author_name(x) | committer_name(x)";
       };
 
       "--scope" = [
