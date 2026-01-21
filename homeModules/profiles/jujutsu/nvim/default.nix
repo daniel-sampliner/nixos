@@ -59,6 +59,7 @@
 
           merge-args = nvim_args ++ [
             "-d"
+            "$output"
             "-M"
             "$left"
             "$base"
