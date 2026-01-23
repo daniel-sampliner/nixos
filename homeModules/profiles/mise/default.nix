@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -8,6 +8,16 @@ let
   mise-inits = pkgs.pkgsExtra.mise-inits.override { inherit mise; };
 in
 {
+  assertions = [
+    {
+      assertion = lib.trivial.pipe pkgs.mise [
+        lib.strings.getVersion
+        (v: lib.strings.versionOlder v "2026.")
+      ];
+      message = "unstable mise no longer necessary";
+    }
+  ];
+
   home.packages =
     let
       mise-parse-env =
@@ -33,7 +43,15 @@ in
   programs = {
     mise = {
       enable = true;
-      package = pkgs.pkgsUnstable.mise.override { inherit (pkgs) git; };
+
+      package = mise.override {
+        inherit (pkgs)
+          bash
+          coreutils
+          direnv
+          git
+          ;
+      };
 
       enableBashIntegration = false;
       enableFishIntegration = false;
