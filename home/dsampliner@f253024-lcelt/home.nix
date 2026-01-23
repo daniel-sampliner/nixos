@@ -35,23 +35,24 @@
       ./ssh.nix
     ];
 
-  warnings = lib.optional (pkgs ? prek) "unstable prek no longer necessary";
+  assertions = [
+    {
+      assertion = !pkgs ? prek;
+      message = "unstable prek no longer necessary";
+    }
+  ];
 
-  home.packages =
-    let
-      prek = pkgs.pkgsUnstable.prek.override { inherit (pkgs) git uv python312; };
-    in
-    builtins.attrValues {
-      inherit (pkgs)
-        bat
-        btop-cuda
-        delta
-        glow
-        spacer
-        ;
+  home.packages = builtins.attrValues {
+    inherit (pkgs)
+      bat
+      btop-cuda
+      delta
+      glow
+      spacer
+      ;
 
-      inherit prek;
-    };
+    inherit (pkgs.pkgsUnstable) prek;
+  };
 
   programs.bash.enable = true;
   programs.command-not-found.enable = true;
