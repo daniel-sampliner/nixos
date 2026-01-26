@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -31,16 +31,19 @@
           };
 
           "capture.props" = {
+            "audio.rate" = 48000;
             "node.name" = "capture.rnnoise_source";
             "node.passive" = true;
-            "audio.rate" = 48000;
           };
 
           "playback.props" = {
-            "node.name" = "rnnoise_source";
-            "media.class" = "Audio/Source";
+            "audio.channels" = 1;
+            "audio.position" = [ "MONO" ];
             "audio.rate" = 48000;
+            "filter.name" = "rnnoise_source";
             "filter.smart" = true;
+            "media.class" = "Audio/Source";
+            "node.name" = "rnnoise_source";
           };
         };
       }
