@@ -1,8 +1,13 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 {
   home.packages = builtins.attrValues {
     inherit (pkgs)
@@ -10,15 +15,16 @@
       ;
   };
 
-  programs.git = {
-    aliases = {
-      difft = "--paginate difftool --no-prompt --tool difftastic";
-    };
+  programs.difftastic.enable = true;
 
-    difftastic.enableAsDifftool = true;
+  programs.git = {
     enable = true;
 
-    extraConfig = {
+    settings = {
+      aliases = {
+        difft = "--paginate difftool --no-prompt --tool difftastic";
+      };
+
       blame.markIgnoredLines = true;
       blame.markUnblamableLines = true;
 
@@ -30,7 +36,12 @@
         algorithm = "histogram";
         colorMoved = "default";
         colorMovedWS = "allow-indentation-change";
+        tool = "difftastic";
       };
+
+      difftool.difftastic.cmd = "${lib.getExe config.programs.difftastic.package} ${
+        lib.cli.toGNUCommandLineShell { } config.programs.difftastic.options
+      }";
 
       fetch.prune = true;
       fetch.fsckObjects = true;

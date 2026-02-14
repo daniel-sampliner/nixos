@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,9 +6,22 @@
 {
   programs.ssh = {
     enable = true;
-    controlPath = "\${XDG_RUNTIME_DIR}/ssh/control-%C";
+    enableDefaultConfig = false;
 
     matchBlocks = {
+      "*" = {
+        addKeysToAgent = "no";
+        compression = false;
+        controlMaster = "no";
+        controlPath = "\${XDG_RUNTIME_DIR}/ssh/control-%C";
+        controlPersist = "no";
+        forwardAgent = false;
+        hashKnownHosts = false;
+        serverAliveCountMax = 3;
+        serverAliveInterval = 0;
+        userKnownHostsFile = "~/.ssh/known_hosts";
+      };
+
       zzz_yolo = {
         match = "tagged yolo";
         extraOptions = {

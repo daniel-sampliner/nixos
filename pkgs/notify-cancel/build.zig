@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -95,8 +95,6 @@ pub fn build(b: *std.Build) void {
     const sd_bus_unit_tests = b.addTest(.{
         .name = "test_sd_bus",
         .root_module = sd_bus_mod,
-        .target = target,
-        .optimize = optimize,
         .filters = test_filters,
     });
 
@@ -105,8 +103,6 @@ pub fn build(b: *std.Build) void {
 
     const exe_unit_tests = b.addTest(.{
         .root_module = exe_mod,
-        .target = target,
-        .optimize = optimize,
         .filters = test_filters,
     });
 

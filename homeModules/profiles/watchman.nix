@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -8,7 +8,7 @@
   ...
 }:
 let
-  pkg = pkgs.pkgsUnstable.watchman;
+  pkg = pkgs.watchman;
 
   minVer = "2025.09.22.00";
   checkVer =
@@ -25,8 +25,6 @@ in
       message = "watchman profile requires watchman version >= ${minVer}";
     }
   ];
-
-  warnings = lib.optional (checkVer pkgs.watchman) "unstable watchman no longer necessary for XDG support";
 
   home.packages = [ pkg ];
 

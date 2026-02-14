@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -38,7 +38,7 @@ pub fn getCookie(m: *Message) !u64 {
     var buf: u64 = undefined;
     const r = c.sd_bus_message_get_cookie(m.sd_bus_message, &buf);
     if (r < 0) {
-        logger.err("failed to get cookie: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to get cookie: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageGetCookieFailed;
     }
     return buf;
@@ -48,7 +48,7 @@ pub fn getReplyCookie(m: *Message) !u64 {
     var buf: u64 = undefined;
     const r = c.sd_bus_message_get_reply_cookie(m.sd_bus_message, &buf);
     if (r < 0) {
-        logger.err("failed to get reply cookie: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to get reply cookie: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageGetReplyCookieFailed;
     }
     return buf;
@@ -74,7 +74,7 @@ pub fn getType(m: *Message) !Message.Type {
     var buf = Message.Type.unknown;
     const r = c.sd_bus_message_get_type(m.sd_bus_message, @ptrCast(&buf));
     if (r < 0) {
-        logger.err("failed to get type of message: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to get type of message: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageGetTypeFailed;
     }
     return switch (buf) {
@@ -90,7 +90,7 @@ pub fn getType(m: *Message) !Message.Type {
 pub fn openContainer(m: *Message, dbus_type: u8, contents: [*:0]const u8) !void {
     const r = c.sd_bus_message_open_container(m.sd_bus_message, dbus_type, contents);
     if (r < 0) {
-        logger.err("failed to create {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to create {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -98,7 +98,7 @@ pub fn openContainer(m: *Message, dbus_type: u8, contents: [*:0]const u8) !void 
 pub fn closeContainer(m: *Message) !void {
     const r = c.sd_bus_message_close_container(m.sd_bus_message);
     if (r < 0) {
-        logger.err("failed to close {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to close {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -106,7 +106,7 @@ pub fn closeContainer(m: *Message) !void {
 pub fn enterContainer(m: *Message, dbus_type: u8, contents: [*:0]const u8) !void {
     const r = c.sd_bus_message_enter_container(m.sd_bus_message, dbus_type, contents);
     if (r < 0) {
-        logger.err("failed to enter {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to enter {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -114,7 +114,7 @@ pub fn enterContainer(m: *Message, dbus_type: u8, contents: [*:0]const u8) !void
 pub fn exitContainer(m: *Message) !void {
     const r = c.sd_bus_message_exit_container(m.sd_bus_message);
     if (r < 0) {
-        logger.err("failed to exit {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to exit {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -122,7 +122,7 @@ pub fn exitContainer(m: *Message) !void {
 pub fn skip(m: *Message, dbus_types: [:0]const u8) !void {
     const r = c.sd_bus_message_skip(m.sd_bus_message, dbus_types);
     if (r < 0) {
-        logger.err("failed to skip fields in message: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to skip fields in message: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageReadFailed;
     }
 }
@@ -134,7 +134,7 @@ pub fn atEnd(m: *Message, complete: bool) !bool {
     } else if (r == 0) {
         return false;
     } else {
-        logger.err("failed to check end of {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to check end of {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -142,7 +142,7 @@ pub fn atEnd(m: *Message, complete: bool) !bool {
 pub fn appendString(m: *Message, s: [:0]const u8) !void {
     const r = c.sd_bus_message_append_basic(m.sd_bus_message, 's', s.ptr);
     if (r < 0) {
-        logger.err("failed to append string to {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to append string to {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -150,7 +150,7 @@ pub fn appendString(m: *Message, s: [:0]const u8) !void {
 pub fn appendUint(m: *Message, u: u32) !void {
     const r = c.sd_bus_message_append_basic(m.sd_bus_message, 'u', &u);
     if (r < 0) {
-        logger.err("failed to append uint to {s} message: {s}", .{ m.getMember(), Error.fmtSdRetCode(r) });
+        logger.err("failed to append uint to {s} message: {f}", .{ m.getMember(), Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
@@ -159,7 +159,7 @@ pub fn readString(m: *Message) ![]const u8 {
     var buf: [*:0]const u8 = undefined;
     const r = c.sd_bus_message_read_basic(m.sd_bus_message, 's', @ptrCast(@alignCast(&buf)));
     if (r < 0) {
-        logger.err("failed to read from message: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to read from message: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageReadFailed;
     }
     return std.mem.span(buf);
@@ -169,7 +169,7 @@ pub fn readUint(m: *Message) !u32 {
     var buf: u32 = undefined;
     const r = c.sd_bus_message_read_basic(m.sd_bus_message, 'u', &buf);
     if (r < 0) {
-        logger.err("failed to read from message: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to read from message: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageReadFailed;
     }
     return buf;
@@ -182,7 +182,7 @@ pub fn read(m: *Message, dbus_types: [:0]const u8, ptrs: anytype) !void {
         .{ m.sd_bus_message, dbus_types } ++ ptrs,
     );
     if (r < 0) {
-        logger.err("failed to read from message: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to read from message: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusMessageReadFailed;
     }
 }

@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -16,47 +16,39 @@ pub fn free(e: *Error) void {
     _ = c.sd_bus_error_free(e.sd_bus_error);
 }
 
-pub fn format(
-    e: Error,
-    comptime fmt: []const u8,
-    options: std.fmt.FormatOptions,
-    writer: anytype,
-) !void {
-    if (fmt.len == 0) {
-        @branchHint(.cold);
-        try writer.writeAll(@typeName(Error));
-        try writer.writeAll("{");
+pub fn format(e: Error, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+    try writer.print("{?s}: {?s}", .{ e.sd_bus_error.name, e.sd_bus_error.message });
+}
 
-        // if (e.sd_bus_error) |ee| {
-        inline for (std.meta.fields(c.sd_bus_error), 0..) |f, i| {
-            if (i == 0) {
-                try writer.writeAll(" .");
-            } else {
-                try writer.writeAll(", .");
-            }
-            try writer.writeAll(f.name);
-            try writer.writeAll(" = ");
-            try std.fmt.formatType(
-                @field(e.sd_bus_error, f.name),
-                switch (f.type) {
-                    ?[*:0]const u8 => "?s",
-                    c_int => "d",
-                    else => unreachable,
-                },
-                options,
-                writer,
-                std.fmt.default_max_depth - 1,
-            );
+pub fn fmtVerbose(e: Error) std.fmt.Alt(Error, Error.formatVerbose) {
+    return .{ .data = e };
+}
+
+fn formatVerbose(e: Error, writer: *std.Io.Writer) std.Io.Writer.Error!void {
+    try writer.writeAll(@typeName(Error));
+    try writer.writeAll("{");
+
+    inline for (std.meta.fields(c.sd_bus_error), 0..) |f, i| {
+        if (i == 0) {
+            try writer.writeAll(" .");
+        } else {
+            try writer.writeAll(", .");
         }
-        // }
-        try writer.writeAll(" }");
-        return;
+        try writer.writeAll(f.name);
+        try writer.writeAll(" = ");
+        try writer.printValue(
+            switch (f.type) {
+                ?[*:0]const u8 => "?s",
+                c_int => "d",
+                else => unreachable,
+            },
+            .{},
+            @field(e.sd_bus_error, f.name),
+            std.options.fmt_max_depth - 1,
+        );
     }
 
-    // if (e.sd_bus_error) |ee| {
-    //     try writer.print("{?s}: {?s}", .{ ee.name, ee.message });
-    // }
-    try writer.print("{?s}: {?s}", .{ e.sd_bus_error.name, e.sd_bus_error.message });
+    try writer.writeAll(" }");
 }
 
 test "format" {
@@ -74,32 +66,31 @@ test "format" {
 
     try std.testing.expectEqualStrings(
         "Error{ .name = NAME, .message = MESSAGE, ._need_free = -1 }",
-        try std.fmt.allocPrint(allocator, "{any}", .{e}),
+        try std.fmt.allocPrint(allocator, "{f}", .{e.fmtVerbose()}),
     );
 
     try std.testing.expectEqualStrings(
         "NAME: MESSAGE",
-        try std.fmt.allocPrint(allocator, "{s}", .{e}),
+        try std.fmt.allocPrint(allocator, "{f}", .{e}),
     );
 }
 
-fn formatSdRetCode(
-    value: c_int,
-    comptime fmt: []const u8,
-    options: std.fmt.FormatOptions,
-    writer: anytype,
-) !void {
-    const s = blk: {
-        const E = std.posix.E;
-        const e = std.meta.intToEnum(E, -value) catch break :blk "UNKNOWN";
-        break :blk std.enums.tagName(E, e) orelse "UNKNOWN";
-    };
-    try std.fmt.formatType(s, fmt, options, writer, std.fmt.default_max_depth);
+pub fn fmtSdRetCode(rc: c_int) std.fmt.Alt(SdRetCode, SdRetCode.format) {
+    return .{ .data = .{ .rc = rc } };
 }
 
-pub fn fmtSdRetCode(ret: c_int) std.fmt.Formatter(formatSdRetCode) {
-    return .{ .data = ret };
-}
+const SdRetCode = union {
+    rc: c_int,
+
+    pub fn format(sd: SdRetCode, writer: *std.io.Writer) std.Io.Writer.Error!void {
+        const s = blk: {
+            const E = std.posix.E;
+            const e = std.enums.fromInt(E, -sd.rc) orelse break :blk "UNKNOWN";
+            break :blk std.enums.tagName(E, e) orelse "UNKNOWN";
+        };
+        try writer.print("{s}", .{s});
+    }
+};
 
 test "fmtSdRetCode" {
     var arena = std.heap.ArenaAllocator.init(std.testing.allocator);
@@ -117,7 +108,7 @@ test "fmtSdRetCode" {
     };
 
     for (tcs) |tc| {
-        const got = try std.fmt.allocPrint(allocator, "{s}", .{fmtSdRetCode(tc.ret)});
+        const got = try std.fmt.allocPrint(allocator, "{f}", .{fmtSdRetCode(tc.ret)});
         try std.testing.expectEqualStrings(tc.want, got);
     }
 }

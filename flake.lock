@@ -4,11 +4,11 @@
       "flake": false,
       "locked": {
         "host": "gitlab-master.nvidia.com",
-        "lastModified": 1770863001,
-        "narHash": "sha256-NvaJghGPpyu0ZYYC5dKq6HTPF/KVnXRRrCB4/r3xHQ8=",
+        "lastModified": 1771105147,
+        "narHash": "sha256-IZ0S3FpbNkfBr3gwMa9wx5HrmghaMRK/W8IE9/ur7jM=",
         "owner": "dsampliner",
         "repo": "nix-config",
-        "rev": "8b2506885dc0cd5af50ebc11d89e854b0fcce552",
+        "rev": "a1d4e051bbbe23347eb565b8d7583c27fea26345",
         "type": "gitlab"
       },
       "original": {
@@ -45,31 +45,31 @@
         ]
       },
       "locked": {
-        "lastModified": 1763992789,
-        "narHash": "sha256-WHkdBlw6oyxXIra/vQPYLtqY+3G8dUVZM8bEXk0t8x4=",
+        "lastModified": 1770260404,
+        "narHash": "sha256-3iVX1+7YUIt23hBx1WZsUllhbmP2EnXrV8tCRbLxHc8=",
         "owner": "nix-community",
         "repo": "home-manager",
-        "rev": "44831a7eaba4360fb81f2acc5ea6de5fde90aaa3",
+        "rev": "0d782ee42c86b196acff08acfbf41bb7d13eed5b",
         "type": "github"
       },
       "original": {
         "owner": "nix-community",
-        "ref": "release-25.05",
+        "ref": "release-25.11",
         "repo": "home-manager",
         "type": "github"
       }
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1767313136,
-        "narHash": "sha256-3zSML8xJhOT2kRBCNUpniZSCeCBCPA3KGsRYh+KdtbU=",
-        "rev": "ac62194c3917d5f474c1a844b6fd6da2db95077d",
+        "lastModified": 1771043024,
+        "narHash": "sha256-WoiezqWJQ3OHILah+p6rzNXdJceEAmAhyDFZFZ6pZzY=",
+        "rev": "3aadb7ca9eac2891d52a9dec199d9580a6e2bf44",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/25.05/nixos-25.05.813814.ac62194c3917/nixexprs.tar.xz?lastModified=1767313136&rev=ac62194c3917d5f474c1a844b6fd6da2db95077d"
+        "url": "https://releases.nixos.org/nixos/25.11/nixos-25.11.5960.3aadb7ca9eac/nixexprs.tar.xz?lastModified=1771043024&rev=3aadb7ca9eac2891d52a9dec199d9580a6e2bf44"
       },
       "original": {
         "type": "tarball",
-        "url": "https://channels.nixos.org/nixos-25.05/nixexprs.tar.xz"
+        "url": "https://channels.nixos.org/nixos-25.11/nixexprs.tar.xz"
       }
     },
     "root": {

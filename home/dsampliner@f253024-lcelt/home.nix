@@ -35,23 +35,15 @@
       ./ssh.nix
     ];
 
-  assertions = [
-    {
-      assertion = !pkgs ? prek;
-      message = "unstable prek no longer necessary";
-    }
-  ];
-
   home.packages = builtins.attrValues {
     inherit (pkgs)
       bat
       btop-cuda
       delta
       glow
+      prek
       spacer
       ;
-
-    inherit (pkgs.pkgsUnstable) prek;
   };
 
   programs.bash.enable = true;

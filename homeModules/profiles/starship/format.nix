@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -8,9 +8,15 @@ let
 in
 {
   programs.starship.settings = lib.mkMerge [
-    (builtins.mapAttrs (_: v: {
-      format = builtins.replaceStrings [ "via " "with " ] [ "" "" ] v.format;
-    }) (lib.importTOML "${cfg.package}/share/starship/presets/no-empty-icons.toml"))
+    (builtins.mapAttrs (
+      _: v:
+      if v ? format then
+        {
+          format = builtins.replaceStrings [ "via " "with " ] [ "" "" ] v.format;
+        }
+      else
+        v
+    ) (lib.importTOML "${cfg.package}/share/starship/presets/no-empty-icons.toml"))
 
     {
       format =

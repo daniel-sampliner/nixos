@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -38,15 +38,15 @@ pub fn syslogFn(
     };
 
     const prefix2 = if (scope == .default) "" else "(" ++ @tagName(scope) ++ ")";
-    const stderr = std.io.getStdErr().writer();
-    var bw = std.io.bufferedWriter(stderr);
-    const writer = bw.writer();
+    var stderr_buffer: [4096]u8 = undefined;
+    var stderr_writer = std.fs.File.stderr().writer(&stderr_buffer);
+    const stderr = &stderr_writer.interface;
 
     std.debug.lockStdErr();
     defer std.debug.unlockStdErr();
     nosuspend {
-        writer.print(level_txt ++ prefix2 ++ format ++ "\n", args) catch return;
-        bw.flush() catch return;
+        stderr.print(level_txt ++ prefix2 ++ format ++ "\n", args) catch return;
+        stderr.flush() catch return;
     }
 }
 
@@ -188,12 +188,12 @@ fn handleCall(
     }
 
     logger.debug(
-        "cookie: {d}, app: {s}, subject: \"{s}\", body: \"{s}\"",
+        "cookie: {d}, app: {s}, subject: \"{f}\", body: \"{f}\"",
         .{
             cookie,
             app_buf,
-            std.fmt.fmtSliceEscapeLower(std.mem.span(subject_buf)),
-            std.fmt.fmtSliceEscapeLower(std.mem.span(body_buf)),
+            std.ascii.hexEscape(std.mem.span(subject_buf), .lower),
+            std.ascii.hexEscape(std.mem.span(body_buf), .lower),
         },
     );
 

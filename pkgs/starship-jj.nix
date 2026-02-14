@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,14 +6,14 @@
   fetchFromGitLab,
   lib,
   nix-update-script,
-  rustPackages_1_88,
+  rustPackages,
   versionCheckHook,
 }:
 let
   pname = "starship-jj";
   version = "0.6.0";
 in
-rustPackages_1_88.rustPlatform.buildRustPackage (final: {
+rustPackages.rustPlatform.buildRustPackage (final: {
   inherit pname version;
 
   src = fetchFromGitLab {

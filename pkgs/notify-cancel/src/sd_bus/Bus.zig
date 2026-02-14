@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -26,7 +26,7 @@ pub fn init(b: *Bus, bt: BusType) !void {
     var r: c_int = undefined;
     r = c.sd_bus_new(&b.sd_bus);
     if (r < 0) {
-        logger.err("failed to allocate bus: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to allocate bus: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusAllocationFailed;
     }
     errdefer b.free();
@@ -36,7 +36,7 @@ pub fn init(b: *Bus, bt: BusType) !void {
         .monitor => "notify_cancel_monitor",
     });
     if (r < 0) {
-        logger.warn("failed to set bus description: {s}", .{Error.fmtSdRetCode(r)});
+        logger.warn("failed to set bus description: {f}", .{Error.fmtSdRetCode(r)});
     }
 
     switch (bt) {
@@ -44,7 +44,7 @@ pub fn init(b: *Bus, bt: BusType) !void {
         .monitor => {
             r = c.sd_bus_set_monitor(b.sd_bus, @intFromBool(true));
             if (r < 0) {
-                logger.err("failed to set monitor mode: {s}", .{Error.fmtSdRetCode(r)});
+                logger.err("failed to set monitor mode: {f}", .{Error.fmtSdRetCode(r)});
                 return error.DBusSetMonitorFailed;
             }
         },
@@ -52,7 +52,7 @@ pub fn init(b: *Bus, bt: BusType) !void {
 
     r = c.sd_bus_set_bus_client(b.sd_bus, @intFromBool(true));
     if (r < 0) {
-        logger.err("failed to set bus client: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to set bus client: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusSetBusClientFailed;
     }
 
@@ -67,8 +67,8 @@ pub fn init(b: *Bus, bt: BusType) !void {
     r = c.sd_bus_set_address(b.sd_bus, addr);
     if (r < 0) {
         logger.err(
-            "failed to connect to session bus '{s}': {s}",
-            .{ std.fmt.fmtSliceEscapeLower(addr), Error.fmtSdRetCode(r) },
+            "failed to connect to session bus '{f}': {f}",
+            .{ std.ascii.hexEscape(addr, .lower), Error.fmtSdRetCode(r) },
         );
         return error.DBusStartFailed;
     }
@@ -76,8 +76,8 @@ pub fn init(b: *Bus, bt: BusType) !void {
     r = c.sd_bus_start(b.sd_bus);
     if (r < 0) {
         logger.err(
-            "failed to connect to session bus '{s}': {s}",
-            .{ std.fmt.fmtSliceEscapeLower(addr), Error.fmtSdRetCode(r) },
+            "failed to connect to session bus '{f}': {f}",
+            .{ std.ascii.hexEscape(addr, .lower), Error.fmtSdRetCode(r) },
         );
         return error.DBusStartFailed;
     }
@@ -140,7 +140,7 @@ pub fn getUniqueName(b: *Bus) ![]const u8 {
     var buf: [*:0]const u8 = undefined;
     const r = c.sd_bus_get_unique_name(b.sd_bus, &buf);
     if (r < 0) {
-        logger.err("failed to get unique name of bus: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to get unique name of bus: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusError;
     }
     return std.mem.span(buf);
@@ -298,7 +298,7 @@ test "monitor" {
 pub fn process(b: *Bus, m: *Message) !bool {
     const r = c.sd_bus_process(b.sd_bus, &m.sd_bus_message);
     if (r < 0) {
-        logger.err("failed to process bus: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to process bus: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusProcessFailed;
     }
     return r > 0;
@@ -307,7 +307,7 @@ pub fn process(b: *Bus, m: *Message) !bool {
 pub fn wait(b: *Bus, timeout_usec: u64) !void {
     const r = c.sd_bus_wait(b.sd_bus, timeout_usec);
     if (r < 0) {
-        logger.err("failed to wait on bus: {s}", .{Error.fmtSdRetCode(r)});
+        logger.err("failed to wait on bus: {f}", .{Error.fmtSdRetCode(r)});
         return error.DBusWaitFailed;
     }
 }
@@ -357,7 +357,7 @@ pub fn callMethod(
         } ++ args,
     );
     if (r < 0) {
-        logger.err("failed to call {s}.{s}: {s}", .{ interface, member, err });
+        logger.err("failed to call {s}.{s}: {f}", .{ interface, member, err });
         return error.DBusCallFailed;
     }
 }
@@ -370,10 +370,16 @@ test "callMethod_reply" {
     const file = try std.fs.openFileAbsolute("/etc/machine-id", .{});
     defer file.close();
 
-    var buf_reader = std.io.bufferedReader(file.reader());
-    const reader = buf_reader.reader();
+    var reader = blk: {
+        var buf: [4096]u8 = undefined;
+        break :blk file.reader(&buf);
+    };
 
-    const want = try reader.readBytesNoEof(32);
+    const want = blk: {
+        var buf: [32]u8 = undefined;
+        _ = try reader.interface.readSliceShort(&buf);
+        break :blk &buf;
+    };
 
     var reply = Message{};
     try b.callMethod(
@@ -388,7 +394,7 @@ test "callMethod_reply" {
     defer reply.free();
 
     const got = try reply.readString();
-    try std.testing.expectEqualStrings(&want, got);
+    try std.testing.expectEqualStrings(want, got);
 }
 
 test "callMethod_noReply" {
@@ -444,7 +450,7 @@ pub fn newMethodCall(
         member,
     );
     if (r < 0) {
-        logger.err("failed to create {s}.{s} message: {s}", .{ interface, member, Error.fmtSdRetCode(r) });
+        logger.err("failed to create {s}.{s} message: {f}", .{ interface, member, Error.fmtSdRetCode(r) });
         return error.DBusAllocationFailed;
     }
 }
