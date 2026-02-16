@@ -28,6 +28,7 @@
     ++ [
       (dgxModulesPath + "/profiles")
 
+      ./brave.nix
       ./clush.nix
       ./gpgkey.nix
       ./hide-fleet-icon
