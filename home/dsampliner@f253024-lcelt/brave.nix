@@ -32,5 +32,9 @@ let
       ];
 in
 {
+  dgx.teleport.pkg = pkgs.pkgsExtra.teleport-wrapped.override {
+    browser = "${lib.getExe' browser_scripts "brave-work"}";
+  };
+
   home.packages = [ browser_scripts ];
 }
