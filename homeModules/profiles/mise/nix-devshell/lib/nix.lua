@@ -13,7 +13,7 @@ local log = require("log")
 local M = {}
 
 function M.get_mise_config(options)
-	local mise_configs = json.decode(cmd.exec("mise config ls --json"))
+	local mise_configs = json.decode(cmd.exec("mise --no-env --no-hooks config ls --json"))
 	for _, mise_config in ipairs(mise_configs) do
 		local dir = file_extra.dirname(mise_config.path)
 		local _, f = next(options.watch_files)
