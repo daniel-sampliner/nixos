@@ -7,16 +7,13 @@ local strings = require("strings")
 local log = require("log")
 local nix = require("nix")
 
-local keep_vars = {}
-for _, v in ipairs({
-	"IN_NIX_SHELL",
-	"name",
-	"PKG_CONFIG_PATH",
-	"PYTHONPATH",
-	"XDG_DATA_DIRS",
-}) do
-	keep_vars[v] = true
-end
+local keep_vars = {
+	["IN_NIX_SHELL"] = true,
+	["name"] = true,
+	["PKG_CONFIG_PATH"] = true,
+	["PYTHONPATH"] = true,
+	["XDG_DATA_DIRS"] = true,
+}
 
 local pathlike_vars = {
 	["PKG_CONFIG_PATH"] = true,
