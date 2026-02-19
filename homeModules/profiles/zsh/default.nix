@@ -18,9 +18,14 @@
 
     initContent = lib.mkMerge [
       (lib.mkBefore ''
-        typeset -aUT NIX_PATH nix_path
-        typeset -aUT XDG_DATA_DIRS xdg_data_dirs
-        typeset -aUT XDG_CONFIG_DIRS xdg_config_dirs
+        typeset -axUT CPATH cpath
+        typeset -axUT LD_LIBRARY_PATH ld_library_path
+        typeset -axUT LIBRARY_PATH library_path
+        typeset -axUT MANPATH manpath
+        typeset -axUT NIX_PATH nix_path
+        typeset -axUT PKG_CONFIG_PATH pkg_config_path
+        typeset -axUT XDG_CONFIG_DIRS xdg_config_dirs
+        typeset -axUT XDG_DATA_DIRS xdg_data_dirs
       '')
 
       ''
