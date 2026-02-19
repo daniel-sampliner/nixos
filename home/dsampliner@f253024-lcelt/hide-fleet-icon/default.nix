@@ -24,6 +24,5 @@ in
       StartLimitInterval = "60s";
       Type = "oneshot";
     };
-    Install.WantedBy = [ "plasma-workspace.target" ];
   };
 }
