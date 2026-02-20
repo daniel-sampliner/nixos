@@ -45,6 +45,8 @@
       prek
       spacer
       ;
+
+    inherit (pkgs.pkgsExtra) wl-clipboard;
   };
 
   programs.bash.enable = true;
