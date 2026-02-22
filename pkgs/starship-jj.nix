@@ -11,7 +11,7 @@
 }:
 let
   pname = "starship-jj";
-  version = "0.6.0";
+  version = "0.7.0";
 in
 rustPackages.rustPlatform.buildRustPackage (final: {
   inherit pname version;
@@ -21,10 +21,10 @@ rustPackages.rustPlatform.buildRustPackage (final: {
     repo = pname;
     tag = version;
 
-    hash = "sha256-HTkDZQJnlbv2LlBybpBTNh1Y3/M8RNeQuiked3JaLgI=";
+    hash = "sha256-EgOKjPJK6NdHghMclbn4daywJ8oODiXkS48Nrn5cRZo=";
   };
 
-  cargoHash = "sha256-E5z3AZhD3kiP6ojthcPne0f29SbY0eV4EYTFewA+jNc=";
+  cargoHash = "sha256-NNeovW27YSK/fO2DjAsJqBvebd43usCw7ni47cgTth8=";
 
   doInstallCheck = true;
   nativeInstallCheckInputs = [ versionCheckHook ];
