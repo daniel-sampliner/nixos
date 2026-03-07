@@ -21,6 +21,7 @@
         "rnnoise.nix"
         "starship"
         "watchman.nix"
+        "zig"
         "zsh"
       ];
     in

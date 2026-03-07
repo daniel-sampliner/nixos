@@ -15,20 +15,23 @@
     enable = true;
 
     extraLuaConfig = ''
-
-      vim.filetype.add({
-        extension = {
-          ipd = 'bzl',
-          star = 'bzl',
-          starlark = 'bzl',
-        },
-      })
+      ${builtins.readFile ./starlark-ft.lua}
     '';
 
     plugins =
       let
         pluginConfigs = lib.trivial.pipe ./. [
-          (lib.fileset.fileFilter ({ type, hasExt, ... }: type == "regular" && hasExt "lua"))
+          (lib.fileset.fileFilter (
+            {
+              name,
+              type,
+              hasExt,
+              ...
+            }:
+            type == "regular"
+            && hasExt "lua"
+            && builtins.hasAttr (lib.strings.removeSuffix ".lua" name) pkgs.vimPlugins
+          ))
           lib.fileset.toList
           (builtins.map (f: {
             plugin = lib.trivial.pipe f [
@@ -52,7 +55,6 @@
           vim-sexp
           vim-sexp-mappings-for-regular-people
           vim-unimpaired
-          zig-vim
           ;
       }
       ++ pluginConfigs;
