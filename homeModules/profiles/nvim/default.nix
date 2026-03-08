@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -14,11 +14,17 @@
   programs.neovim = {
     enable = true;
 
-    extraLuaConfig = ''
-      vim.opt.exrc = true
+    extraLuaConfig = lib.mkMerge [
+      (lib.mkOrder 0 ''
+        local vim = vim
+      '')
 
-      ${builtins.readFile ./starlark-ft.lua}
-    '';
+      ''
+        vim.opt.exrc = true
+
+        ${builtins.readFile ./starlark-ft.lua}
+      ''
+    ];
 
     plugins =
       let
