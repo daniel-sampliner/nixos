@@ -15,6 +15,8 @@
     enable = true;
 
     extraLuaConfig = ''
+      vim.opt.exrc = true
+
       ${builtins.readFile ./starlark-ft.lua}
     '';
 
