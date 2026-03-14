@@ -15,6 +15,7 @@
       profiles = [
         "foreign.nix"
         "fzf.nix"
+        "javascript.nix"
         "jujutsu"
         "kitty.nix"
         "notify-cancel.nix"
