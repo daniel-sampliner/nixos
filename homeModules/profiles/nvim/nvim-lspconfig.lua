@@ -12,7 +12,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	callback = function(ev)
 		local client_id = ev.data.client_id
 		local client = assert(vim.lsp.get_client_by_id(ev.data.client_id))
-		local augroup = vim.api.nvim_create_augroup("lsp_" .. client.name, {})
+		local client_augroup = vim.api.nvim_create_augroup("lsp_" .. client.name, {})
 
 		if
 			not client:supports_method("textDocument/willSaveWaitUntil")
@@ -20,7 +20,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
 		then
 			vim.api.nvim_create_autocmd("BufWritePre", {
 				desc = "format",
-				group = augroup,
+				group = client_augroup,
 				buffer = ev.buf,
 				callback = function(ev)
 					vim.lsp.buf.format({ bufnr = ev.buf, async = false, id = client_id })
@@ -28,9 +28,10 @@ vim.api.nvim_create_autocmd("LspAttach", {
 			})
 		end
 
+		local common_augroup = vim.api.nvim_create_augroup("lsp_common", {})
 		vim.api.nvim_create_autocmd({ "BufWritePost" }, {
 			desc = "populate quickfix from diagnostics",
-			group = augroup,
+			group = common_augroup,
 			buffer = ev.buf,
 			callback = function(ev)
 				local diagnostics = vim.diagnostic.get(ev.buf)
