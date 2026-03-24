@@ -9,7 +9,7 @@
   nix2container,
   writers,
 
-  curl-healthchecker,
+  curlMinimal,
   jellyfin,
 }:
 nix2container.buildImage {
@@ -23,7 +23,7 @@ nix2container.buildImage {
     (buildEnv {
       name = "root";
       paths = [
-        curl-healthchecker
+        curlMinimal
         jellyfin
 
         (writers.writeExecline { } "/bin/healthcheck" ''

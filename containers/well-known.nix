@@ -9,7 +9,7 @@
   runCommand,
   writeTextFile,
 
-  curl-healthchecker,
+  curlMinimal,
   s6-networking,
   tipidee,
 }:
@@ -45,7 +45,7 @@ nix2container.buildImage {
     (buildEnv {
       name = "root";
       paths = [
-        curl-healthchecker
+        curlMinimal
         s6-networking
         tipidee
       ];
