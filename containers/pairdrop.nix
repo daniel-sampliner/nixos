@@ -7,7 +7,7 @@
   nix2container,
   writers,
 
-  curl-healthchecker,
+  curlMinimal,
   pairdrop,
 }:
 nix2container.buildImage {
@@ -18,7 +18,7 @@ nix2container.buildImage {
     (buildEnv {
       name = "root";
       paths = [
-        curl-healthchecker
+        curlMinimal
         pairdrop
 
         (writers.writeExecline { } "/bin/healthcheck" ''

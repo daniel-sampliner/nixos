@@ -8,7 +8,7 @@
   nix2container,
   writers,
 
-  curl-healthchecker,
+  curlMinimal,
   ffmpeg-headless,
   radarr,
 }:
@@ -23,7 +23,7 @@ nix2container.buildImage {
     (buildEnv {
       name = "root";
       paths = [
-        curl-healthchecker
+        curlMinimal
         ffmpeg-headless
         radarr
 

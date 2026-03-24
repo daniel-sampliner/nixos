@@ -10,7 +10,7 @@
   writers,
 
   coreutils,
-  curl-healthchecker,
+  curlMinimal,
   qbittorrent-nox,
 }:
 let
@@ -81,7 +81,7 @@ nix2container.buildImage {
       name = "root";
       paths = [
         coreutils
-        curl-healthchecker
+        curlMinimal
         entrypoint
         healthcheck
         qbittorrent-nox

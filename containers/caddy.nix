@@ -9,7 +9,7 @@
   nix2container,
 
   caddy,
-  curl-healthchecker,
+  curlMinimal,
   mailcap,
 }:
 let
@@ -42,7 +42,7 @@ nix2container.buildImage {
       name = "root";
       paths = [
         caddy-w-plugins
-        curl-healthchecker
+        curlMinimal
       ];
       pathsToLink = [ "/bin" ];
     })

@@ -6,7 +6,7 @@
   dockerTools,
   nix2container,
 
-  curl-healthchecker,
+  curlMinimal,
   socat,
 }:
 nix2container.buildImage {
@@ -14,7 +14,7 @@ nix2container.buildImage {
   tag = socat.version;
 
   copyToRoot = [
-    curl-healthchecker
+    curlMinimal
     dockerTools.caCertificates
     socat
   ];
