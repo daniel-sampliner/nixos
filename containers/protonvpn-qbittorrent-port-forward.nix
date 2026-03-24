@@ -68,7 +68,7 @@ let
       importas -i -u bgPID !
 
       backtick -E port { pipeline { ${natpmpCmd "udp"} } ${getPort} }
-      ${log ''received udp port: %d'' "$port"}
+      ${log "received udp port: %d" "$port"}
 
       if { ${curlCmd} --retry-max-time 60
         --data-urlencode "json={\"listen_port\":''${port}}"
@@ -83,7 +83,7 @@ let
     if { ${curlCmd} --retry-max-time 30 --retry-connrefused
       localhost:8080/api/v2/app/version }
     if { printf "\n" }
-    ${log ''qBittorrent up!'' ""}
+    ${log "qBittorrent up!" ""}
 
     if { touch --date "60 seconds" /run/end }
     if { loopwhilex -x 0,69
@@ -91,7 +91,7 @@ let
       if { touch /run/now }
       ifelse -n { eltest /run/end -nt /run/now } { foreground { fdmove -c 1 2 printf "natpmp check timeout\n" } exit 69 }
       timeout 10 ${natpmpCmd "check"} }
-    ${log ''natpmp OK!'' ""}
+    ${log "natpmp OK!" ""}
     foreground { rm -- /run/end /run/now }
 
     emptyenv -c

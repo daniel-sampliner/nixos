@@ -86,26 +86,19 @@ in
               gtk3 = null;
               harfbuzz = null;
               libGL = null;
-              libX11 = null;
-              libXcomposite = null;
-              libXext = null;
-              libXi = null;
-              libXrender = null;
               libepoxy = null;
               libinput = null;
               libmysqlclient = prev.emptyFile;
               libxcb = null;
+              libxcomposite = null;
+              libxext = null;
+              libxi = null;
               libxkbcommon = null;
+              libxrender = null;
               qttranslations = null;
-              unixODBC = null;
-              unixODBCDrivers = nullAttrs prev.unixODBCDrivers;
+              unixodbc = null;
+              unixodbcDrivers = nullAttrs prev.unixodbcDrivers;
               vulkan-loader = prev.emptyFile;
-              xcbutil = null;
-              xcbutilimage = null;
-              xcbutilkeysyms = null;
-              xcbutilrenderutil = null;
-              xcbutilwm = null;
-              xorg = nullAttrs prev.xorg;
 
               withGtk3 = false;
             }
@@ -145,7 +138,6 @@ in
       qtlanguageserver = prev.emptyFile;
       qtshadertools = prev.emptyFile;
       qtsvg = prev.emptyFile;
-      wrapQtAppsHook = prev'.wrapQtAppsNoGuiHook;
     }
   );
 
