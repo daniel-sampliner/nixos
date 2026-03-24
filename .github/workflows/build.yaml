@@ -32,10 +32,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -53,10 +53,10 @@ jobs:
       regexp: ${{ steps.pushfilter.outputs.regexp }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -166,9 +166,9 @@ jobs:
       CHECK: ${{ matrix.check }}
 
     steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: actions/checkout@v6
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}

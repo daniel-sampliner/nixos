@@ -30,7 +30,7 @@ jobs:
       jobs: ${{ steps.main.outputs.jobs }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: enable swap
         run: |
@@ -40,8 +40,8 @@ jobs:
           sudo mkswap /swapfile
           sudo swapon /swapfile
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}

@@ -24,10 +24,10 @@ jobs:
       contents: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -84,10 +84,10 @@ jobs:
       packages: ${{ steps.list-updateables.outputs.packages }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -113,12 +113,12 @@ jobs:
         package: ${{ fromJSON(needs.gen-matrix.outputs.packages) }}
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           ref: ${{ env.BRANCH }}
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
@@ -231,7 +231,7 @@ jobs:
       pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         id: checkout
 
       - uses: actions/download-artifact@v4
@@ -240,8 +240,8 @@ jobs:
           path: ${{ runner.temp }}/patches
           merge-multiple: true
 
-      - uses: cachix/install-nix-action@v30
-      - uses: cachix/cachix-action@v15
+      - uses: cachix/install-nix-action@v31
+      - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
