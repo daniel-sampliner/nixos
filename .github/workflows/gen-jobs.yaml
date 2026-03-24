@@ -34,6 +34,7 @@ jobs:
 
       - name: enable swap
         run: |
+          sudo swapoff /swapfile || true
           sudo fallocate -l 10G /swapfile
           sudo chmod 600 /swapfile
           sudo mkswap /swapfile
