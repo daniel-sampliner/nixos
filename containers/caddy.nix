@@ -1,15 +1,12 @@
-# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024 - 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
   buildEnv,
-  buildGo125Module,
   dockerTools,
   lib,
   nix2container,
-  runCommandLocal,
-  writeText,
 
   caddy,
   curl-healthchecker,
@@ -19,54 +16,22 @@ let
   name = caddy.pname;
 
   caddy-w-plugins =
-    let
-      modules = [
-        {
-          name = "github.com/tailscale/caddy-tailscale";
-        }
-      ];
-      modulesFile = writeText "modules" (
-        lib.concatMapStrings (m: "_ \"${m}\"\n") (builtins.map (m: m.name) modules)
-      );
-      src = runCommandLocal "src-patched" { } ''
-        cp -a ${caddy.src} $out
-        chmod -R u+w $out
-        sed -i -E \
-          '\:^[[:blank:]]+// plug in Caddy modules here$:r ${modulesFile}' \
-          $out/cmd/caddy/main.go
-        ${caddy.go}/bin/gofmt -w $out/cmd/caddy/main.go
-      '';
-    in
-    caddy.override {
-      buildGo125Module =
-        args:
-        buildGo125Module (
-          args
-          // {
-            inherit src;
-            overrideModAttrs = old: {
-              preBuild = old.preBuild or "" + ''
-                cp go.mod go.mod.old
-                cp go.sum go.sum.old
-                go get ${
-                  lib.escapeShellArgs (
-                    builtins.map (m: m.name + lib.optionalString (m ? version) "@${m.version}") modules
-                  )
-                }
-                go mod tidy
-              '';
+    (caddy.withPlugins {
+      plugins = [ "github.com/tailscale/caddy-tailscale@latest" ];
+      hash = "sha256-xJOPVE56h4tlhW7m8ZFN8F2jrZW/3gYeLXVqaEaoVvY=";
+    }).overrideAttrs
+      (
+        _: prev: {
+          patchPhase = prev.patchPhase or "" + ''
+            go mod edit -go="${caddy.go.version}"
+          '';
 
-              postInstall = old.postInstall or "" + ''
-                install -Dm0644 -t "$out/smuggle" go.mod go.sum
-              '';
-            };
-            postConfigure = caddy.postConfigure or "" + ''
-              cp vendor/smuggle/go.{mod,sum} .
-            '';
-            vendorHash = "sha256-ijVKBOEE1XwsQn7DqdDwimhpIqs4hPjFOTtuEebGUOw=";
-          }
-        );
-    };
+          installCheckPhase =
+            lib.strings.replaceString ''[[ "''${modules[$mod]}" != "$ver" ]]''
+              ''[[ "$ver" != latest && "''${modules[$mod]}" != "$ver" ]]''
+              prev.installCheckPhase;
+        }
+      );
 in
 nix2container.buildImage {
   inherit name;
