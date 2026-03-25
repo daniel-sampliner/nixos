@@ -53,6 +53,7 @@
 
   programs.bash.enable = true;
   programs.command-not-found.enable = true;
+  programs.poetry.enable = true;
   programs.starship.settings.shell.zsh_indicator = "";
   programs.uv.enable = true;
 
