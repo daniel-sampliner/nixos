@@ -21,6 +21,7 @@
 
       ''
         vim.opt.exrc = true
+        vim.opt.wildmode = "longest:full,full"
 
         ${builtins.readFile ./starlark-ft.lua}
       ''
