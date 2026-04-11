@@ -12,6 +12,9 @@
     dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
     dgx.flake = false;
 
+    flake-compat.url = "github:NixOS/flake-compat";
+    flake-compat.flake = false;
+
     flake-parts.url = "github:hercules-ci/flake-parts";
     flake-parts.inputs.nixpkgs-lib.follows = "unstable";
 
@@ -20,6 +23,9 @@
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "unstable";
+
+    zig2nix.url = "github:Cloudef/zig2nix";
+    zig2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =

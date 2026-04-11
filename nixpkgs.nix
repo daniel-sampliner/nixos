@@ -5,13 +5,13 @@
 {
   inputs,
   lib,
-  withSystem,
   ...
 }:
 {
   perSystem =
     {
       config,
+      inputs',
       pkgs,
       system,
       ...
@@ -19,10 +19,15 @@
     let
       mkPkgSet =
         pkgs:
-        lib.filesystem.packagesFromDirectoryRecursive {
+        (lib.filesystem.packagesFromDirectoryRecursive {
           inherit (pkgs) callPackage newScope;
           directory = ./pkgs;
-        };
+        }).overrideScope
+          (
+            final: prev: {
+              inherit inputs';
+            }
+          );
     in
     {
       _module.args.pkgs = import inputs.nixpkgs {

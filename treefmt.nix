@@ -15,8 +15,10 @@
         programs = {
           nixfmt.enable = true;
 
-          shfmt.enable = true;
-          shfmt.indent_size = null;
+          shfmt = {
+            enable = true;
+            indent_size = null;
+          };
 
           stylua = {
             enable = true;
@@ -29,6 +31,10 @@
 
           taplo.enable = true;
           zig.enable = true;
+        };
+
+        settings.formatter = {
+          shfmt.options = [ "-bn" ];
         };
       };
     };
