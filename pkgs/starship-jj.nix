@@ -30,7 +30,10 @@ rustPackages.rustPlatform.buildRustPackage (final: {
   nativeInstallCheckInputs = [ versionCheckHook ];
   versionCheckProgramArg = "--version";
 
-  passthru.updateScript = nix-update-script { };
+  passthru.updateScript = nix-update-script {
+    attrPath = "starship-jj";
+    extraArgs = [ "-F" ];
+  };
 
   meta = {
     homepage = "https://gitlab.com/lanastara_foss/starship-jj";
