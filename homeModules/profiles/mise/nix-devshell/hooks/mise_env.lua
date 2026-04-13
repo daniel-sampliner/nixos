@@ -38,8 +38,12 @@ function PLUGIN:MiseEnv(ctx)
 		if keep_vars[key] then
 			if pathlike_vars[key] then
 				val = os.getenv(key)
-				if val and not strings.has_prefix(val, value) then
-					value = strings.join({ value, val }, ":")
+				if val then
+					if strings.has_prefix(val, value) then
+						value = val
+					else
+						value = strings.join({ value, val }, ":")
+					end
 				end
 			end
 			log.debug(key .. "=" .. value)
