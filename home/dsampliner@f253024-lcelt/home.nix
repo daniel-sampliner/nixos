@@ -46,9 +46,8 @@
       glow
       prek
       spacer
+      wl-clipboard
       ;
-
-    inherit (pkgs.pkgsExtra) wl-clipboard;
   };
 
   programs.bash.enable = true;
