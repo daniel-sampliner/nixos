@@ -4,7 +4,15 @@
 
 { lib, pkgs, ... }:
 let
-  inherit (pkgs.pkgsUnstable) mise;
+  mise = pkgs.pkgsUnstable.mise.override {
+    inherit (pkgs)
+      bash
+      coreutils
+      direnv
+      git
+      ;
+  };
+
   mise-inits = pkgs.pkgsExtra.mise-inits.override { inherit mise; };
 in
 {
@@ -44,15 +52,6 @@ in
     mise = {
       enable = true;
 
-      package = mise.override {
-        inherit (pkgs)
-          bash
-          coreutils
-          direnv
-          git
-          ;
-      };
-
       enableBashIntegration = false;
       enableFishIntegration = false;
       enableZshIntegration = false;
@@ -68,6 +67,8 @@ in
           show_tools = true;
         };
       };
+
+      package = mise;
     };
 
     git.ignores = [
