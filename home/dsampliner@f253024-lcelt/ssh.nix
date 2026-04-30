@@ -1,11 +1,9 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 { config, ... }:
 {
-  dgx.mc-ssh-configs = "${config.home.homeDirectory}/projects/nvidia/mc-ssh-configs";
-
   programs.ssh = {
     matchBlocks = {
       "github.com" = {
