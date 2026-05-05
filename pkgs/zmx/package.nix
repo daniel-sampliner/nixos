@@ -6,6 +6,7 @@
   fetchFromGitHub,
   installShellFiles,
   lib,
+  nix-update-script,
   stdenv,
   versionCheckHook,
   zig,
@@ -57,5 +58,6 @@ stdenv.mkDerivation (final: {
 
   passthru = {
     inherit (final) zigDeps;
+    updateScript = nix-update-script { extraArgs = [ "-F" ]; };
   };
 })
