@@ -23,9 +23,6 @@
 
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "unstable";
-
-    zig2nix.url = "github:Cloudef/zig2nix";
-    zig2nix.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs =

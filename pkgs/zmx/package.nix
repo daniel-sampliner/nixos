@@ -3,18 +3,11 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
-  callPackage,
-  common-updater-scripts,
   fetchFromGitHub,
-  inputs',
   installShellFiles,
-  jq,
   lib,
-  nixfmt,
-  runCommand,
   stdenv,
   versionCheckHook,
-  writeShellApplication,
   zig,
 }:
 stdenv.mkDerivation (final: {
@@ -27,15 +20,20 @@ stdenv.mkDerivation (final: {
     rev = "v${final.version}";
     hash = "sha256-ehbriI3xW40oVUbokhNuxYvueqFhkmHCVNZpqxQLr3A=";
   };
-  deps = callPackage ./build.zig.zon.nix { };
+
+  zigDeps = zig.fetchDeps {
+    inherit (final) src pname version;
+    fetchAll = true;
+    hash = "sha256-4jwdYJWSO39ZaO24ViG+rm3czP9mRB3Uj/RZArebP0Q=";
+  };
 
   nativeBuildInputs = [
     installShellFiles
     zig.hook
   ];
 
-  preBuild = ''
-    cp --dereference --recursive "${final.deps}" "$ZIG_GLOBAL_CACHE_DIR/p"
+  postConfigure = ''
+    cp --dereference --recursive "${final.zigDeps}" "$ZIG_GLOBAL_CACHE_DIR/p"
   '';
 
   postInstall = lib.strings.optionalString (stdenv.buildPlatform.canExecute stdenv.hostPlatform) ''
@@ -57,28 +55,7 @@ stdenv.mkDerivation (final: {
     mainProgram = final.pname;
   };
 
-  passthru =
-    let
-      zig2nix = runCommand "zig2nix" { } ''
-        install -D "${inputs'.zig2nix.apps.zig2nix-latest.program}" "$out/bin/zig2nix"
-      '';
-
-      updater = writeShellApplication {
-        name = "${final.pname}-updater";
-        runtimeInputs = [
-          common-updater-scripts
-          jq
-          nixfmt
-          zig2nix
-        ];
-        text = builtins.readFile ./update.sh;
-      };
-    in
-    {
-      inherit updater;
-      updateScript = [
-        (lib.getExe updater)
-        final.src.gitRepoUrl
-      ];
-    };
+  passthru = {
+    inherit (final) zigDeps;
+  };
 })
