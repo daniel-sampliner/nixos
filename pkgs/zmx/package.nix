@@ -13,13 +13,13 @@
 }:
 stdenv.mkDerivation (final: {
   pname = "zmx";
-  version = "0.4.2";
+  version = "0.5.0";
 
   src = fetchFromGitHub {
     owner = "neurosnap";
     repo = final.pname;
     rev = "v${final.version}";
-    hash = "sha256-ehbriI3xW40oVUbokhNuxYvueqFhkmHCVNZpqxQLr3A=";
+    hash = "sha256-eVp9Lgpx4Dn60NH17zZ+VOUy1VVK73A17bIkPFDKuz4=";
   };
 
   zigDeps = zig.fetchDeps {
