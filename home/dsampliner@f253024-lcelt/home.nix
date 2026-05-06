@@ -43,6 +43,7 @@
       bat
       btop-cuda
       delta
+      glab
       glow
       prek
       spacer
