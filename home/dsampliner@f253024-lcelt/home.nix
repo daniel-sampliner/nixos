@@ -36,6 +36,7 @@
       ./hide-fleet-icon
       ./mpv
       ./ssh.nix
+      ./vault.nix
     ];
 
   home.packages = builtins.attrValues {
