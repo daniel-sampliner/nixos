@@ -14,7 +14,7 @@
   programs.neovim = {
     enable = true;
 
-    extraLuaConfig = lib.mkMerge [
+    initLua = lib.mkMerge [
       (lib.mkOrder 0 ''
         local vim = vim
       '')
@@ -49,7 +49,7 @@
               (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
             ];
 
-            config = "luafile ${f}";
+            config = ''dofile("${f}")'';
           }))
         ];
       in

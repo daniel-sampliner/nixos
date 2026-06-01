@@ -4,14 +4,11 @@
 
 { config, ... }:
 {
-  programs.ssh = {
-    matchBlocks = {
-      "github.com" = {
-        extraOptions.PreferredAuthentications = "publickey";
-        host = "github.com gist.github.com";
-        identitiesOnly = true;
-        identityFile = "~/.ssh/github_id_ed25519";
-      };
+  programs.ssh.settings = {
+    "github.com gist.github.com" = {
+      IdentitiesOnly = true;
+      IdentityFile = "~/.ssh/github_id_ed25519";
+      PreferredAuthentications = "publickey";
     };
   };
 }

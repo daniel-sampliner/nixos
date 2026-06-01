@@ -4,25 +4,17 @@
 
 { pkgs, ... }:
 {
-  assertions = [
-    {
-      assertion = !pkgs ? oxfmt;
-      message = "unstable no longer necessary for oxfmt";
-    }
-  ];
-
   home.packages = builtins.attrValues {
     inherit (pkgs)
+      oxfmt
       oxlint
       typescript-go
       ;
-
-    inherit (pkgs.pkgsUnstable) oxfmt;
   };
 
   programs.bun.enable = true;
 
-  programs.neovim.extraLuaConfig = ''
+  programs.neovim.initLua = ''
     vim.lsp.enable("oxfmt")
     vim.lsp.enable("oxlint")
     vim.lsp.enable("tsgo")

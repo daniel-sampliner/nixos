@@ -4,28 +4,9 @@
 
 { lib, pkgs, ... }:
 let
-  mise = pkgs.pkgsUnstable.mise.override {
-    inherit (pkgs)
-      bash
-      coreutils
-      direnv
-      git
-      ;
-  };
-
-  mise-inits = pkgs.pkgsExtra.mise-inits.override { inherit mise; };
+  inherit (pkgs.pkgsExtra) mise-inits;
 in
 {
-  assertions = [
-    {
-      assertion = lib.trivial.pipe pkgs.mise [
-        lib.strings.getVersion
-        (v: lib.strings.versionOlder v "2026.")
-      ];
-      message = "unstable mise no longer necessary";
-    }
-  ];
-
   home.packages =
     let
       mise-parse-env =
@@ -45,7 +26,7 @@ in
     in
     [
       mise-parse-env
-      pkgs.xxHash
+      pkgs.xxhash
     ];
 
   programs = {
@@ -67,8 +48,6 @@ in
           show_tools = true;
         };
       };
-
-      package = mise;
     };
 
     git.ignores = [

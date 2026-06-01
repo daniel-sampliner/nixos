@@ -58,5 +58,5 @@
   programs.starship.settings.shell.zsh_indicator = "";
   programs.uv.enable = true;
 
-  home.stateVersion = "25.05";
+  home.stateVersion = "26.05";
 }

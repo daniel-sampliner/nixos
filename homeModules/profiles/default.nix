@@ -29,7 +29,7 @@
         man-pages
         man-pages-posix
         nix-output-monitor
-        nixfmt-rfc-style
+        nixfmt
         parallel
         pv
         ripgrep
@@ -62,4 +62,5 @@
 
   programs.home-manager.enable = true;
   xdg.enable = true;
+  xdg.userDirs.setSessionVariables = true;
 }

@@ -6,7 +6,7 @@
   pkg-config,
   stdenv,
   systemdLibs,
-  zig,
+  zig_0_15,
 }:
 stdenv.mkDerivation {
   pname = "notify_cancel";
@@ -16,7 +16,7 @@ stdenv.mkDerivation {
 
   nativeBuildInputs = [
     pkg-config
-    zig.hook
+    zig_0_15.hook
   ];
   buildInputs = [ systemdLibs ];
 

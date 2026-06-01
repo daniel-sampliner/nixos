@@ -12,7 +12,7 @@
   home.packages =
     let
       inherit (pkgs) openbao;
-      vault-shim = pkgs.runCommand "vault-shim" {} ''
+      vault-shim = pkgs.runCommand "vault-shim" { } ''
         mkdir -p "$out/bin"
         ln -s "${lib.getExe openbao}" "$out/bin/vault"
       '';

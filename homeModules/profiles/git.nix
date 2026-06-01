@@ -40,7 +40,7 @@
       };
 
       difftool.difftastic.cmd = "${lib.getExe config.programs.difftastic.package} ${
-        lib.cli.toGNUCommandLineShell { } config.programs.difftastic.options
+        lib.cli.toCommandLineShellGNU { } config.programs.difftastic.options
       }";
 
       fetch.prune = true;

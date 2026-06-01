@@ -2,33 +2,30 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ config, ... }:
+{ lib, config, ... }:
 {
   programs.ssh = {
     enable = true;
     enableDefaultConfig = false;
 
-    matchBlocks = {
+    settings = {
       "*" = {
-        addKeysToAgent = "no";
-        compression = false;
-        controlMaster = "no";
-        controlPath = "\${XDG_RUNTIME_DIR}/ssh/control-%C";
-        controlPersist = "no";
-        forwardAgent = false;
-        hashKnownHosts = false;
-        serverAliveCountMax = 3;
-        serverAliveInterval = 0;
-        userKnownHostsFile = "~/.ssh/known_hosts";
+        AddKeysToAgent = "no";
+        Compression = false;
+        ControlMaster = "no";
+        ControlPath = "\${XDG_RUNTIME_DIR}/ssh/control-%C";
+        ControlPersist = "no";
+        ForwardAgent = false;
+        HashKnownHosts = false;
+        ServerAliveCountMax = 3;
+        ServerAliveInterval = 0;
+        UserKnownHostsFile = "~/.ssh/known_hosts";
       };
 
-      zzz_yolo = {
-        match = "tagged yolo";
-        extraOptions = {
-          LogLevel = "ERROR";
-          UserKnownHostsFile = "/dev/null";
-          StrictHostKeyChecking = "no";
-        };
+      "Match tagged yolo" = {
+        LogLevel = "ERROR";
+        UserKnownHostsFile = "/dev/null";
+        StrictHostKeyChecking = "no";
       };
     };
   };

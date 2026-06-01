@@ -92,7 +92,7 @@
             (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
           ];
 
-          config = "luafile ${f}";
+          config = ''dofile("${f}")'';
         }))
       ];
     in
