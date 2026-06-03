@@ -23,18 +23,24 @@ pub fn build(b: *std.Build) void {
         .root_source_file = b.path("src/sd_bus/root.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 
     sd_bus_mod.addImport("logger", logger_mod);
+    sd_bus_mod.linkSystemLibrary("libsystemd", .{});
+
+    const patched_std_lib = patchStdLib(b);
 
     const exe_mod = b.createModule(.{
         .root_source_file = b.path("src/main.zig"),
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
 
     exe_mod.addImport("logger", logger_mod);
     exe_mod.addImport("sd_bus", sd_bus_mod);
+    exe_mod.linkSystemLibrary("libsystemd", .{});
 
     const app_filter = b.option(
         []const u8,
@@ -70,10 +76,8 @@ pub fn build(b: *std.Build) void {
     const exe = b.addExecutable(.{
         .name = "notify_cancel",
         .root_module = exe_mod,
+        .zig_lib_dir = patched_std_lib,
     });
-
-    exe.linkSystemLibrary("libsystemd");
-    exe.linkLibC();
 
     b.installArtifact(exe);
 
@@ -98,12 +102,10 @@ pub fn build(b: *std.Build) void {
         .filters = test_filters,
     });
 
-    sd_bus_unit_tests.linkSystemLibrary("libsystemd");
-    sd_bus_unit_tests.linkLibC();
-
     const exe_unit_tests = b.addTest(.{
         .root_module = exe_mod,
         .filters = test_filters,
+        .zig_lib_dir = patched_std_lib,
     });
 
     const run_sd_bus_unit_tests = b.addRunArtifact(sd_bus_unit_tests);
@@ -155,4 +157,27 @@ pub fn build(b: *std.Build) void {
 
     const fmt_step = b.step("fmt", "Format source code");
     fmt_step.dependOn(&run_zig_fmt.step);
+}
+
+fn patchStdLib(b: *std.Build) std.Build.LazyPath {
+    const src: std.Build.LazyPath = .{ .cwd_relative = b.fmt("{f}", .{b.graph.zig_lib_directory}) };
+
+    const patch_wf = b.addWriteFiles();
+    _ = patch_wf.addCopyDirectory(b.path("patch_stdlib/patches"), "", .{ .include_extensions = &.{".patch"} });
+
+    const run = b.addSystemCommand(&.{"bash"});
+    run.addFileArg(b.path("patch_stdlib/run.sh"));
+
+    if (b.verbose) run.addArg("-v");
+
+    run.addArg("-s");
+    run.addDirectoryArg(src);
+
+    run.addArg("-p");
+    run.addDirectoryArg(patch_wf.getDirectory());
+
+    run.addArg("-o");
+    const out = run.addOutputDirectoryArg("out");
+
+    return out.path(b, "lib");
 }

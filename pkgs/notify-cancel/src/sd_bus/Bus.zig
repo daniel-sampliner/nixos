@@ -2,15 +2,14 @@
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
 const c = @import("c.zig");
+const Error = @import("Error.zig");
+const Message = @import("Message.zig");
 
 const Bus = @This();
-const Message = @import("Message.zig");
-const Error = @import("Error.zig");
-
 const logger = @import("logger").logger(.@"sd_bus.Bus");
 
 sd_bus: ?*c.sd_bus = null,
@@ -20,7 +19,7 @@ pub const BusType = enum {
     monitor,
 };
 
-pub fn init(b: *Bus, bt: BusType) !void {
+pub fn init(b: *Bus, bt: BusType, addr: [:0]const u8) !void {
     logger.debug("initializing Bus: {s}", .{@tagName(bt)});
 
     var r: c_int = undefined;
@@ -56,14 +55,6 @@ pub fn init(b: *Bus, bt: BusType) !void {
         return error.DBusSetBusClientFailed;
     }
 
-    const addr = std.posix.getenvZ("DBUS_SESSION_BUS_ADDRESS") orelse {
-        logger.err("DBUS_SESSION_BUS_ADDRESS env var not set", .{});
-        return error.DBusMissingEnvVar;
-    };
-    if (addr.len < 1) {
-        logger.err("DBUS_SESSION_BUS_ADDRESS env var not set", .{});
-        return error.DBusMissingEnvVar;
-    }
     r = c.sd_bus_set_address(b.sd_bus, addr);
     if (r < 0) {
         logger.err(
@@ -146,9 +137,15 @@ pub fn getUniqueName(b: *Bus) ![]const u8 {
     return std.mem.span(buf);
 }
 
+var test_dbus_addr: [:0]const u8 = undefined;
+
+test {
+    test_dbus_addr = std.testing.environ.getPosix("DBUS_SESSION_BUS_ADDRESS").?;
+}
+
 test "monitor" {
     var monitor = Bus{};
-    try monitor.init(.monitor);
+    try monitor.init(.monitor, test_dbus_addr);
     defer monitor.free();
 
     var notification_id = std.atomic.Value(u32).init(0);
@@ -158,7 +155,7 @@ test "monitor" {
             const l = @import("logger").logger(.@"sd_bus.Bus.test.monitor.thread");
 
             var client = Bus{};
-            try client.init(.client);
+            try client.init(.client, test_dbus_addr);
             defer client.free();
 
             var reply = Message{};
@@ -273,7 +270,7 @@ test "monitor" {
     const want = notification_id.load(.seq_cst);
     defer {
         var client = Bus{};
-        if (client.init(.client)) {
+        if (client.init(.client, test_dbus_addr)) {
             defer client.free();
 
             client.callMethod(
@@ -314,7 +311,7 @@ pub fn wait(b: *Bus, timeout_usec: u64) !void {
 
 test "getUniqueName" {
     var b = Bus{};
-    try b.init(.client);
+    try b.init(.client, test_dbus_addr);
     defer b.free();
 
     const name = try b.getUniqueName();
@@ -364,15 +361,16 @@ pub fn callMethod(
 
 test "callMethod_reply" {
     var b = Bus{};
-    try b.init(.client);
+    try b.init(.client, test_dbus_addr);
     defer b.free();
 
-    const file = try std.fs.openFileAbsolute("/etc/machine-id", .{});
-    defer file.close();
+    const io = std.testing.io;
+    const file = try std.Io.Dir.openFileAbsolute(io, "/etc/machine-id", .{});
+    defer file.close(io);
 
     var reader = blk: {
         var buf: [4096]u8 = undefined;
-        break :blk file.reader(&buf);
+        break :blk file.reader(io, &buf);
     };
 
     const want = blk: {
@@ -399,7 +397,7 @@ test "callMethod_reply" {
 
 test "callMethod_noReply" {
     var b = Bus{};
-    try b.init(.client);
+    try b.init(.client, test_dbus_addr);
     defer b.free();
 
     try b.callMethod(
@@ -415,7 +413,7 @@ test "callMethod_noReply" {
 
 test "callMethod_bad" {
     var b = Bus{};
-    try b.init(.client);
+    try b.init(.client, test_dbus_addr);
     defer b.free();
 
     try std.testing.expectError(

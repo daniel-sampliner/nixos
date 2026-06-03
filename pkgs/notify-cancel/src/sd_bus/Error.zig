@@ -7,7 +7,6 @@ const std = @import("std");
 const c = @import("c.zig");
 
 const Error = @This();
-
 const logger = @import("logger").logger(.@"sd_bus.Error");
 
 sd_bus_error: *c.sd_bus_error,
@@ -82,7 +81,7 @@ pub fn fmtSdRetCode(rc: c_int) std.fmt.Alt(SdRetCode, SdRetCode.format) {
 const SdRetCode = union {
     rc: c_int,
 
-    pub fn format(sd: SdRetCode, writer: *std.io.Writer) std.Io.Writer.Error!void {
+    pub fn format(sd: SdRetCode, writer: *std.Io.Writer) std.Io.Writer.Error!void {
         const s = blk: {
             const E = std.posix.E;
             const e = std.enums.fromInt(E, -sd.rc) orelse break :blk "UNKNOWN";

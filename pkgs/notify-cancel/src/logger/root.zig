@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+// SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 //
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-const builtin = @import("builtin");
 const std = @import("std");
+const builtin = @import("builtin");
 
-pub fn logger(comptime scope: @Type(.enum_literal)) type {
+pub fn logger(comptime scope: @EnumLiteral()) type {
     const l = std.log.scoped(scope);
     return switch (builtin.is_test) {
         false => l,

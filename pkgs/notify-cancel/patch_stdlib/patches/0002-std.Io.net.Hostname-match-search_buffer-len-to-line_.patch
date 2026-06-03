@@ -1,0 +1,25 @@
+From 38342db8950a7ff5c54b0ae9dd94c411e8cb26f6 Mon Sep 17 00:00:00 2001
+From: Daniel Sampliner <samplinerD@gmail.com>
+Date: Thu, 4 Jun 2026 11:05:17 -0400
+Subject: [PATCH 2/4] std.Io.net.Hostname: match search_buffer len to line_buf
+
+---
+ lib/std/Io/net/HostName.zig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/lib/std/Io/net/HostName.zig b/lib/std/Io/net/HostName.zig
+index 6def1e2095..4560af1da5 100644
+--- a/lib/std/Io/net/HostName.zig
++++ b/lib/std/Io/net/HostName.zig
+@@ -383,7 +383,7 @@ pub const ResolvConf = struct {
+     timeout_seconds: u32,
+     nameservers_buffer: [max_nameservers]IpAddress,
+     nameservers_len: usize,
+-    search_buffer: [max_len]u8,
++    search_buffer: [512]u8,
+     search_len: usize,
+ 
+     /// According to resolv.conf(5) there is a maximum of 3 nameservers in this
+-- 
+2.54.0
+

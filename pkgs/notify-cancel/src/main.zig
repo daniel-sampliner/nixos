@@ -4,11 +4,10 @@
 
 const std = @import("std");
 const builtin = @import("builtin");
+
 const config = @import("config");
-
-const sd_bus = @import("sd_bus");
-
 const scoped = @import("logger").logger;
+const sd_bus = @import("sd_bus");
 
 pub const std_options: std.Options = .{
     .log_level = if (config.log_level) |ll| @enumFromInt(ll) else std.log.default_level,
@@ -25,29 +24,39 @@ pub const std_options: std.Options = .{
 
 /// Print log in syslog(3) format. Adapated from std.log.defaultLog.
 pub fn syslogFn(
-    comptime message_level: std.log.Level,
-    comptime scope: @Type(.enum_literal),
+    comptime level: std.log.Level,
+    comptime scope: @EnumLiteral(),
     comptime format: []const u8,
     args: anytype,
 ) void {
-    const level_txt = switch (message_level) {
+    const io = std.Options.debug_io;
+    const prev = io.swapCancelProtection(.blocked);
+    defer _ = io.swapCancelProtection(prev);
+
+    var buffer: [64]u8 = undefined;
+    const stderr = std.debug.lockStderr(&buffer).terminal();
+    defer std.debug.unlockStderr();
+
+    return syslogFnFileTerminal(level, scope, format, args, stderr) catch {};
+}
+
+/// Adapted from std.log.defaultLogFileTerminal.
+pub fn syslogFnFileTerminal(
+    comptime level: std.log.Level,
+    comptime scope: @EnumLiteral(),
+    comptime format: []const u8,
+    args: anytype,
+    t: std.Io.Terminal,
+) std.Io.Writer.Error!void {
+    try t.writer.writeAll(switch (level) {
         .err => "<3>",
         .warn => "<4>",
         .info => "<6>",
         .debug => "<7>",
-    };
-
-    const prefix2 = if (scope == .default) "" else "(" ++ @tagName(scope) ++ ")";
-    var stderr_buffer: [4096]u8 = undefined;
-    var stderr_writer = std.fs.File.stderr().writer(&stderr_buffer);
-    const stderr = &stderr_writer.interface;
-
-    std.debug.lockStdErr();
-    defer std.debug.unlockStdErr();
-    nosuspend {
-        stderr.print(level_txt ++ prefix2 ++ format ++ "\n", args) catch return;
-        stderr.flush() catch return;
-    }
+    });
+    if (scope != .default) try t.writer.print("({t})", .{scope});
+    try t.writer.writeAll(": ");
+    try t.writer.print(format ++ "\n", args);
 }
 
 test {
@@ -55,15 +64,29 @@ test {
     std.testing.refAllDecls(@This());
 }
 
-pub fn main() !void {
+pub fn main(init: std.process.Init) !void {
     const logger = scoped(.default);
     const allocator = std.heap.c_allocator;
 
+    const dbus_addr = blk: {
+        const env = "DBUS_SESSION_BUS_ADDRESS";
+        const msg = "{s} env var not set";
+        const addr = init.minimal.environ.getPosix(env) orelse {
+            logger.err(msg, .{env});
+            return error.DBusMissingEnvVar;
+        };
+        if (addr.len < 1) {
+            logger.err(msg, .{env});
+            return error.DBusMissingEnvVar;
+        }
+        break :blk addr;
+    };
+
     var monitor = sd_bus.Bus{};
-    try monitor.init(.monitor);
+    try monitor.init(.monitor, dbus_addr);
     defer monitor.free();
 
-    try ready();
+    if (init.environ_map.get("NOTIFY_SOCKET")) |s| try ready(init.io, s);
 
     var call_cookies = std.AutoHashMap(u64, void).init(allocator);
     defer call_cookies.deinit();
@@ -86,6 +109,7 @@ pub fn main() !void {
                 .method_return => handleReturn(
                     &message,
                     &call_cookies,
+                    dbus_addr,
                 ) catch |err| {
                     logger.err("{}", .{err});
                     switch (err) {
@@ -106,32 +130,94 @@ pub fn main() !void {
     }
 }
 
-fn ready() !void {
-    const socket_path = std.posix.getenv("NOTIFY_SOCKET") orelse return;
-    switch (socket_path[0]) {
-        '/' => {},
-        '@' => {},
-        else => {
-            return error.AddressFamilyNotSupported;
+const ready_msg = "READY=1" ++ "\n";
+
+fn ready(io: std.Io, socket_path: []const u8) !void {
+    const path = switch (socket_path[0]) {
+        '/', 0 => socket_path,
+        '@' => blk: {
+            var buf: [std.Io.Dir.max_path_bytes]u8 = undefined;
+            var p = buf[0..socket_path.len];
+            p[0] = 0;
+            @memcpy(p[1..], socket_path[1..]);
+            std.log.debug(
+                "{f} => {f}",
+                .{
+                    std.ascii.hexEscape(socket_path, .upper),
+                    std.ascii.hexEscape(p, .upper),
+                },
+            );
+            break :blk p;
         },
-    }
+        else => return error.AddressFamilyNotSupported,
+    };
 
-    var addr = try std.net.Address.initUnix(socket_path);
-    if (addr.un.path[0] == '@') {
-        addr.un.path[0] = 0;
-    }
+    const addr: std.Io.net.UnixAddress = try .init(path[0..socket_path.len]);
+    const stream = try addr.connect(io, .{ .mode = .dgram });
+    errdefer stream.close(io);
 
-    const fd = try std.posix.socket(
-        std.posix.AF.UNIX,
-        std.posix.SOCK.DGRAM | std.posix.SOCK.CLOEXEC,
-        0,
-    );
-    errdefer std.net.Stream.close(.{ .handle = fd });
+    var w = stream.writer(io, &.{});
+    try w.interface.writeAll(ready_msg);
+}
 
-    try std.posix.connect(fd, &addr.any, addr.getOsSockLen());
-    const stream: std.net.Stream = .{ .handle = fd };
+test "ready" {
+    const io = std.testing.io;
+    const logger = scoped(.ready);
 
-    try stream.writeAll("READY=1");
+    const sock_path = blk: {
+        var random_bytes: [12]u8 = undefined;
+        io.random(&random_bytes);
+        var suffix: [std.base64.url_safe.Encoder.calcSize(random_bytes.len)]u8 = undefined;
+        _ = std.base64.url_safe.Encoder.encode(&suffix, &random_bytes);
+        break :blk try std.fmt.allocPrint(std.testing.allocator, "\x00notify-cancel-test.{s}", .{&suffix});
+    };
+    defer std.testing.allocator.free(sock_path);
+    logger.info("path: {f}", .{std.ascii.hexEscape(sock_path, .upper)});
+
+    const addr: std.Io.net.UnixAddress = try .init(sock_path);
+    var server = try addr.bind(io, .{ .mode = .dgram });
+    defer server.close(io);
+
+    var client_task = try io.concurrent(ready, .{ io, sock_path });
+    defer client_task.cancel(io) catch |err|
+        scoped(.@"ready.client_task").err("cancel err: {}", .{err});
+
+    var buf: [ready_msg.len]u8 = undefined;
+    const msg = try server.receive(io, &buf);
+    const got = msg.data;
+
+    try std.testing.expectEqualStrings(ready_msg, got);
+
+    try client_task.await(io);
+}
+
+fn testReadyRead(io: std.Io, server: *std.Io.net.Server, buf: *[]u8) error{Canceled}!void {
+    const logger = scoped(.testReadyRead);
+
+    const stream = server.accept(io) catch |err| {
+        logger.err("failed to accept: {}", .{err});
+        return error.Canceled;
+    };
+
+    defer stream.close(io);
+    defer stream.shutdown(io, .recv) catch {};
+    stream.shutdown(io, .send) catch {};
+
+    var r = stream.reader(io, buf.*);
+    const msg = r.interface.takeDelimiter('\n') catch |err| {
+        logger.err("failed to read: {}", .{err});
+        return error.Canceled;
+    };
+    buf.len = if (msg) |m| m.len else 0;
+}
+
+fn testReadyWrite(io: std.Io, sock_path: []const u8) error{Canceled}!void {
+    const logger = scoped(.testReadyWrite);
+
+    ready(io, sock_path) catch |err| {
+        logger.err("{}", .{err});
+        return error.Canceled;
+    };
 }
 
 fn handleCall(
@@ -209,6 +295,7 @@ fn handleCall(
 fn handleReturn(
     message: *sd_bus.Message,
     cookies: *std.AutoHashMap(u64, void),
+    dbus_addr: [:0]const u8,
 ) !void {
     const logger = scoped(.handleReturn);
     const reply_cookie = try message.getReplyCookie();
@@ -226,7 +313,7 @@ fn handleReturn(
     logger.debug("reply_cookie: {d}, id: {d}", .{ reply_cookie, id });
 
     var bus = sd_bus.Bus{};
-    try bus.init(.client);
+    try bus.init(.client, dbus_addr);
     defer bus.free();
 
     try bus.callMethod(

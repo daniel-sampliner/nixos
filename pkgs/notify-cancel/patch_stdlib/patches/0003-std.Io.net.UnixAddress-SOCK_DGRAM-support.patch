@@ -1,0 +1,205 @@
+From 8e8c03a327e286e6b1ea2a0ceb196d6a1e95bed9 Mon Sep 17 00:00:00 2001
+From: Daniel Sampliner <samplinerD@gmail.com>
+Date: Thu, 4 Jun 2026 11:05:17 -0400
+Subject: [PATCH 3/4] std.Io.net.UnixAddress: SOCK_DGRAM support
+
+---
+ lib/std/Io.zig          | 14 +++++++++++--
+ lib/std/Io/Threaded.zig | 46 +++++++++++++++++++++++++++++++++++++++--
+ lib/std/Io/net.zig      | 33 +++++++++++++++++++++++++++--
+ 3 files changed, 87 insertions(+), 6 deletions(-)
+
+diff --git a/lib/std/Io.zig b/lib/std/Io.zig
+index ba20eccc4e..3430989ffe 100644
+--- a/lib/std/Io.zig
++++ b/lib/std/Io.zig
+@@ -239,8 +239,9 @@ pub const VTable = struct {
+     netAccept: *const fn (?*anyopaque, server: net.Socket.Handle, options: net.Server.AcceptOptions) net.Server.AcceptError!net.Socket,
+     netBindIp: *const fn (?*anyopaque, address: *const net.IpAddress, options: net.IpAddress.BindOptions) net.IpAddress.BindError!net.Socket,
+     netConnectIp: *const fn (?*anyopaque, address: *const net.IpAddress, options: net.IpAddress.ConnectOptions) net.IpAddress.ConnectError!net.Socket,
++    netBindUnix: *const fn (?*anyopaque, address: *const net.UnixAddress, options: net.UnixAddress.BindOptions) net.UnixAddress.BindError!net.Socket,
+     netListenUnix: *const fn (?*anyopaque, *const net.UnixAddress, net.UnixAddress.ListenOptions) net.UnixAddress.ListenError!net.Socket.Handle,
+-    netConnectUnix: *const fn (?*anyopaque, *const net.UnixAddress) net.UnixAddress.ConnectError!net.Socket.Handle,
++    netConnectUnix: *const fn (?*anyopaque, *const net.UnixAddress, options: net.UnixAddress.ConnectOptions) net.UnixAddress.ConnectError!net.Socket.Handle,
+     netSocketCreatePair: *const fn (?*anyopaque, net.Socket.CreatePairOptions) net.Socket.CreatePairError![2]net.Socket,
+     netSend: *const fn (?*anyopaque, net.Socket.Handle, []net.OutgoingMessage, net.SendFlags) struct { ?net.Socket.SendError, usize },
+     /// Returns 0 on end of stream.
+@@ -2622,6 +2623,7 @@ pub const failing: std.Io = .{
+         .netAccept = failingNetAccept,
+         .netBindIp = failingNetBindIp,
+         .netConnectIp = failingNetConnectIp,
++        .netBindUnix = failingNetBindUnix,
+         .netListenUnix = failingNetListenUnix,
+         .netConnectUnix = failingNetConnectUnix,
+         .netSocketCreatePair = failingNetSocketCreatePair,
+@@ -3350,6 +3352,13 @@ pub fn failingNetConnectIp(userdata: ?*anyopaque, address: *const net.IpAddress,
+     return error.NetworkDown;
+ }
+ 
++pub fn failingNetBindUnix(userdata: ?*anyopaque, address: *const net.UnixAddress, options: net.UnixAddress.BindOptions) net.UnixAddress.BindError!net.Socket {
++    _ = userdata;
++    _ = address;
++    _ = options;
++    return error.NetworkDown;
++}
++
+ pub fn failingNetListenUnix(userdata: ?*anyopaque, address: *const net.UnixAddress, options: net.UnixAddress.ListenOptions) net.UnixAddress.ListenError!net.Socket.Handle {
+     _ = userdata;
+     _ = address;
+@@ -3357,9 +3366,10 @@ pub fn failingNetListenUnix(userdata: ?*anyopaque, address: *const net.UnixAddre
+     return error.NetworkDown;
+ }
+ 
+-pub fn failingNetConnectUnix(userdata: ?*anyopaque, address: *const net.UnixAddress) net.UnixAddress.ConnectError!net.Socket.Handle {
++pub fn failingNetConnectUnix(userdata: ?*anyopaque, address: *const net.UnixAddress, options: net.UnixAddress.ConnectOptions) net.UnixAddress.ConnectError!net.Socket.Handle {
+     _ = userdata;
+     _ = address;
++    _ = options;
+     return error.NetworkDown;
+ }
+ 
+diff --git a/lib/std/Io/Threaded.zig b/lib/std/Io/Threaded.zig
+index f004a56ca9..2dfe26d377 100644
+--- a/lib/std/Io/Threaded.zig
++++ b/lib/std/Io/Threaded.zig
+@@ -1929,6 +1929,10 @@ pub fn io(t: *Threaded) Io {
+                 .windows => netBindIpWindows,
+                 else => netBindIpPosix,
+             },
++            .netBindUnix = switch (native_os) {
++                .windows => netBindUnixWindows,
++                else => netBindUnixPosix,
++            },
+             .netConnectIp = switch (native_os) {
+                 .windows => netConnectIpWindows,
+                 else => netConnectIpPosix,
+@@ -12126,11 +12130,12 @@ fn netConnectIpWindows(
+ fn netConnectUnixPosix(
+     userdata: ?*anyopaque,
+     address: *const net.UnixAddress,
++    options: net.UnixAddress.ConnectOptions,
+ ) net.UnixAddress.ConnectError!net.Socket.Handle {
+     if (!net.has_unix_sockets) return error.AddressFamilyUnsupported;
+     const t: *Threaded = @ptrCast(@alignCast(userdata));
+     _ = t;
+-    const socket_fd = openSocketPosix(posix.AF.UNIX, .{ .mode = .stream }) catch |err| switch (err) {
++    const socket_fd = openSocketPosix(posix.AF.UNIX, .{ .mode = options.mode }) catch |err| switch (err) {
+         error.ProtocolUnsupportedByAddressFamily => return error.AddressFamilyUnsupported,
+         error.OptionUnsupported => return error.Unexpected,
+         else => |e| return e,
+@@ -12145,6 +12150,7 @@ fn netConnectUnixPosix(
+ fn netConnectUnixWindows(
+     userdata: ?*anyopaque,
+     address: *const net.UnixAddress,
++    options: net.UnixAddress.ConnectOptions,
+ ) net.UnixAddress.ConnectError!net.Socket.Handle {
+     if (!net.has_unix_sockets) return error.AddressFamilyUnsupported;
+     if (!have_networking) return error.NetworkDown;
+@@ -12157,7 +12163,7 @@ fn netConnectUnixWindows(
+         error.NameTooLong, error.BadPathName => return error.FileNotFound,
+         else => |e| return e,
+     } else undefined;
+-    const socket_handle = openSocketAfd(ws2_32.AF.UNIX, .{ .mode = .stream }) catch |err| switch (err) {
++    const socket_handle = openSocketAfd(ws2_32.AF.UNIX, .{ .mode = options.mode }) catch |err| switch (err) {
+         error.ProtocolUnsupportedByAddressFamily => return error.AddressFamilyUnsupported,
+         else => |e| return e,
+     };
+@@ -12224,6 +12230,42 @@ fn netBindIpWindows(
+     return .{ .handle = socket_handle, .address = bound_address };
+ }
+ 
++fn netBindUnixPosix(
++    userdata: ?*anyopaque,
++    address: *const net.UnixAddress,
++    options: net.UnixAddress.BindOptions,
++) net.UnixAddress.BindError!net.Socket {
++    if (!have_networking) return error.NetworkDown;
++    const t: *Threaded = @ptrCast(@alignCast(userdata));
++    _ = t;
++    const socket_fd = openSocketPosix(posix.AF.UNIX, .{ .mode = options.mode }) catch |err| switch (err) {
++        error.ProtocolUnsupportedBySystem => return error.AddressFamilyUnsupported,
++        error.ProtocolUnsupportedByAddressFamily => return error.AddressFamilyUnsupported,
++        error.SocketModeUnsupported => return error.AddressFamilyUnsupported,
++        error.OptionUnsupported => return error.Unexpected,
++        else => |e| return e,
++    };
++    errdefer closeFd(socket_fd);
++
++    var storage: UnixAddress = undefined;
++    var addr_len = addressUnixToPosix(address, &storage);
++    try posixBindUnix(socket_fd, &storage.any, addr_len);
++    if (options.allow_broadcast) try setSocketOptionPosix(socket_fd, std.posix.SOL.SOCKET, std.posix.SO.BROADCAST, 1);
++    try posixGetSockName(socket_fd, &storage.any, &addr_len);
++    return .{ .handle = socket_fd, .address = .{ .ip4 = .loopback(0) } };
++}
++
++fn netBindUnixWindows(
++    userdata: ?*anyopaque,
++    address: *const net.UnixAddress,
++    options: net.UnixAddress.BindOptions,
++) net.UnixAddress.BindError!net.Socket {
++    _ = userdata;
++    _ = address;
++    _ = options;
++    @compileError("not implemented");
++}
++
+ fn openSocketPosix(
+     family: posix.sa_family_t,
+     options: IpAddress.BindOptions,
+diff --git a/lib/std/Io/net.zig b/lib/std/Io/net.zig
+index ef99c8e441..f25edbfc07 100644
+--- a/lib/std/Io/net.zig
++++ b/lib/std/Io/net.zig
+@@ -888,6 +888,31 @@ pub const UnixAddress = struct {
+         };
+     }
+ 
++    pub const BindError = error{
++        AddressFamilyUnsupported,
++        AddressInUse,
++        NetworkDown,
++        SystemResources,
++        SymLinkLoop,
++        FileNotFound,
++        NotDir,
++        ReadOnlyFileSystem,
++        ProcessFdQuotaExceeded,
++        SystemFdQuotaExceeded,
++        AccessDenied,
++        PermissionDenied,
++        AddressUnavailable,
++    } || Io.Cancelable || Io.UnexpectedError;
++
++    pub const BindOptions = struct {
++        allow_broadcast: bool = false,
++        mode: Socket.Mode,
++    };
++
++    pub fn bind(ua: *const UnixAddress, io: Io, options: BindOptions) BindError!Socket {
++        return io.vtable.netBindUnix(io.userdata, ua, options);
++    }
++
+     pub const ConnectError = error{
+         SystemResources,
+         ProcessFdQuotaExceeded,
+@@ -905,10 +930,14 @@ pub const UnixAddress = struct {
+         NetworkDown,
+     } || Io.Cancelable || Io.UnexpectedError;
+ 
+-    pub fn connect(ua: *const UnixAddress, io: Io) ConnectError!Stream {
++    pub const ConnectOptions = struct {
++        mode: Socket.Mode = .stream,
++    };
++
++    pub fn connect(ua: *const UnixAddress, io: Io, options: ConnectOptions) ConnectError!Stream {
+         assert(ua.path.len <= max_len);
+         return .{ .socket = .{
+-            .handle = try io.vtable.netConnectUnix(io.userdata, ua),
++            .handle = try io.vtable.netConnectUnix(io.userdata, ua, options),
+             .address = .{ .ip4 = .loopback(0) },
+         } };
+     }
+-- 
+2.54.0
+

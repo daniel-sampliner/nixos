@@ -1,0 +1,16 @@
+// SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+//
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+.{
+    .name = .notify_cancel,
+    .version = "0.0.1",
+    .fingerprint = 0x6c81e2c4c4a6174e, // Changing this has security and trust implications.
+    .minimum_zig_version = "0.16.0",
+    .dependencies = .{},
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
