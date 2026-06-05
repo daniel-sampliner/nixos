@@ -46,10 +46,6 @@
             {
               inherit pkgsUnstable;
 
-              inherit (pkgsUnstable)
-                vimPlugins
-                ;
-
               pkgsExtra = mkPkgSet prev;
             }
           )
