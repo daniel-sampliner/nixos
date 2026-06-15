@@ -42,6 +42,8 @@
     };
 
     settings = {
+      auto_reload_config = -1;
+
       disable_ligatures = "cursor";
 
       scrollback_lines = 20000;
