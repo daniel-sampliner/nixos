@@ -17,6 +17,7 @@
         "fzf.nix"
         "javascript.nix"
         "jujutsu"
+        "k8s.nix"
         "kitty.nix"
         "notify-cancel.nix"
         "rnnoise.nix"
