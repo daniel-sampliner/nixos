@@ -186,6 +186,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          sudo rm -vf -- /etc/containers/registries.conf
           nix -L run .#push-to-registry
 
   success:
