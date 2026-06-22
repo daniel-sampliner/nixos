@@ -19,7 +19,7 @@ in
   ffmpeg_7 = prev.ffmpeg_7.override { ffmpegVariant = "headless"; };
   gd = prev.gd.override { withXorg = false; };
   gobject-introspection = prev.gobject-introspection.override { x11Support = false; };
-  graphviz = prev.graphviz-nox;
+  graphviz = prev.graphviz.override { withXorg = false; };
 
   gst_all_1 = prev.gst_all_1 // {
     gst-plugins-bad = prev.gst_all_1.gst-plugins-bad.override { guiSupport = false; };

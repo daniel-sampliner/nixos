@@ -18,7 +18,7 @@ let
   caddy-w-plugins =
     (caddy.withPlugins {
       plugins = [ "github.com/tailscale/caddy-tailscale@latest" ];
-      hash = "sha256-xJOPVE56h4tlhW7m8ZFN8F2jrZW/3gYeLXVqaEaoVvY=";
+      hash = "sha256-XBdYjtuPVu/beIgFgFcVp6ln4r9kq0B6+4xJ8+WWYn0=";
     }).overrideAttrs
       (
         _: prev: {

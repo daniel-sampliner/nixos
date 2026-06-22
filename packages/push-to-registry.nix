@@ -29,8 +29,10 @@ writers.writeExecline
     if {
       heredoc -d 0 $GH_TOKEN
       skopeo login
-        --username $GITHUB_ACTOR
+        --debug
         --password-stdin
+        --username $GITHUB_ACTOR
+        --verbose
         $registry
     }
 
