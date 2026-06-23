@@ -5,9 +5,12 @@
 { pkgs, ... }: {
   home.packages = builtins.attrValues {
     inherit (pkgs)
+      dyff
       kube-capacity
       kubectl
       kubectl-neat
+      kubectl-view-allocations
+      kubespy
       stern
       ;
 
