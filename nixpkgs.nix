@@ -46,6 +46,7 @@
             {
               inherit pkgsUnstable;
 
+              pnpm_10_29_2 = prev.pnpm_10;
               pkgsExtra = mkPkgSet prev;
             }
           )
