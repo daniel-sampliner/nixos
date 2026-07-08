@@ -46,7 +46,7 @@
             {
               inherit pkgsUnstable;
 
-              pkgsDgx = prev.callPackage inputs.dgx {};
+              pkgsDgx = prev.callPackage inputs.dgx { };
               pkgsExtra = mkPkgSet prev;
             }
           )

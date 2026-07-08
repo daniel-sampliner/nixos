@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -18,12 +18,9 @@
 
         packages = builtins.attrValues {
           inherit (pkgs)
+            dix
             home-manager
             nix-output-monitor
-            ;
-
-          inherit (pkgs.pkgsUnstable)
-            dix
             nix-update
             reuse
             ;
