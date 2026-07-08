@@ -51,6 +51,8 @@
       spacer
       wl-clipboard
       ;
+
+    inherit (pkgs.pkgsDgx) kubectl-nkx;
   };
 
   programs.bash.enable = true;
