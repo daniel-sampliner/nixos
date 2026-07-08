@@ -48,7 +48,6 @@
 
               pkgsDgx = prev.callPackage inputs.dgx {};
               pkgsExtra = mkPkgSet prev;
-              pnpm_10_29_2 = prev.pnpm_10;
             }
           )
         ];
