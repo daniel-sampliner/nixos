@@ -53,6 +53,8 @@
       ;
 
     inherit (pkgs.pkgsDgx) kubectl-nkx;
+    inherit (pkgs.pkgsExtra) ai-jail;
+    inherit (pkgs.pkgsUnstable) pi-coding-agent;
   };
 
   programs.bash.enable = true;
