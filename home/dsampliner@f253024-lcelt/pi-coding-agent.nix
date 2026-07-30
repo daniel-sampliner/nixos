@@ -13,6 +13,7 @@ in
       extensions = [
         "commands.ts"
         "handoff.ts"
+        "inline-bash.ts"
         "notify.ts"
         "pirate.ts"
         "plan-mode"
