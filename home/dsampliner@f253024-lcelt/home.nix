@@ -48,12 +48,17 @@
       delta
       glab
       glow
+      par
       prek
       spacer
       wl-clipboard
       ;
 
     inherit (pkgs.pkgsDgx) kubectl-nkx;
+  };
+
+  home.sessionVariables = {
+    PARINIT = "rTbgqR B=.,?'_A_a_@ Q=_s>|";
   };
 
   programs.bash.enable = true;
