@@ -51,6 +51,7 @@
       par
       prek
       spacer
+      units
       wl-clipboard
       ;
 
