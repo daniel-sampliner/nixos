@@ -31,6 +31,7 @@ in
     ];
 
   home.packages = builtins.attrValues {
+    inherit (pkgs) opensrc;
     inherit (pkgs.pkgsExtra) ai-jail;
     inherit pi-coding-agent;
   };
