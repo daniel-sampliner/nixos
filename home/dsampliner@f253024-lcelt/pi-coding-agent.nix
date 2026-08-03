@@ -19,6 +19,7 @@ in
         "plan-mode"
         "session-name.ts"
         "structured-output.ts"
+        "subagent"
         "tools.ts"
       ];
 
