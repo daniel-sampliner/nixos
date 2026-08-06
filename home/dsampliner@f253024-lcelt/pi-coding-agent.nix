@@ -67,7 +67,7 @@ in
   home.packages = builtins.attrValues {
     inherit (pkgs) opensrc;
     inherit (pkgs.pkgsExtra) ai-jail;
-    inherit (pkgs.pkgsUnstable) rtk;
+    inherit (pkgs.pkgsUnstable) nono rtk;
     inherit pi-coding-agent;
   };
 }
