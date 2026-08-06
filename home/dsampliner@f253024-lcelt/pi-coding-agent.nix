@@ -2,7 +2,12 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ lib, pkgs, ... }:
+{
+  config,
+  lib,
+  pkgs,
+  ...
+}:
 let
   inherit (pkgs.pkgsUnstable) pi-coding-agent;
 in
@@ -78,5 +83,9 @@ in
     inherit (pkgs.pkgsExtra) ai-jail;
     inherit (pkgs.pkgsUnstable) nono rtk;
     inherit pi-coding-agent;
+  };
+
+  home.sessionVariables = {
+    RTK_DB_PATH = "${config.xdg.dataHome}/rtk/history.db";
   };
 }
