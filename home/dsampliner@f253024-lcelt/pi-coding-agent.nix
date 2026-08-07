@@ -12,71 +12,40 @@ let
   inherit (pkgs.pkgsUnstable) pi-coding-agent;
 in
 {
-  home.file =
-    let
-      srcDir = "${pi-coding-agent}/lib/node_modules/pi-monorepo/examples/extensions";
-      extensions = [
+  home.file.".pi/agent/extensions" = {
+    source = pkgs.stdenvNoCC.mkDerivation (final: {
+      pname = "${lib.strings.getName pi-coding-agent}-example-extensions";
+      version = "${lib.strings.getVersion pi-coding-agent}";
+
+      files = [
         "commands.ts"
         "handoff.ts"
         "inline-bash.ts"
-        "notify.ts"
         "pirate.ts"
-        "plan-mode"
         "session-name.ts"
         "structured-output.ts"
         "tools.ts"
       ];
 
-      subagent =
-        let
-          dir = "${srcDir}/subagent";
-        in
-        {
-          agents = {
-            source = pkgs.runCommand "pi-subagent-agents" { } ''
-              for f in "${dir}/agents"/*.md; do
-                install -Dm0644 -t "$out" "$f"
-              done
+      src = pi-coding-agent;
+      dontUnpack = true;
+      dontPatch = true;
+      dontConfigure = true;
+      dontBuild = true;
 
-              substituteInPlace "$out/planner.md" \
-                --replace-fail 'claude-sonnet-4-5' 'openai-codex/gpt-5.6-sol:high'
+      installPhase = ''
+        cd "$src/lib/node_modules/pi-monorepo/examples/extensions" || exit 1
 
-              substituteInPlace "$out/reviewer.md" \
-                --replace-fail 'claude-sonnet-4-5' 'anthropic/claude-opus-5:high'
+        ${lib.strings.toShellVar "files" final.files}
+        install -Dm 0644 -t "$out" "''${files[@]}"
 
-              substituteInPlace "$out/scout.md" \
-                --replace-fail 'claude-haiku-4-5' 'openai-codex/gpt-5.6-luna:low'
+        substitute "notify.ts" "$out/notify-modified.ts" \
+          --replace-fail agent_end agent_settled
+      '';
+    });
 
-              substituteInPlace "$out/worker.md" \
-                --replace-fail 'claude-sonnet-4-5' 'openai-codex/gpt-5.6-terra:medium'
-            '';
-            recursive = true;
-          };
-
-          "extensions/subagent" = {
-            source = pkgs.runCommand "pi-subagent-extension" { } ''
-              install -Dm0644 -t "$out" "${dir}"/{agents,index}.ts
-            '';
-            recursive = false;
-          };
-
-          prompts = {
-            source = "${dir}/prompts";
-            recursive = true;
-          };
-        };
-
-      dstDir = ".pi/agent";
-    in
-    lib.trivial.pipe extensions [
-      (builtins.map (
-        ext: lib.attrsets.nameValuePair "${dstDir}/extensions/${ext}" { source = "${srcDir}/${ext}"; }
-      ))
-      builtins.listToAttrs
-    ]
-    // lib.attrsets.mapAttrs' (
-      name: value: lib.attrsets.nameValuePair "${dstDir}/${name}" value
-    ) subagent;
+    recursive = true;
+  };
 
   home.packages = builtins.attrValues {
     inherit (pkgs) opensrc;
