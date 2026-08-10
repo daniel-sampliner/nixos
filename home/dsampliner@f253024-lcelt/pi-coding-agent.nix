@@ -57,4 +57,10 @@ in
   home.sessionVariables = {
     RTK_DB_PATH = "${config.xdg.dataHome}/rtk/history.db";
   };
+
+  programs.neovim.initLua = lib.mkOrder 1 ''
+    if os.getenv("NONO_CAP_FILE") then
+      vim.opt.shadafile = "NONE"
+    end
+  '';
 }
