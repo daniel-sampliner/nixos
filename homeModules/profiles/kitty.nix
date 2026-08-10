@@ -39,6 +39,7 @@
 
     keybindings = {
       "ctrl+shift+n" = "new_os_window_with_cwd";
+      "ctrl+shift+t" = "no_op";
     };
 
     settings = {
