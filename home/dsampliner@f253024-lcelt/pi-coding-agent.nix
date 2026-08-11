@@ -61,6 +61,7 @@ in
   programs.neovim.initLua = lib.mkOrder 1 ''
     if os.getenv("NONO_CAP_FILE") then
       vim.opt.shadafile = "NONE"
+      vim.opt.swapfile = false
     end
   '';
 }
