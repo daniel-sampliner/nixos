@@ -9,7 +9,9 @@
   ...
 }:
 let
-  inherit (pkgs.pkgsUnstable) pi-coding-agent;
+  inherit (pkgs.pkgsUnstable) nono pi-coding-agent;
+
+  rtkDbDir = "${config.xdg.dataHome}/rtk";
 in
 {
   home.file.".pi/agent/extensions" = {
@@ -50,12 +52,12 @@ in
   home.packages = builtins.attrValues {
     inherit (pkgs) opensrc;
     inherit (pkgs.pkgsExtra) ai-jail;
-    inherit (pkgs.pkgsUnstable) nono rtk;
-    inherit pi-coding-agent;
+    inherit (pkgs.pkgsUnstable) rtk;
+    inherit nono pi-coding-agent;
   };
 
   home.sessionVariables = {
-    RTK_DB_PATH = "${config.xdg.dataHome}/rtk/history.db";
+    RTK_DB_PATH = "${rtkDbDir}/history.db";
   };
 
   programs.neovim.initLua = lib.mkOrder 1 ''
@@ -64,4 +66,24 @@ in
       vim.opt.swapfile = false
     end
   '';
+
+  systemd.user = {
+    services."nono-session-cleanup".Service = {
+      ExecStart = "${lib.getExe nono} session cleanup --silent --older-than 7";
+      Type = "oneshot";
+    };
+
+    timers."nono-session-cleanup" = {
+      Timer = {
+        OnCalendar = "*-*-* 03:00:00";
+        RandomizedDelaySec = "1h";
+        Persistent = true;
+      };
+      Install.WantedBy = [ "timers.target" ];
+    };
+
+    tmpfiles.rules = [
+      "d ${rtkDbDir}/tee 0700 - - 7d"
+    ];
+  };
 }
