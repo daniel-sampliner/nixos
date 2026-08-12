@@ -53,6 +53,7 @@ in
     inherit (pkgs) opensrc;
     inherit (pkgs.pkgsExtra) ai-jail;
     inherit (pkgs.pkgsUnstable) rtk;
+    inherit (pkgs.pkgsUnstable.pkgsExtra) nono-completions;
     inherit nono pi-coding-agent;
   };
 
