@@ -21,7 +21,7 @@
     enable = true;
 
     settings = {
-      aliases = {
+      alias = {
         difft = "--paginate difftool --no-prompt --tool difftastic";
       };
 
@@ -41,7 +41,7 @@
 
       difftool.difftastic.cmd = "${lib.getExe config.programs.difftastic.package} ${
         lib.cli.toCommandLineShellGNU { } config.programs.difftastic.options
-      }";
+      } $LOCAL $REMOTE";
 
       fetch.prune = true;
       fetch.fsckObjects = true;
