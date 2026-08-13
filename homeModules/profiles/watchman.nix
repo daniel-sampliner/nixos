@@ -29,7 +29,6 @@ in
   home.packages = [ pkg ];
 
   programs.jujutsu.settings.fsmonitor = {
-    backend = "watchman";
     watchman."register-snapshot-trigger" = true;
   };
 
