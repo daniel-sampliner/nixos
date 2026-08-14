@@ -9,8 +9,9 @@
   ...
 }:
 let
-  inherit (pkgs.pkgsUnstable) nono pi-coding-agent;
+  inherit (pkgs.pkgsUnstable) nono;
 
+  pi-coding-agent = pkgs.pkgsUnstable.pkgsExtra.pi-coding-agent-chatgpt-account-id;
   opensrcDir = "${config.xdg.cacheHome}/opensrc";
   rtkDbDir = "${config.xdg.dataHome}/rtk";
 in

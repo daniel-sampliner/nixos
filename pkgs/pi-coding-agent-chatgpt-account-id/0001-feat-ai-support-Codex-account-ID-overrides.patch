@@ -1,0 +1,386 @@
+From acb322fc46fa3d64241fa7e411f55da7f6f0d2fb Mon Sep 17 00:00:00 2001
+From: Daniel Sampliner <dsampliner@nvidia.com>
+Date: Fri, 14 Aug 2026 10:04:45 -0400
+Subject: [PATCH] feat(ai): support Codex account ID overrides
+
+---
+ packages/ai/src/api/openai-codex-responses.ts |  19 ++-
+ packages/ai/src/auth/oauth/openai-codex.ts    |  47 ++++++--
+ packages/ai/test/oauth-auth.test.ts           |  11 ++
+ packages/ai/test/openai-codex-oauth.test.ts   | 113 ++++++++++++++++++
+ packages/ai/test/openai-codex-stream.test.ts  |  60 ++++++++++
+ 5 files changed, 241 insertions(+), 9 deletions(-)
+
+diff --git a/packages/ai/src/api/openai-codex-responses.ts b/packages/ai/src/api/openai-codex-responses.ts
+index 52e1becfb..5ee27c7ca 100644
+--- a/packages/ai/src/api/openai-codex-responses.ts
++++ b/packages/ai/src/api/openai-codex-responses.ts
+@@ -273,7 +273,7 @@ export const stream: StreamFunction<"openai-codex-responses", OpenAICodexRespons
+ 				throw new Error(`No API key for provider: ${model.provider}`);
+ 			}
+ 
+-			const accountId = extractAccountId(apiKey);
++			const accountId = resolveEffectiveAccountId(model.headers, options?.headers, apiKey);
+ 			const grammarToolInputProperties = createGrammarToolInputProperties(
+ 				context.tools,
+ 				model.compat?.supportsOpenAIGrammarTools ?? false,
+@@ -1576,6 +1576,23 @@ async function parseErrorResponse(response: Response): Promise<{ message: string
+ // Auth & Headers
+ // ============================================================================
+ 
++function resolveEffectiveAccountId(
++	initHeaders: Record<string, string> | undefined,
++	additionalHeaders: ProviderHeaders | undefined,
++	token: string,
++): string {
++	const configuredHeaders = new Headers(initHeaders);
++	for (const [key, value] of Object.entries(additionalHeaders || {})) {
++		if (value === null) {
++			configuredHeaders.delete(key);
++		} else {
++			configuredHeaders.set(key, value);
++		}
++	}
++	const explicitAccountId = configuredHeaders.get("chatgpt-account-id")?.trim();
++	return explicitAccountId || extractAccountId(token);
++}
++
+ function extractAccountId(token: string): string {
+ 	try {
+ 		const parts = token.split(".");
+diff --git a/packages/ai/src/auth/oauth/openai-codex.ts b/packages/ai/src/auth/oauth/openai-codex.ts
+index 96e861a94..65112285c 100644
+--- a/packages/ai/src/auth/oauth/openai-codex.ts
++++ b/packages/ai/src/auth/oauth/openai-codex.ts
+@@ -400,8 +400,9 @@ function getAccountId(accessToken: string): string | null {
+ 	return typeof accountId === "string" && accountId.length > 0 ? accountId : null;
+ }
+ 
+-function credentialsFromToken(token: OAuthToken): OAuthCredential {
+-	const accountId = getAccountId(token.access);
++function credentialsFromToken(token: OAuthToken, accountIdOverride?: string): OAuthCredential {
++	const normalizedOverride = typeof accountIdOverride === "string" ? accountIdOverride.trim() : undefined;
++	const accountId = normalizedOverride || getAccountId(token.access);
+ 	if (!accountId) {
+ 		throw new Error("Failed to extract accountId from token");
+ 	}
+@@ -412,6 +413,7 @@ function credentialsFromToken(token: OAuthToken): OAuthCredential {
+ 		refresh: token.refresh,
+ 		expires: token.expires,
+ 		accountId,
++		...(normalizedOverride ? { accountIdOverride: normalizedOverride } : {}),
+ 	};
+ }
+ 
+@@ -420,8 +422,9 @@ async function exchangeAuthorizationCodeForCredentials(
+ 	verifier: string,
+ 	redirectUri: string,
+ 	signal: AbortSignal,
++	accountIdOverride?: string,
+ ): Promise<OAuthCredential> {
+-	return credentialsFromToken(await exchangeAuthorizationCode(code, verifier, redirectUri, signal));
++	return credentialsFromToken(await exchangeAuthorizationCode(code, verifier, redirectUri, signal), accountIdOverride);
+ }
+ 
+ async function loginOpenAICodexDeviceCode(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
+@@ -443,6 +446,14 @@ async function loginOpenAICodexDeviceCode(interaction: ProviderAuthInteraction):
+ }
+ 
+ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
++	const accountIdOverride = (
++		await interaction.prompt({
++			type: "text",
++			message: "ChatGPT account ID (optional; blank to use the token claim):",
++		})
++	).trim();
++	if (interaction.signal.aborted) throw new Error("Login cancelled");
++
+ 	const { verifier, state, url } = await createAuthorizationFlow();
+ 	const server = await startLocalOAuthServer(state);
+ 	const manualAbort = new AbortController();
+@@ -497,7 +508,13 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
+ 		}
+ 
+ 		if (!code) throw new Error("Missing authorization code");
+-		return exchangeAuthorizationCodeForCredentials(code, verifier, REDIRECT_URI, interaction.signal);
++		return exchangeAuthorizationCodeForCredentials(
++			code,
++			verifier,
++			REDIRECT_URI,
++			interaction.signal,
++			accountIdOverride || undefined,
++		);
+ 	} finally {
+ 		interaction.signal.removeEventListener("abort", onAbort);
+ 		manualAbort.abort();
+@@ -508,8 +525,12 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
+ /**
+  * Refresh OpenAI Codex OAuth token
+  */
+-async function refreshOpenAICodexToken(refreshToken: string, signal: AbortSignal): Promise<OAuthCredential> {
+-	return credentialsFromToken(await refreshAccessToken(refreshToken, signal));
++async function refreshOpenAICodexToken(
++	refreshToken: string,
++	signal: AbortSignal,
++	accountIdOverride?: string,
++): Promise<OAuthCredential> {
++	return credentialsFromToken(await refreshAccessToken(refreshToken, signal), accountIdOverride);
+ }
+ 
+ export const openaiCodexOAuth: OAuthAuth = {
+@@ -536,9 +557,19 @@ export const openaiCodexOAuth: OAuthAuth = {
+ 		return loginOpenAICodex(interaction);
+ 	},
+ 
+-	refresh: (credential, signal) => refreshOpenAICodexToken(credential.refresh, signal),
++	refresh: (credential, signal) =>
++		refreshOpenAICodexToken(
++			credential.refresh,
++			signal,
++			typeof credential.accountIdOverride === "string" ? credential.accountIdOverride : undefined,
++		),
+ 
+ 	async toAuth(credential) {
+-		return { apiKey: credential.access };
++		return {
++			apiKey: credential.access,
++			...(typeof credential.accountIdOverride === "string" && credential.accountIdOverride.trim().length > 0
++				? { headers: { "chatgpt-account-id": credential.accountIdOverride.trim() } }
++				: {}),
++		};
+ 	},
+ };
+diff --git a/packages/ai/test/oauth-auth.test.ts b/packages/ai/test/oauth-auth.test.ts
+index ceaac57f9..3aefa7954 100644
+--- a/packages/ai/test/oauth-auth.test.ts
++++ b/packages/ai/test/oauth-auth.test.ts
+@@ -44,6 +44,17 @@ describe.sequential("OAuthAuth adapters", () => {
+ 		expect(auth).toEqual({ apiKey: "token" });
+ 	});
+ 
++	it("openai-codex toAuth forwards an explicit account ID header", async () => {
++		const auth = await openaiCodexOAuth.toAuth({
++			type: "oauth",
++			access: "token",
++			refresh: "r",
++			expires: 0,
++			accountIdOverride: " explicit-account ",
++		});
++		expect(auth).toEqual({ apiKey: "token", headers: { "chatgpt-account-id": "explicit-account" } });
++	});
++
+ 	it("openrouter derives the api key and keeps the permanent credential on refresh", async () => {
+ 		const credential = { type: "oauth" as const, access: "token", refresh: "", expires: Number.MAX_SAFE_INTEGER };
+ 		expect(await openRouterOAuth.toAuth(credential)).toEqual({ apiKey: "token" });
+diff --git a/packages/ai/test/openai-codex-oauth.test.ts b/packages/ai/test/openai-codex-oauth.test.ts
+index f45d4aeea..d97d6e9cc 100644
+--- a/packages/ai/test/openai-codex-oauth.test.ts
++++ b/packages/ai/test/openai-codex-oauth.test.ts
+@@ -17,6 +17,12 @@ function getUrl(input: unknown): string {
+ 	throw new Error(`Unsupported fetch input: ${String(input)}`);
+ }
+ 
++function createAccessTokenWithClaims(auth?: { chatgpt_account_id?: string }): string {
++	const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64");
++	const payload = Buffer.from(JSON.stringify(auth ? { "https://api.openai.com/auth": auth } : {})).toString("base64");
++	return `${header}.${payload}.signature`;
++}
++
+ function createAccessToken(accountId: string): string {
+ 	const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64");
+ 	const payload = Buffer.from(
+@@ -453,6 +459,113 @@ describe("OpenAI Codex OAuth", () => {
+ 		);
+ 	});
+ 
++	it.each([
++		{
++			name: "empty",
++			input: "",
++			token: createAccessToken("jwt-account"),
++			accountId: "jwt-account",
++			override: undefined,
++		},
++		{
++			name: "whitespace-only",
++			input: "   ",
++			token: createAccessToken("jwt-account"),
++			accountId: "jwt-account",
++			override: undefined,
++		},
++		{
++			name: "conflicting claim",
++			input: " override-account ",
++			token: createAccessToken("jwt-account"),
++			accountId: "override-account",
++			override: "override-account",
++		},
++		{
++			name: "claim-less token",
++			input: "override-account",
++			token: createAccessTokenWithClaims(),
++			accountId: "override-account",
++			override: "override-account",
++		},
++	])("preserves browser account identity for $name", async ({ input, token, accountId, override }) => {
++		const prompts: string[] = [];
++		vi.stubGlobal(
++			"fetch",
++			vi.fn(async () => jsonResponse({ access_token: token, refresh_token: "refresh-token", expires_in: 3600 })),
++		);
++		const credential = await openaiCodexOAuth.login({
++			signal: neverAbortedSignal,
++			prompt: async (prompt) => {
++				prompts.push(prompt.type);
++				if (prompt.type === "select") return "browser";
++				if (prompt.type === "text") return input;
++				if (prompt.type === "manual_code") return "oauth-code";
++				throw new Error(`Unexpected prompt: ${prompt.type}`);
++			},
++			notify: () => {},
++		});
++		expect(prompts).toEqual(["select", "text", "manual_code"]);
++		expect(credential).toMatchObject({ accountId, ...(override ? { accountIdOverride: override } : {}) });
++		if (!override) expect(credential).not.toHaveProperty("accountIdOverride");
++		expect(await openaiCodexOAuth.toAuth(credential)).toEqual({
++			apiKey: token,
++			...(override ? { headers: { "chatgpt-account-id": override } } : {}),
++		});
++	});
++
++	it("preserves accountIdOverride on refresh and falls back for legacy credentials", async () => {
++		const refreshedToken = createAccessToken("refreshed-jwt-account");
++		const fetchMock = vi.fn(async () =>
++			jsonResponse({ access_token: refreshedToken, refresh_token: "new-refresh", expires_in: 3600 }),
++		);
++		vi.stubGlobal("fetch", fetchMock);
++		await expect(
++			openaiCodexOAuth.refresh(
++				{ type: "oauth", access: "old", refresh: "stored", expires: 0, accountIdOverride: " explicit-account " },
++				neverAbortedSignal,
++			),
++		).resolves.toMatchObject({
++			accountId: "explicit-account",
++			accountIdOverride: "explicit-account",
++			refresh: "new-refresh",
++		});
++		await expect(
++			openaiCodexOAuth.refresh({ type: "oauth", access: "old", refresh: "stored", expires: 0 }, neverAbortedSignal),
++		).resolves.toMatchObject({ accountId: "refreshed-jwt-account", refresh: "new-refresh" });
++		expect(fetchMock).toHaveBeenCalledTimes(2);
++	});
++
++	it("does not prompt for an account ID during device-code login", async () => {
++		const prompts: string[] = [];
++		const accessToken = createAccessToken("device-account");
++		vi.stubGlobal(
++			"fetch",
++			vi.fn(async (input: unknown) => {
++				const url = getUrl(input);
++				if (url.endsWith("/deviceauth/usercode"))
++					return jsonResponse({ device_auth_id: "device-auth-id", user_code: "ABCD-1234", interval: "0" });
++				if (url.endsWith("/deviceauth/token"))
++					return jsonResponse({ authorization_code: "oauth-code", code_verifier: "device-verifier" });
++				if (url.endsWith("/oauth/token"))
++					return jsonResponse({ access_token: accessToken, refresh_token: "device-refresh", expires_in: 3600 });
++				throw new Error(`Unexpected fetch URL: ${url}`);
++			}),
++		);
++		const credential = await openaiCodexOAuth.login({
++			signal: neverAbortedSignal,
++			prompt: async (prompt) => {
++				prompts.push(prompt.type);
++				if (prompt.type === "select") return "device_code";
++				throw new Error(`Unexpected prompt: ${prompt.type}`);
++			},
++			notify: () => {},
++		});
++		expect(prompts).toEqual(["select"]);
++		expect(credential).toMatchObject({ accountId: "device-account" });
++		expect(credential).not.toHaveProperty("accountIdOverride");
++	});
++
+ 	it("does not write token refresh failures to stderr", async () => {
+ 		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+ 		vi.stubGlobal(
+diff --git a/packages/ai/test/openai-codex-stream.test.ts b/packages/ai/test/openai-codex-stream.test.ts
+index a8423c887..2f3825eaa 100644
+--- a/packages/ai/test/openai-codex-stream.test.ts
++++ b/packages/ai/test/openai-codex-stream.test.ts
+@@ -46,6 +46,21 @@ function decodeCodexRequestBody(body: RequestInit["body"] | undefined): Record<s
+ 	return null;
+ }
+ 
++function makeCodexTestModel(): Model<"openai-codex-responses"> {
++	return {
++		id: "gpt-5.1-codex",
++		name: "GPT-5.1 Codex",
++		api: "openai-codex-responses",
++		provider: "openai-codex",
++		baseUrl: "https://chatgpt.com/backend-api",
++		reasoning: true,
++		input: ["text"],
++		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
++		contextWindow: 400000,
++		maxTokens: 128000,
++	};
++}
++
+ function buildSSEPayload({
+ 	status,
+ 	includeDone = false,
+@@ -94,6 +109,51 @@ function buildSSEPayload({
+ }
+ 
+ describe("openai-codex streaming", () => {
++	it.each(["aaa.e30.bbb", "not-a-jwt"])(
++		"uses explicit account headers for claim-less or malformed tokens (%s)",
++		async (apiKey) => {
++			let capturedHeaders: Headers | undefined;
++			vi.stubGlobal(
++				"fetch",
++				vi.fn(async (_input: string | URL, init?: RequestInit) => {
++					capturedHeaders = init?.headers instanceof Headers ? init.headers : undefined;
++					return new Response(buildSSEPayload({ status: "completed" }), {
++						status: 200,
++						headers: { "content-type": "text/event-stream" },
++					});
++				}),
++			);
++			const result = await streamOpenAICodexResponses(
++				makeCodexTestModel(),
++				{ systemPrompt: "", messages: [] },
++				{
++					apiKey,
++					transport: "sse",
++					headers: { "CHATGPT-ACCOUNT-ID": " explicit-account " },
++				},
++			).result();
++			expect(result.stopReason).toBe("stop");
++			expect(capturedHeaders?.get("chatgpt-account-id")).toBe("explicit-account");
++		},
++	);
++
++	it.each([undefined, "", "   "])(
++		"retains JWT extraction failures for empty account metadata (%s)",
++		async (accountId) => {
++			const result = await streamOpenAICodexResponses(
++				makeCodexTestModel(),
++				{ systemPrompt: "", messages: [] },
++				{
++					apiKey: "aaa.e30.bbb",
++					transport: "sse",
++					...(accountId === undefined ? {} : { headers: { "chatgpt-account-id": accountId } }),
++				},
++			).result();
++			expect(result.stopReason).toBe("error");
++			expect(result.errorMessage).toContain("Failed to extract accountId from token");
++		},
++	);
++
+ 	it("streams SSE responses into AssistantMessageEventStream", async () => {
+ 		const tempDir = mkdtempSync(join(tmpdir(), "pi-codex-stream-"));
+ 		process.env.PI_CODING_AGENT_DIR = tempDir;
+-- 
+2.54.0
+
