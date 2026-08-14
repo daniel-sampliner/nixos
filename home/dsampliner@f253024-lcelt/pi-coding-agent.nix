@@ -11,6 +11,7 @@
 let
   inherit (pkgs.pkgsUnstable) nono pi-coding-agent;
 
+  opensrcDir = "${config.xdg.cacheHome}/opensrc";
   rtkDbDir = "${config.xdg.dataHome}/rtk";
 in
 {
@@ -58,6 +59,7 @@ in
   };
 
   home.sessionVariables = {
+    OPENSRC_HOME = opensrcDir;
     RTK_DB_PATH = "${rtkDbDir}/history.db";
   };
 
@@ -84,6 +86,7 @@ in
     };
 
     tmpfiles.rules = [
+      "d ${opensrcDir} 0700 - - 30d"
       "d ${rtkDbDir}/tee 0700 - - 7d"
     ];
   };
