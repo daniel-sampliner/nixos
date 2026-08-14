@@ -88,6 +88,7 @@ in
     tmpfiles.rules = [
       "d ${opensrcDir} 0700 - - 30d"
       "d ${rtkDbDir}/tee 0700 - - 7d"
+      "d %h/.pi/agent/sessions 0700 - - 30d"
     ];
   };
 }
