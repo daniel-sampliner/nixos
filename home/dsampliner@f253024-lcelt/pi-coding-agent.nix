@@ -41,9 +41,6 @@ in
 
         ${lib.strings.toShellVar "files" final.files}
         install -Dm 0644 -t "$out" "''${files[@]}"
-
-        substitute "notify.ts" "$out/notify-modified.ts" \
-          --replace-fail agent_end agent_settled
       '';
     });
 
