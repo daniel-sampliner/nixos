@@ -26,7 +26,6 @@ in
         "inline-bash.ts"
         "pirate.ts"
         "session-name.ts"
-        "structured-output.ts"
         "tools.ts"
       ];
 
