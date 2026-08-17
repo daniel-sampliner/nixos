@@ -68,7 +68,6 @@
           vim-apathy
           vim-characterize
           vim-easy-align
-          vim-fugitive
           vim-nix
           vim-repeat
           vim-sexp

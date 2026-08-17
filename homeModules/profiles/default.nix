@@ -7,7 +7,7 @@
   imports = [
     ./aliases
     ./fonts.nix
-    ./git.nix
+    ./git
     ./mise
     ./nvim
     ./ssh.nix

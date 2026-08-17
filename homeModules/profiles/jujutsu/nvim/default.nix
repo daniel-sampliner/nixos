@@ -80,6 +80,8 @@
       ui.editor = lib.mkIf config.programs.neovim.defaultEditor ([ nvim_cmd ] ++ nvim_args);
     };
 
+  programs.neovim.extraPackages = [ pkgs.commitmsgfmt ];
+
   programs.neovim.plugins =
     let
       luaFilter = { type, hasExt, ... }: type == "regular" && hasExt "lua";
@@ -98,20 +100,30 @@
           (lib.strings.removePrefix "${baseDir}/")
         ];
 
-      pluginConfigs = lib.trivial.pipe ./plugin [
-        (lib.fileset.fileFilter luaFilter)
-        lib.fileset.toList
+      pluginConfigs =
+        lib.trivial.pipe ./plugin [
+          (lib.fileset.fileFilter luaFilter)
+          lib.fileset.toList
 
-        (builtins.map (f: {
-          plugin = lib.trivial.pipe f [
-            builtins.baseNameOf
-            (lib.strings.removeSuffix ".lua")
-            (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
-          ];
+          (builtins.map (f: {
+            plugin = lib.trivial.pipe f [
+              builtins.baseNameOf
+              (lib.strings.removeSuffix ".lua")
+              (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
+            ];
 
-          runtime."${mkRuntimeName f}".source = f;
-        }))
-      ];
+            runtime."${mkRuntimeName f}".source = f;
+          }))
+        ]
+        ++ lib.trivial.pipe ./after [
+          (lib.fileset.fileFilter luaFilter)
+          lib.fileset.toList
+
+          (builtins.map (f: {
+            plugin = pkgs.emptyFile;
+            runtime."${mkRuntimeName f}".source = f;
+          }))
+        ];
     in
     builtins.attrValues {
       inherit (pkgs.vimPlugins)

@@ -9,6 +9,10 @@
   ...
 }:
 {
+  imports = [
+    ./nvim
+  ];
+
   home.packages = builtins.attrValues {
     inherit (pkgs)
       git-absorb

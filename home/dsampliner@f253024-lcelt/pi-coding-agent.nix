@@ -10,6 +10,7 @@
 }:
 let
   nono = pkgs.pkgsExtra.nono-latest;
+  nono-completions = pkgs.pkgsExtra.nono-completions.override { inherit nono; };
   opensrcDir = "${config.xdg.cacheHome}/opensrc";
   pi-coding-agent = pkgs.pkgsUnstable.pkgsExtra.pi-coding-agent-chatgpt-account-id;
   rtkDbDir = "${config.xdg.dataHome}/rtk";
@@ -47,11 +48,10 @@ in
   };
 
   home.packages = builtins.attrValues {
-    inherit (pkgs) opensrc;
+    inherit (pkgs) commitmsgfmt opensrc;
     inherit (pkgs.pkgsExtra) ai-jail;
     inherit (pkgs.pkgsUnstable) rtk;
-    inherit (pkgs.pkgsUnstable.pkgsExtra) nono-completions;
-    inherit nono pi-coding-agent;
+    inherit nono nono-completions pi-coding-agent;
   };
 
   home.sessionVariables = {
