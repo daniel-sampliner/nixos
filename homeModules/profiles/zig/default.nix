@@ -14,10 +14,6 @@
       ;
   };
 
-  programs.neovim.initLua = ''
-    ${builtins.readFile ./zls.nvim.lua}
-  '';
-
   programs.neovim.plugins = [
     {
       plugin = pkgs.vimPlugins.zig-vim;
@@ -25,6 +21,10 @@
         vim.g.zig_fmt_parse_errors = 0
         vim.g.zig_fmt_autosave = 0
       '';
+    }
+    {
+      plugin = pkgs.emptyFile;
+      runtime."plugin/zls.nvim.lua".source = ./zls.nvim.lua;
     }
   ];
 }

@@ -22,35 +22,45 @@
       ''
         vim.opt.exrc = true
         vim.opt.wildmode = "longest:full,full"
-
-        ${builtins.readFile ./starlark-ft.lua}
       ''
     ];
 
     plugins =
       let
-        pluginConfigs = lib.trivial.pipe ./. [
-          (lib.fileset.fileFilter (
-            {
-              name,
-              type,
-              hasExt,
-              ...
-            }:
-            type == "regular"
-            && hasExt "lua"
-            && builtins.hasAttr (lib.strings.removeSuffix ".lua" name) pkgs.vimPlugins
-          ))
-          lib.fileset.toList
-          (builtins.map (f: {
-            plugin = lib.trivial.pipe f [
-              builtins.baseNameOf
-              (lib.strings.removeSuffix ".lua")
-              (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
-            ];
+        luaFilter = { type, hasExt, ... }: type == "regular" && hasExt "lua";
 
-            config = ''dofile("${f}")'';
-          }))
+        baseDir = lib.pipe ./default.nix [
+          lib.fileset.toList
+          builtins.head
+          builtins.dirOf
+          builtins.toString
+        ];
+
+        mkRuntimeName =
+          path:
+          lib.trivial.pipe path [
+            builtins.toString
+            (lib.strings.removePrefix "${baseDir}/")
+          ];
+
+        pluginConfigs = lib.trivial.pipe ./plugin [
+          (lib.fileset.fileFilter luaFilter)
+          lib.fileset.toList
+
+          (builtins.map (
+            f:
+            let
+            in
+            {
+              plugin = lib.trivial.pipe f [
+                builtins.baseNameOf
+                (lib.strings.removeSuffix ".lua")
+                (attr: pkgs.vimPlugins."${attr}" or pkgs.emptyFile)
+              ];
+
+              runtime."${mkRuntimeName f}".source = f;
+            }
+          ))
         ];
       in
       builtins.attrValues {
