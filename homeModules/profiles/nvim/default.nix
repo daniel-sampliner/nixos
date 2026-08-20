@@ -25,58 +25,20 @@
       ''
     ];
 
-    plugins =
-      let
-        luaFilter = { type, hasExt, ... }: type == "regular" && hasExt "lua";
+    plugins = builtins.attrValues {
+      inherit (pkgs.vimPlugins)
+        vim-apathy
+        vim-characterize
+        vim-easy-align
+        vim-nix
+        vim-repeat
+        vim-sexp
+        vim-sexp-mappings-for-regular-people
+        vim-unimpaired
+        ;
+    };
 
-        baseDir = lib.pipe ./default.nix [
-          lib.fileset.toList
-          builtins.head
-          builtins.dirOf
-          builtins.toString
-        ];
-
-        mkRuntimeName =
-          path:
-          lib.trivial.pipe path [
-            builtins.toString
-            (lib.strings.removePrefix "${baseDir}/")
-          ];
-
-        pluginConfigs = lib.trivial.pipe ./plugin [
-          (lib.fileset.fileFilter luaFilter)
-          lib.fileset.toList
-
-          (builtins.map (
-            f:
-            let
-            in
-            {
-              plugin = lib.trivial.pipe f [
-                builtins.baseNameOf
-                (lib.strings.removeSuffix ".lua")
-                (attr: pkgs.vimPlugins."${attr}" or pkgs.emptyFile)
-              ];
-
-              runtime."${mkRuntimeName f}".source = f;
-            }
-          ))
-        ];
-      in
-      builtins.attrValues {
-        inherit (pkgs.vimPlugins)
-          vim-apathy
-          vim-characterize
-          vim-easy-align
-          vim-nix
-          vim-repeat
-          vim-sexp
-          vim-sexp-mappings-for-regular-people
-          vim-unimpaired
-          ;
-      }
-      ++ pluginConfigs;
-
+    runtimeDir = [ ./. ];
     viAlias = true;
     vimAlias = true;
     vimdiffAlias = true;

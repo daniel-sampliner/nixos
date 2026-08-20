@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -82,54 +82,12 @@
 
   programs.neovim.extraPackages = [ pkgs.commitmsgfmt ];
 
-  programs.neovim.plugins =
-    let
-      luaFilter = { type, hasExt, ... }: type == "regular" && hasExt "lua";
+  programs.neovim.plugins = builtins.attrValues {
+    inherit (pkgs.vimPlugins)
+      nui-nvim
+      vim-jjdescription
+      ;
+  };
 
-      baseDir = lib.pipe ./default.nix [
-        lib.fileset.toList
-        builtins.head
-        builtins.dirOf
-        builtins.toString
-      ];
-
-      mkRuntimeName =
-        path:
-        lib.trivial.pipe path [
-          builtins.toString
-          (lib.strings.removePrefix "${baseDir}/")
-        ];
-
-      pluginConfigs =
-        lib.trivial.pipe ./plugin [
-          (lib.fileset.fileFilter luaFilter)
-          lib.fileset.toList
-
-          (builtins.map (f: {
-            plugin = lib.trivial.pipe f [
-              builtins.baseNameOf
-              (lib.strings.removeSuffix ".lua")
-              (lib.trivial.flip builtins.getAttr pkgs.vimPlugins)
-            ];
-
-            runtime."${mkRuntimeName f}".source = f;
-          }))
-        ]
-        ++ lib.trivial.pipe ./after [
-          (lib.fileset.fileFilter luaFilter)
-          lib.fileset.toList
-
-          (builtins.map (f: {
-            plugin = pkgs.emptyFile;
-            runtime."${mkRuntimeName f}".source = f;
-          }))
-        ];
-    in
-    builtins.attrValues {
-      inherit (pkgs.vimPlugins)
-        nui-nvim
-        vim-jjdescription
-        ;
-    }
-    ++ pluginConfigs;
+  programs.neovim.runtimeDir = [ ./. ];
 }
