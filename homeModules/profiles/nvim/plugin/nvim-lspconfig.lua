@@ -3,7 +3,31 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 
 local vim = vim
-local math = math
+
+vim.diagnostic.config({
+	jump = {
+		on_jump = function(diagnostic, bufnr)
+			if not diagnostic then
+				return
+			end
+
+			vim.diagnostic.show(
+				diagnostic.namespace,
+				bufnr,
+				{ diagnostic },
+				{ virtual_lines = { current_line = true }, virtual_text = { current_line = false } }
+			)
+		end,
+	},
+
+	loclist = {
+		open = true,
+		severity = { min = vim.diagnostic.severity.WARN },
+	},
+
+	severity_sort = true,
+	virtual_text = { current_line = nil },
+})
 
 local augroup = vim.api.nvim_create_augroup("lsp", {})
 vim.api.nvim_create_autocmd("LspAttach", {
@@ -27,53 +51,5 @@ vim.api.nvim_create_autocmd("LspAttach", {
 				end,
 			})
 		end
-
-		vim.opt.updatetime = 2000
-		local common_augroup = vim.api.nvim_create_augroup("lsp_common", {})
-		vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-			desc = "populate quickfix from diagnostics",
-			group = common_augroup,
-			buffer = ev.buf,
-			callback = function(ev)
-				local diagnostics = vim.diagnostic.get(ev.buf)
-				vim.diagnostic.setqflist()
-
-				local qflist = vim.fn.getqflist({ winid = 0 })
-				local window = qflist.winid
-				if window == nil or window == 0 then
-					return
-				end
-				vim.api.nvim_win_set_height(window, math.min(#diagnostics, 5))
-			end,
-		})
-
-		vim.api.nvim_create_autocmd({ "CursorHold" }, {
-			desc = "populate quickfix from diagnostics",
-			group = common_augroup,
-			buffer = ev.buf,
-			callback = function(ev)
-				local diagnostics = vim.diagnostic.get(ev.buf)
-				vim.diagnostic.setqflist({ open = false })
-
-				local qflist = vim.fn.getqflist({ winid = 0 })
-				local window = qflist.winid
-				if window == nil or window == 0 then
-					return
-				end
-				vim.api.nvim_win_set_height(window, math.min(#diagnostics, 5))
-			end,
-		})
-
-		vim.api.nvim_create_autocmd({ "CursorHold" }, {
-			desc = "populate quickfix from diagnostics",
-			group = common_augroup,
-			buffer = ev.buf,
-			callback = function(ev)
-				vim.diagnostic.open_float({
-					bufnr = ev.buf,
-					scope = "cursor",
-				})
-			end,
-		})
 	end,
 })

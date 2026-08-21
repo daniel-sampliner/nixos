@@ -3,7 +3,6 @@
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 {
-  config,
   lib,
   pkgs,
   ...
@@ -13,6 +12,7 @@
 
   programs.neovim = {
     enable = true;
+    extraPackages = [ pkgs.nixd ];
 
     initLua = lib.mkMerge [
       (lib.mkOrder 0 ''
@@ -20,6 +20,7 @@
       '')
 
       ''
+        vim.lsp.enable("nixd")
         vim.opt.exrc = true
         vim.opt.wildmode = "longest:full,full"
       ''
