@@ -3,6 +3,7 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 
 local lsp_server = "zls"
+local vim = vim
 
 -- workaround for lack of synchronous vim.lsp.buf.code_action
 -- https://github.com/neovim/neovim/issues/31206

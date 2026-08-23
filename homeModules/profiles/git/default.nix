@@ -9,10 +9,6 @@
   ...
 }:
 {
-  imports = [
-    ./nvim
-  ];
-
   home.packages = builtins.attrValues {
     inherit (pkgs)
       git-absorb
@@ -69,5 +65,11 @@
       receive.fsckObjects = true;
       transfer.fsckObjects = true;
     };
+  };
+
+  programs.neovim = {
+    extraPackages = [ pkgs.commitmsgfmt ];
+    plugins = [ pkgs.vimPlugins.vim-fugitive ];
+    runtimeDir = [ ./nvim ];
   };
 }
