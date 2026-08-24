@@ -11,7 +11,6 @@
   imports = [
     ./flakeref.nix
     ./nvim
-    ./tug.nix
   ];
 
   programs.jujutsu = {
@@ -45,10 +44,31 @@
         "bough()" = "bough(@)";
         "bough(x)" = "bough(x, trunk())";
         "bough(x, m)" = "descendants(ancestors(x) ~ ancestors(m))";
+
+        "closest_bookmark()" = "closest_bookmark(@)";
+        "closest_bookmark(to)" = ''
+          coalesce(
+            heads(first_ancestors(to) & bookmarks()),
+            heads(ancestors(to) & bookmarks()),
+          )
+        '';
+
+        "closest_pushable()" = "closest_pushable(@)";
+        "closest_pushable(to)" = ''
+          heads(::to
+            & mutable()
+            & ~description(exact:"")
+            & (~empty() | merges()))
+        '';
+
         "immutable_heads()" = "builtin_immutable_heads() | (trunk().. & ~mine())";
         "user(x)" = "author(x) | committer(x)";
         "user_email(x)" = "author_email(x) | committer_email(x)";
         "user_name(x)" = "author_name(x) | committer_name(x)";
+      };
+
+      revsets = {
+        "bookmark-advance-to" = "closest_pushable(@)";
       };
 
       "--scope" = [
