@@ -93,6 +93,19 @@
             ")",
           )
         '';
+
+        new_description = ''
+          if(parents.len() > 1,
+            "Merge " ++ parents.skip(1).map(|p| try(
+              p.bookmarks().first().name(),
+              p.change_id().shortest(8)
+            )).join(", ") ++ " into " ++ try(
+              parents.first().bookmarks().first().name(),
+              parents.first().change_id().shortest(8)
+            ) ++ "\n",
+            ""
+          )
+        '';
       };
 
       ui = {
