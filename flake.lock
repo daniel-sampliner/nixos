@@ -4,11 +4,11 @@
       "flake": false,
       "locked": {
         "host": "gitlab-master.nvidia.com",
-        "lastModified": 1783524069,
-        "narHash": "sha256-XmjJ7eug5UxzFA8+JjZWZWjaqy36aFh7NL4FXcPzwOo=",
+        "lastModified": 1787674511,
+        "narHash": "sha256-TVd8q2Sv9ZMlWJUU34qjh2KL+8vzeI7JSvrAEl2/msQ=",
         "owner": "dsampliner",
         "repo": "nix-config",
-        "rev": "bd7819ee224a299605c4da91ab694393789992b9",
+        "rev": "2a8aebd5b12317046b75791687c3729bc9a5670b",
         "type": "gitlab"
       },
       "original": {
@@ -77,11 +77,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1787414105,
-        "narHash": "sha256-8FnH9CMQCQ9i7d7xrXK30SBjgODxlkltCa0thsRgrxg=",
-        "rev": "a9e6d84f9c2f9012f5fe7d964a7851352300e61a",
+        "lastModified": 1787640266,
+        "narHash": "sha256-tbu/95O8ZRmCj0kfSiDvz3YT7GSnD0fO6cxLRVYtXnU=",
+        "rev": "f4f698677b11021a8f84f452e23ae9ef2427bec3",
         "type": "tarball",
-        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8255.a9e6d84f9c2f/nixexprs.tar.xz?lastModified=1787414105&rev=a9e6d84f9c2f9012f5fe7d964a7851352300e61a"
+        "url": "https://releases.nixos.org/nixos/26.05/nixos-26.05.8409.f4f698677b11/nixexprs.tar.xz?lastModified=1787640266&rev=f4f698677b11021a8f84f452e23ae9ef2427bec3"
       },
       "original": {
         "type": "tarball",
