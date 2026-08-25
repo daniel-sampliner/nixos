@@ -53,6 +53,26 @@
         ];
       };
 
-      packages = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation) (mkPkgSet pkgs);
+      packages =
+        let
+          filterDerivations = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation);
+          pkgsDgx =
+            let
+              linkFarm = lib.trivial.pipe pkgs.pkgsDgx [
+                filterDerivations
+
+                (lib.attrsets.mapAttrsToList (
+                  _: drv: {
+                    name = drv.pname;
+                    path = drv;
+                  }
+                ))
+
+                (pkgs.linkFarm "pkgsDgx")
+              ];
+            in
+            linkFarm // linkFarm.passthru.entries;
+        in
+        filterDerivations (mkPkgSet pkgs) // { inherit pkgsDgx; };
     };
 }
