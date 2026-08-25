@@ -13,26 +13,31 @@
 }:
 rustPlatform.buildRustPackage (final: {
   pname = "ai-jail";
-  version = "1.15.0";
+  version = "1.20.1";
 
   src = fetchFromGitHub {
     owner = "akitaonrails";
     repo = final.pname;
     tag = "v${final.version}";
-    hash = "sha256-LPa0mdm28SYi68TD+b/QGD5YW2nu4RZosLMZv7Fvk+E=";
+    hash = "sha256-veF08HRDB2mCrVGfaXZ1jflH9tJQp7agr9e3Y8VrgZ8=";
   };
 
-  cargoHash = "sha256-Xrca9e9/utUJSliNvPFV53UdmnqBaNtP9aRINT2drnE=";
+  cargoHash = "sha256-6gi0Xn+yOT2Xw07FOaEq89zgyx/JBXAwgPiLw4QVfRs=";
 
-  buildInputs = [ bubblewrap ];
-  nativeBuildInputs = [ makeBinaryWrapper ];
+  nativeBuildInputs = [
+    bubblewrap
+    makeBinaryWrapper
+  ];
+
+  BWRAP_BIN = lib.getExe bubblewrap;
+  RUSTFLAGS = "--remap-path-prefix=$(builtins.storeDir}=/build";
 
   nativeInstallCheckInputs = [ versionCheckHook ];
   doInstallCheck = true;
 
   postFixup = ''
     wrapProgram "$out/bin/ai-jail" \
-      --set BWRAP_BIN "${lib.getExe bubblewrap}"
+      --set BWRAP_BIN "${final.BWRAP_BIN}"
   '';
 
   passthru.updateScript = nix-update-script {
