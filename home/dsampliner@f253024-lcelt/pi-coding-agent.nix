@@ -48,7 +48,13 @@ in
   };
 
   home.packages = builtins.attrValues {
-    inherit (pkgs) commitmsgfmt opensrc;
+    inherit (pkgs)
+      commitmsgfmt
+      nodejs-slim
+      opensrc
+      pnpm
+      ;
+
     inherit (pkgs.pkgsExtra) ai-jail;
     inherit (pkgs.pkgsUnstable) rtk;
     inherit nono nono-completions pi-coding-agent;
