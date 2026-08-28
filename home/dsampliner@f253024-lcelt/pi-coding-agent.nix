@@ -9,7 +9,8 @@
   ...
 }:
 let
-  nono = pkgs.pkgsExtra.nono-latest;
+  inherit (pkgs.pkgsUnstable) nono;
+
   nono-completions = pkgs.pkgsExtra.nono-completions.override { inherit nono; };
   opensrcDir = "${config.xdg.cacheHome}/opensrc";
   pi-coding-agent = pkgs.pkgsUnstable.pkgsExtra.pi-coding-agent-chatgpt-account-id;
