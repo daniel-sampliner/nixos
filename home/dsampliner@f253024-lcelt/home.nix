@@ -61,6 +61,8 @@
       ;
   };
 
+  home.sessionPath = [ "$HOME/.local/bin" ];
+
   home.sessionVariables = {
     PARINIT = "rTbgqR B=.,?'_A_a_@ Q=_s>|";
     TMPDIR = "\${XDG_RUNTIME_DIR:-/tmp}";
