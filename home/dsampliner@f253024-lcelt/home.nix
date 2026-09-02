@@ -4,7 +4,6 @@
 
 {
   dgxModulesPath,
-  lib,
   myModulesPath,
   pkgs,
   ...
@@ -21,6 +20,7 @@
         "kitty.nix"
         "notify-cancel.nix"
         "rnnoise.nix"
+        "starlark.nix"
         "starship"
         "watchman.nix"
         "zig"
