@@ -14,6 +14,7 @@
       profiles = [
         "foreign.nix"
         "fzf.nix"
+        "go"
         "javascript.nix"
         "jujutsu"
         "k8s.nix"
