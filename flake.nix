@@ -6,8 +6,8 @@
   description = "nixos-configs";
 
   inputs = {
-    nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.xz";
-    unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.xz";
+    nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.zst";
+    unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst";
 
     dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
     dgx.flake = false;
