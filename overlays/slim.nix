@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -17,6 +17,8 @@ in
   ffmpeg_4 = prev.ffmpeg_4.override { ffmpegVariant = "headless"; };
   ffmpeg_6 = prev.ffmpeg_6.override { ffmpegVariant = "headless"; };
   ffmpeg_7 = prev.ffmpeg_7.override { ffmpegVariant = "headless"; };
+  ffmpeg_8 = prev.ffmpeg_8.override { ffmpegVariant = "headless"; };
+  ffmpeg_9 = prev.ffmpeg_9.override { ffmpegVariant = "headless"; };
   gd = prev.gd.override { withXorg = false; };
   gobject-introspection = prev.gobject-introspection.override { x11Support = false; };
   graphviz = prev.graphviz.override { withXorg = false; };
@@ -52,7 +54,7 @@ in
   };
 
   jellyfin-ffmpeg = prev.jellyfin-ffmpeg.override {
-    ffmpeg_7-full = prev.ffmpeg_7-headless.override {
+    ffmpeg_8-full = prev.ffmpeg_8-headless.override {
       withAvisynth = true;
       withFdkAac = true;
       withOpenh264 = true;
