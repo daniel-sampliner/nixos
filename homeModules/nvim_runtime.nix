@@ -32,6 +32,9 @@ in
             ];
 
             luaFilter = { type, hasExt, ... }: type == "regular" && hasExt "lua";
+            configFilter =
+              { type, hasExt, ... }:
+              type == "regular" && (hasExt "lua" || hasExt "vim");
 
             mkRuntimeName =
               path:
@@ -69,7 +72,7 @@ in
               lib.trivial.pipe dirs [
                 (builtins.map (dir: cfgDir + dir))
                 (builtins.filter builtins.pathExists)
-                (builtins.map (fileset.fileFilter luaFilter))
+                (builtins.map (fileset.fileFilter configFilter))
                 fileset.unions
                 fileset.toList
 
