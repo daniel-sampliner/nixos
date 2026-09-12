@@ -58,8 +58,9 @@ vim.api.nvim_create_autocmd("LspAttach", {
 	desc = "register " .. lsp_server .. " autocmds",
 	group = augroup,
 	callback = function(ev)
-		local client = vim.lsp.get_client_by_id(ev.data.client_id)
-		if not client or client.name ~= "zls" then
+		local client_id = ev.data.client_id
+		local client = assert(vim.lsp.get_client_by_id(client_id))
+		if client.name ~= "zls" then
 			return
 		end
 
@@ -75,6 +76,15 @@ vim.api.nvim_create_autocmd("LspAttach", {
 				end,
 			})
 		end
+
+		vim.api.nvim_create_autocmd("BufWritePre", {
+			desc = "format",
+			group = augroup,
+			buffer = ev.buf,
+			callback = function(ev)
+				vim.lsp.buf.format({ bufnr = ev.buf, async = false, id = client_id })
+			end,
+		})
 	end,
 })
 
