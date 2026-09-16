@@ -4,11 +4,11 @@
       "flake": false,
       "locked": {
         "host": "gitlab-master.nvidia.com",
-        "lastModified": 1787674511,
-        "narHash": "sha256-TVd8q2Sv9ZMlWJUU34qjh2KL+8vzeI7JSvrAEl2/msQ=",
+        "lastModified": 1789579110,
+        "narHash": "sha256-3xNppy66Z5+OmKgoY8hsIGrxSKy6yu3CajMCPAw270g=",
         "owner": "dsampliner",
         "repo": "nix-config",
-        "rev": "2a8aebd5b12317046b75791687c3729bc9a5670b",
+        "rev": "921bd5fe2a9ef8ac2292a9f3094625226d7115f6",
         "type": "gitlab"
       },
       "original": {

@@ -55,11 +55,6 @@
       units
       wl-clipboard
       ;
-
-    inherit (pkgs.pkgsDgx)
-      kubectl-nkx
-      nke-cli
-      ;
   };
 
   home.sessionPath = [ "$HOME/.local/bin" ];
