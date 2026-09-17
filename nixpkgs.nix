@@ -10,7 +10,6 @@
 {
   perSystem =
     {
-      config,
       inputs',
       pkgs,
       system,
@@ -46,33 +45,15 @@
             {
               inherit pkgsUnstable;
 
-              pkgsDgx = prev.callPackage inputs.dgx { };
               pkgsExtra = mkPkgSet prev;
             }
           )
         ];
       };
 
-      packages =
-        let
-          filterDerivations = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation);
-          pkgsDgx =
-            let
-              linkFarm = lib.trivial.pipe pkgs.pkgsDgx [
-                filterDerivations
-
-                (lib.attrsets.mapAttrsToList (
-                  _: drv: {
-                    name = drv.pname;
-                    path = drv;
-                  }
-                ))
-
-                (pkgs.linkFarm "pkgsDgx")
-              ];
-            in
-            linkFarm // linkFarm.passthru.entries;
-        in
-        filterDerivations (mkPkgSet pkgs) // { inherit pkgsDgx; };
+      packages = lib.trivial.pipe pkgs [
+        mkPkgSet
+        (lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation))
+      ];
     };
 }
