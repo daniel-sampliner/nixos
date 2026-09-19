@@ -18,15 +18,20 @@ typeset -gaUT _XDG_FPATH_OLD_FPATH _xdg_fpath_old_fpath=()
 
 _xdg_fpath_xdg_to_fpath() {
 	local fpath_var="${1:?}"
-	local xdg_dirs="${2:-xdg_data_dirs}"
+	shift
 
 	local tmp_fpath=()
-	local xdg_dir fpath_dir
-	for xdg_dir in "${(@P)xdg_dirs}"; do
-		for fpath_dir in "$xdg_dir/zsh/${_xdg_fpath_extra_dirs[@]}"; do
-			if [[ -d $fpath_dir ]]; then
-				tmp_fpath+=("$fpath_dir")
+	local var xdg_dir fpath_dir
+	for var; do
+		for xdg_dir in ${(P)var}; do
+			if [[ ! -d $xdg_dir ]]; then
+				continue
 			fi
+			for fpath_dir in "$xdg_dir/zsh/${_xdg_fpath_extra_dirs[@]}"; do
+				if [[ -d $fpath_dir ]]; then
+					tmp_fpath+=($fpath_dir)
+				fi
+			done
 		done
 	done
 
@@ -93,7 +98,7 @@ _xdg_fpath_hook() {
 
 	if [[ -z $_XDG_FPATH_OLD_XDG_DATA_DIRS ]]; then
 		local -aU xdg_fpath=()
-		_xdg_fpath_xdg_to_fpath xdg_fpath
+		_xdg_fpath_xdg_to_fpath xdg_fpath XDG_DATA_HOME xdg_data_dirs
 
 		if [[ -n "$xdg_fpath" ]]; then
 			local -aU tmp_fpath=(${(aO)fpath})
