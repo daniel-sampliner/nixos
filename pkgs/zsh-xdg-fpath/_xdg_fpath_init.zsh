@@ -153,6 +153,4 @@ if ! (( ${precmd_functions[(I)_xdg_fpath_hook]} )); then
 	precmd_functions[${precmd_functions[(I)_mise_hook]}+1,0]=_xdg_fpath_hook
 fi
 
-if whence -f _xdg_fpath_init >/dev/null; then
-	unfunction _xdg_fpath_init
-fi
+unfunction -m '_xdg_fpath_init(|.zsh)'

@@ -20,6 +20,6 @@
     zstyle ':completion:*' cache-path "${config.xdg.cacheHome}/zsh/zcompcache"
     zstyle ':completion:*' use-cache on
 
-    autoload -RUz _xdg_fpath_init && _xdg_fpath_init
+    emulate -R zsh -c 'autoload -RUz _xdg_fpath_init && _xdg_fpath_init'
   '';
 }
