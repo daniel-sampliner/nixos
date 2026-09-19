@@ -1,12 +1,17 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
 zstyle ':xdg-fpath' dir "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
 zstyle ':xdg-fpath:hash' cmd xxhsum -H3
 
-readonly -g _xdg_fpath_log_prefix='%N:'
-readonly -ga _xdg_fpath_extra_dirs=(site-functions vendor-completions)
+if [[ ! -v _xdg_fpath_log_prefix ]]; then
+	readonly -g _xdg_fpath_log_prefix='%N:'
+fi
+
+if [[ ! -v _xdg_fpath_extra_dirs ]]; then
+	readonly -ga _xdg_fpath_extra_dirs=(site-functions vendor-completions)
+fi
 
 typeset -gaUT _XDG_FPATH_OLD_XDG_DATA_DIRS _xdg_fpath_old_xdg_data_dirs=()
 typeset -gaUT _XDG_FPATH_OLD_FPATH _xdg_fpath_old_fpath=()
@@ -143,4 +148,6 @@ if ! (( ${precmd_functions[(I)_xdg_fpath_hook]} )); then
 	precmd_functions[${precmd_functions[(I)_mise_hook]}+1,0]=_xdg_fpath_hook
 fi
 
-unfunction _xdg_fpath_init
+if whence -f _xdg_fpath_init >/dev/null; then
+	unfunction _xdg_fpath_init
+fi
