@@ -67,7 +67,7 @@ _xdg_fpath_compinit() {
 			|| return 1
 	else
 		(
-			old=( $dumpdir/*(.Nm+7) )
+			old=( $dumpdir/*(.Na+7) )
 			(( #old )) || return 0
 			zmodload -F zsh/files b:rm \
 				&& rm -f -- $old
