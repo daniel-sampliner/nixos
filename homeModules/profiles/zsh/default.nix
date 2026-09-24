@@ -2,7 +2,7 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{ config, lib, ... }:
+{ lib, ... }:
 {
   imports = [
     ./completions.nix
@@ -28,7 +28,7 @@
       '')
 
       ''
-        PS4='+%1x:%I %1N:%i> '
+        PS4='# %1x:%I %1N:%i> '
       ''
 
       (lib.mkAfter ''
