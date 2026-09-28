@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024-2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -6,8 +6,8 @@
   description = "nixos configs";
 
   inputs = {
-    nixpkgs.url = "github:nixos/nixpkgs/nixos-25.05";
-    unstable.url = "github:nixos/nixpkgs/nixos-unstable";
+    nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.zst";
+    unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst";
 
     flake-utils.url = "github:numtide/flake-utils/v1.0.0";
 
@@ -36,7 +36,7 @@
       inputs.nixpkgs.follows = "unstable";
     };
 
-    home-manager.url = "github:nix-community/home-manager/release-25.05";
+    home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
     nix2container = {
