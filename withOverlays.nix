@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 - 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024-2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -86,9 +86,4 @@ in
   );
 
   writers = prev.writers // prev.callPackage ./withOverlays/writers.nix { };
-}
-// lib.optionalAttrs (lib.versionOlder lib.version "25") {
-  pairdrop = prev.pairdrop.overrideAttrs {
-    inherit (prev.inputs'.unstable.legacyPackages.pairdrop) installPhase;
-  };
 }
