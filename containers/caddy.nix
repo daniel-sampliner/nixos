@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2024 - 2026 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2024-2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -18,7 +18,7 @@ let
   caddy-w-plugins =
     (caddy.withPlugins {
       plugins = [ "github.com/tailscale/caddy-tailscale@latest" ];
-      hash = "sha256-XBdYjtuPVu/beIgFgFcVp6ln4r9kq0B6+4xJ8+WWYn0=";
+      hash = "sha256-IzLM8Qgxurrgs6NBygGEGyzXQUxQMPP3Y6iIWVN5ZvQ=";
     }).overrideAttrs
       (
         _: prev: {
