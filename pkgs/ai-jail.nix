@@ -13,16 +13,16 @@
 }:
 rustPlatform.buildRustPackage (final: {
   pname = "ai-jail";
-  version = "1.20.1";
+  version = "2.2.1";
 
   src = fetchFromGitHub {
     owner = "akitaonrails";
     repo = final.pname;
     tag = "v${final.version}";
-    hash = "sha256-veF08HRDB2mCrVGfaXZ1jflH9tJQp7agr9e3Y8VrgZ8=";
+    hash = "sha256-1Jxl05CJHWjciPwicYlCMXtsOSTLkNWnCod4KOjr6Wk=";
   };
 
-  cargoHash = "sha256-6gi0Xn+yOT2Xw07FOaEq89zgyx/JBXAwgPiLw4QVfRs=";
+  cargoHash = "sha256-LTK4lR+jgRwbA/8H2wQRIJUdlLWPN+EnRClP2RzRdqY=";
 
   nativeBuildInputs = [
     bubblewrap
