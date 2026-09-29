@@ -13,19 +13,19 @@
 }:
 stdenv.mkDerivation (final: {
   pname = "zmx";
-  version = "0.7.0";
+  version = "0.8.1";
 
   src = fetchFromGitHub {
     owner = "neurosnap";
     repo = final.pname;
     rev = "v${final.version}";
-    hash = "sha256-cWTeFRycSZFEbjCYIzKplNhV9SDM1kDl8CeQPOR3uyk=";
+    hash = "sha256-0gxaoup7boFMm4NQCQ8mHusX1oS8h/MacFxhSPLi2XM=";
   };
 
   zigDeps = zig.fetchDeps {
     inherit (final) src pname version;
     fetchAll = true;
-    hash = "sha256-vIjzxGaoJ2WzkB9pm41WkYFiVeoYjq6gL7KiBatrWSU=";
+    hash = "sha256-W1vKzna0dYSBdTb8evGErec6ukemFy/9Fhz5uSJeaj0=";
   };
 
   nativeBuildInputs = [
