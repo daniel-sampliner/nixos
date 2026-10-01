@@ -22,18 +22,28 @@
         colocate = false;
 
         private-commits =
+          let
+            bookmarks = [ ''bookmarks("*∅*")'' ];
+
+            descriptions =
+              lib.trivial.pipe
+                [
+                  "wip"
+                  "private"
+                ]
+                [
+                  (builtins.map (p: [
+                    "${p}:"
+                    "${p}("
+                  ]))
+                  lib.lists.flatten
+                  (builtins.map (p: ''description(glob-i:"${p}*")''))
+                ];
+          in
           lib.trivial.pipe
+            [ bookmarks descriptions ]
             [
-              "wip"
-              "private"
-            ]
-            [
-              (builtins.map (p: [
-                "${p}:"
-                "${p}("
-              ]))
-              lib.lists.flatten
-              (builtins.map (p: ''description(glob-i:"${p}*")''))
+              builtins.concatLists
               (lib.strings.concatStringsSep " | ")
             ];
 
@@ -82,6 +92,28 @@
         }
       ];
 
+      "template-aliases" = {
+        "base_git_push_bookmark" = "base_git_push_bookmark()";
+        "base_git_push_bookmark()" = "base_git_push_bookmark(default_slug_width)";
+        "base_git_push_bookmark(width)" = ''slugify(description, width) ++ "/" ++ change_id.short()'';
+        "default_slug_width" = "65";
+        "slugify" = "slugify()";
+        "slugify()" = "slugify(description)";
+        "slugify(str)" = "slugify(str, default_slug_width)";
+
+        "slugify(str, width)" = ''
+          coalesce(
+            stringify(truncate_end(width, str.first_line()))
+              .replace(regex:'[^[[:alnum:]].]', '-')
+              .replace(regex:'-{2,}', '-')
+              .replace(regex:'\.{2,}', '.')
+              .replace(regex:'(^-+|-+$)', ''')
+              .lower(),
+            "∅"
+          )
+        '';
+      };
+
       templates = {
         config_list = "builtin_config_list_detailed";
 
@@ -93,6 +125,8 @@
             ")",
           )
         '';
+
+        git_push_bookmark = ''slugify ++ "/" ++ change_id.short()'';
 
         new_description = ''
           if(parents.len() > 1,
