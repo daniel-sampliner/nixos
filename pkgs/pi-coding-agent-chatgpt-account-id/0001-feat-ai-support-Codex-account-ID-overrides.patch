@@ -1,4 +1,4 @@
-From acb322fc46fa3d64241fa7e411f55da7f6f0d2fb Mon Sep 17 00:00:00 2001
+From d20357b6f9ee14e5d41c215583971c807c02c4af Mon Sep 17 00:00:00 2001
 From: Daniel Sampliner <dsampliner@nvidia.com>
 Date: Fri, 14 Aug 2026 10:04:45 -0400
 Subject: [PATCH] feat(ai): support Codex account ID overrides
@@ -7,24 +7,24 @@ Subject: [PATCH] feat(ai): support Codex account ID overrides
  packages/ai/src/api/openai-codex-responses.ts |  19 ++-
  packages/ai/src/auth/oauth/openai-codex.ts    |  47 ++++++--
  packages/ai/test/oauth-auth.test.ts           |  11 ++
- packages/ai/test/openai-codex-oauth.test.ts   | 113 ++++++++++++++++++
- packages/ai/test/openai-codex-stream.test.ts  |  60 ++++++++++
- 5 files changed, 241 insertions(+), 9 deletions(-)
+ packages/ai/test/openai-codex-oauth.test.ts   | 114 ++++++++++++++++++
+ packages/ai/test/openai-codex-stream.test.ts  |  60 +++++++++
+ 5 files changed, 242 insertions(+), 9 deletions(-)
 
 diff --git a/packages/ai/src/api/openai-codex-responses.ts b/packages/ai/src/api/openai-codex-responses.ts
-index 52e1becfb..5ee27c7ca 100644
+index 9c1831a02..af46a913a 100644
 --- a/packages/ai/src/api/openai-codex-responses.ts
 +++ b/packages/ai/src/api/openai-codex-responses.ts
-@@ -273,7 +273,7 @@ export const stream: StreamFunction<"openai-codex-responses", OpenAICodexRespons
+@@ -267,7 +267,7 @@ export const stream: StreamFunction<"openai-codex-responses", OpenAICodexRespons
  				throw new Error(`No API key for provider: ${model.provider}`);
  			}
  
 -			const accountId = extractAccountId(apiKey);
 +			const accountId = resolveEffectiveAccountId(model.headers, options?.headers, apiKey);
  			const grammarToolInputProperties = createGrammarToolInputProperties(
- 				context.tools,
+ 				getDeclaredTools(normalizedContext.messages),
  				model.compat?.supportsOpenAIGrammarTools ?? false,
-@@ -1576,6 +1576,23 @@ async function parseErrorResponse(response: Response): Promise<{ message: string
+@@ -1624,6 +1624,23 @@ async function parseErrorResponse(response: Response): Promise<{ message: string
  // Auth & Headers
  // ============================================================================
  
@@ -49,10 +49,10 @@ index 52e1becfb..5ee27c7ca 100644
  	try {
  		const parts = token.split(".");
 diff --git a/packages/ai/src/auth/oauth/openai-codex.ts b/packages/ai/src/auth/oauth/openai-codex.ts
-index 96e861a94..65112285c 100644
+index d2917f1e1..2bb8c621a 100644
 --- a/packages/ai/src/auth/oauth/openai-codex.ts
 +++ b/packages/ai/src/auth/oauth/openai-codex.ts
-@@ -400,8 +400,9 @@ function getAccountId(accessToken: string): string | null {
+@@ -314,8 +314,9 @@ function getAccountId(accessToken: string): string | null {
  	return typeof accountId === "string" && accountId.length > 0 ? accountId : null;
  }
  
@@ -64,7 +64,7 @@ index 96e861a94..65112285c 100644
  	if (!accountId) {
  		throw new Error("Failed to extract accountId from token");
  	}
-@@ -412,6 +413,7 @@ function credentialsFromToken(token: OAuthToken): OAuthCredential {
+@@ -326,6 +327,7 @@ function credentialsFromToken(token: OAuthToken): OAuthCredential {
  		refresh: token.refresh,
  		expires: token.expires,
  		accountId,
@@ -72,7 +72,7 @@ index 96e861a94..65112285c 100644
  	};
  }
  
-@@ -420,8 +422,9 @@ async function exchangeAuthorizationCodeForCredentials(
+@@ -334,8 +336,9 @@ async function exchangeAuthorizationCodeForCredentials(
  	verifier: string,
  	redirectUri: string,
  	signal: AbortSignal,
@@ -83,7 +83,7 @@ index 96e861a94..65112285c 100644
  }
  
  async function loginOpenAICodexDeviceCode(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
-@@ -443,6 +446,14 @@ async function loginOpenAICodexDeviceCode(interaction: ProviderAuthInteraction):
+@@ -357,6 +360,14 @@ async function loginOpenAICodexDeviceCode(interaction: ProviderAuthInteraction):
  }
  
  async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<OAuthCredential> {
@@ -96,14 +96,14 @@ index 96e861a94..65112285c 100644
 +	if (interaction.signal.aborted) throw new Error("Login cancelled");
 +
  	const { verifier, state, url } = await createAuthorizationFlow();
- 	const server = await startLocalOAuthServer(state);
- 	const manualAbort = new AbortController();
-@@ -497,7 +508,13 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
+ 	// Port 1455 is shared with the Codex CLI; when it is taken, fall back to the pasted redirect URL.
+ 	const callback = await startOAuthCallbackServer({
+@@ -390,7 +401,13 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
  		}
  
  		if (!code) throw new Error("Missing authorization code");
--		return exchangeAuthorizationCodeForCredentials(code, verifier, REDIRECT_URI, interaction.signal);
-+		return exchangeAuthorizationCodeForCredentials(
+-		return await exchangeAuthorizationCodeForCredentials(code, verifier, REDIRECT_URI, interaction.signal);
++		return await exchangeAuthorizationCodeForCredentials(
 +			code,
 +			verifier,
 +			REDIRECT_URI,
@@ -111,9 +111,9 @@ index 96e861a94..65112285c 100644
 +			accountIdOverride || undefined,
 +		);
  	} finally {
- 		interaction.signal.removeEventListener("abort", onAbort);
- 		manualAbort.abort();
-@@ -508,8 +525,12 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
+ 		callback?.close();
+ 	}
+@@ -399,8 +416,12 @@ async function loginOpenAICodex(interaction: ProviderAuthInteraction): Promise<O
  /**
   * Refresh OpenAI Codex OAuth token
   */
@@ -128,7 +128,7 @@ index 96e861a94..65112285c 100644
  }
  
  export const openaiCodexOAuth: OAuthAuth = {
-@@ -536,9 +557,19 @@ export const openaiCodexOAuth: OAuthAuth = {
+@@ -427,9 +448,19 @@ export const openaiCodexOAuth: OAuthAuth = {
  		return loginOpenAICodex(interaction);
  	},
  
@@ -151,10 +151,10 @@ index 96e861a94..65112285c 100644
  	},
  };
 diff --git a/packages/ai/test/oauth-auth.test.ts b/packages/ai/test/oauth-auth.test.ts
-index ceaac57f9..3aefa7954 100644
+index 6033fb7fb..66952e8a1 100644
 --- a/packages/ai/test/oauth-auth.test.ts
 +++ b/packages/ai/test/oauth-auth.test.ts
-@@ -44,6 +44,17 @@ describe.sequential("OAuthAuth adapters", () => {
+@@ -63,6 +63,17 @@ describe.sequential("OAuthAuth adapters", () => {
  		expect(auth).toEqual({ apiKey: "token" });
  	});
  
@@ -173,10 +173,10 @@ index ceaac57f9..3aefa7954 100644
  		const credential = { type: "oauth" as const, access: "token", refresh: "", expires: Number.MAX_SAFE_INTEGER };
  		expect(await openRouterOAuth.toAuth(credential)).toEqual({ apiKey: "token" });
 diff --git a/packages/ai/test/openai-codex-oauth.test.ts b/packages/ai/test/openai-codex-oauth.test.ts
-index f45d4aeea..d97d6e9cc 100644
+index 16ec6c76f..9e802734b 100644
 --- a/packages/ai/test/openai-codex-oauth.test.ts
 +++ b/packages/ai/test/openai-codex-oauth.test.ts
-@@ -17,6 +17,12 @@ function getUrl(input: unknown): string {
+@@ -18,6 +18,12 @@ function getUrl(input: unknown): string {
  	throw new Error(`Unsupported fetch input: ${String(input)}`);
  }
  
@@ -189,7 +189,7 @@ index f45d4aeea..d97d6e9cc 100644
  function createAccessToken(accountId: string): string {
  	const header = Buffer.from(JSON.stringify({ alg: "none" })).toString("base64");
  	const payload = Buffer.from(
-@@ -453,6 +459,113 @@ describe("OpenAI Codex OAuth", () => {
+@@ -454,6 +460,113 @@ describe("OpenAI Codex OAuth", () => {
  		);
  	});
  
@@ -303,11 +303,19 @@ index f45d4aeea..d97d6e9cc 100644
  	it("does not write token refresh failures to stderr", async () => {
  		const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
  		vi.stubGlobal(
+@@ -515,6 +628,7 @@ describe("OpenAI Codex OAuth", () => {
+ 				},
+ 				prompt: async (prompt) => {
+ 					if (prompt.type === "select") return "browser";
++					if (prompt.type === "text") return "";
+ 					if (prompt.type !== "manual_code") throw new Error(`Unexpected prompt: ${prompt.type}`);
+ 					const state = new URL(authUrl).searchParams.get("state");
+ 					return `http://localhost:1455/auth/callback?code=pasted-code&state=${state}`;
 diff --git a/packages/ai/test/openai-codex-stream.test.ts b/packages/ai/test/openai-codex-stream.test.ts
-index a8423c887..2f3825eaa 100644
+index 9aabc09c3..e9b7727e4 100644
 --- a/packages/ai/test/openai-codex-stream.test.ts
 +++ b/packages/ai/test/openai-codex-stream.test.ts
-@@ -46,6 +46,21 @@ function decodeCodexRequestBody(body: RequestInit["body"] | undefined): Record<s
+@@ -47,6 +47,21 @@ function decodeCodexRequestBody(body: RequestInit["body"] | undefined): Record<s
  	return null;
  }
  
@@ -329,7 +337,7 @@ index a8423c887..2f3825eaa 100644
  function buildSSEPayload({
  	status,
  	includeDone = false,
-@@ -94,6 +109,51 @@ function buildSSEPayload({
+@@ -98,6 +113,51 @@ function buildSSEPayload({
  }
  
  describe("openai-codex streaming", () => {
@@ -349,7 +357,7 @@ index a8423c887..2f3825eaa 100644
 +			);
 +			const result = await streamOpenAICodexResponses(
 +				makeCodexTestModel(),
-+				{ systemPrompt: "", messages: [] },
++				normalizeContext({ systemPrompt: "", messages: [] }),
 +				{
 +					apiKey,
 +					transport: "sse",
@@ -366,7 +374,7 @@ index a8423c887..2f3825eaa 100644
 +		async (accountId) => {
 +			const result = await streamOpenAICodexResponses(
 +				makeCodexTestModel(),
-+				{ systemPrompt: "", messages: [] },
++				normalizeContext({ systemPrompt: "", messages: [] }),
 +				{
 +					apiKey: "aaa.e30.bbb",
 +					transport: "sse",
@@ -378,7 +386,7 @@ index a8423c887..2f3825eaa 100644
 +		},
 +	);
 +
- 	it("streams SSE responses into AssistantMessageEventStream", async () => {
+ 	it("streams SSE responses and forwards raw provider events", async () => {
  		const tempDir = mkdtempSync(join(tmpdir(), "pi-codex-stream-"));
  		process.env.PI_CODING_AGENT_DIR = tempDir;
 -- 
