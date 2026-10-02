@@ -27,6 +27,7 @@
 
       ''
         vim.opt.exrc = true
+        vim.opt.scrolloff = 5
         vim.opt.wildmode = "longest:full,full"
       ''
     ];
