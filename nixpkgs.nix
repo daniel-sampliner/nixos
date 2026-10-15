@@ -2,20 +2,14 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-{
-  inputs,
-  lib,
-  ...
-}:
+{ lib, ... }:
 {
   perSystem =
-    {
-      inputs',
-      pkgs,
-      system,
-      ...
-    }:
+    { inputs', ... }:
     let
+      stablePkgs = inputs'.nixpkgs.legacyPackages;
+      unstablePkgs = inputs'.unstable.legacyPackages;
+
       mkPkgSet =
         pkgs:
         (lib.filesystem.packagesFromDirectoryRecursive {
@@ -27,33 +21,18 @@
               inherit inputs';
             }
           );
+
+      pkgsExtra = mkPkgSet stablePkgs;
     in
     {
-      _module.args.pkgs = import inputs.nixpkgs {
-        inherit system;
-        overlays = [
-          (
-            final: prev:
-            let
-              pkgsUnstable = import inputs.unstable {
-                inherit system;
-                overlays = [
-                  (final: prev: { pkgsExtra = mkPkgSet prev; })
-                ];
-              };
-            in
-            {
-              inherit pkgsUnstable;
+      _module.args.pkgs = stablePkgs // {
+        pkgsUnstable = unstablePkgs // {
+          pkgsExtra = mkPkgSet unstablePkgs;
+        };
 
-              pkgsExtra = mkPkgSet prev;
-            }
-          )
-        ];
+        inherit pkgsExtra;
       };
 
-      packages = lib.trivial.pipe pkgs [
-        mkPkgSet
-        (lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation))
-      ];
+      packages = lib.attrsets.filterAttrs (_: lib.attrsets.isDerivation) pkgsExtra;
     };
 }

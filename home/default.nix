@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -37,6 +37,8 @@
               ../homeModules
 
               (_: {
+                _module.args.pkgs = lib.mkForce pkgs;
+
                 home.packages =
                   let
                     input-paths = pkgs.writeTextFile {
