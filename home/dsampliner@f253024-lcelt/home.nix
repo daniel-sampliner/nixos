@@ -54,6 +54,7 @@
       spacer
       units
       wl-clipboard
+      yq-go
       ;
   };
 
