@@ -77,10 +77,6 @@ function M.dev_env(options)
 
 	if file_extra.exists(profile) then
 		log.debug("profile exists")
-		local comm = ("nix profile wipe-history --quiet --profile " .. profile)
-		log.debug("running command: " .. comm)
-		cmd.exec(comm, { cwd = base_dir })
-
 		local hash_f = io.open(cached_hash, "r")
 		if hash_f then
 			log.debug("previous hash exists")
@@ -108,6 +104,10 @@ function M.dev_env(options)
 
 		cmd.exec(strings.join({ "touch", mise_config }, " "), { cwd = base_dir })
 		log.debug("profile updated")
+
+		local comm = ("nix profile wipe-history --quiet --profile " .. profile)
+		log.debug("running command: " .. comm)
+		cmd.exec(comm, { cwd = base_dir })
 	end
 
 	profile_f = io.open(profile, "r")
