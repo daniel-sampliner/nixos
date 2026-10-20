@@ -12,12 +12,33 @@ in
   dockerTools = builtins.mapAttrs (
     _: v:
     if lib.isDerivation v && v.buildCommand or "" != "" then
-      prev.runCommand v.name { } ''
-        cp -Lr -- "${v.outPath}" "$out"
+      let
+        patched = prev.replaceDependencies {
+          drv = v;
+          replacements = [
+            {
+              oldDependency = prev.cacert;
+              newDependency = prev.inputs'.nixpkgs_main.legacyPackages.cacert.overrideAttrs {
+                __intentionallyOverridingVersion = true;
+                version = "3.131";
+              };
+            }
+          ];
+        };
+      in
+      prev.runCommand patched.name { } ''
+        cp -Lr -- "${patched.outPath}" "$out"
       ''
     else
       v
   ) prev.dockerTools;
+
+  inherit (prev.inputs'.nixpkgs_main.legacyPackages)
+    buildGo126Module
+    buildGo127Module
+    go_1_26
+    go_1_27
+    ;
 
   nix2container =
     let
