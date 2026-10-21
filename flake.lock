@@ -108,6 +108,38 @@
         "url": "https://channels.nixos.org/nixos-26.05/nixexprs.tar.zst"
       }
     },
+    "nixpkgs_cacert": {
+      "locked": {
+        "lastModified": 1792522774,
+        "narHash": "sha256-OQWzPAj5vOPxeWvAosM5dZS8pRfNtWAxfJsFnWg84+g=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "43a7ae3f9e374f1fde09022c81d4fb1326a67f60",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "43a7ae3f9e374f1fde09022c81d4fb1326a67f60",
+        "type": "github"
+      }
+    },
+    "nixpkgs_release": {
+      "locked": {
+        "lastModified": 1792570108,
+        "narHash": "sha256-zJ1csfQsir1JrUZLeWIc+PnT2i3021AjqQlarqUv/0U=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "98bca2b5be256ebd2489df073e794b558483ae20",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "98bca2b5be256ebd2489df073e794b558483ae20",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "dgx": "dgx",
@@ -116,6 +148,8 @@
         "home-manager": "home-manager",
         "nix2container": "nix2container",
         "nixpkgs": "nixpkgs",
+        "nixpkgs_cacert": "nixpkgs_cacert",
+        "nixpkgs_release": "nixpkgs_release",
         "treefmt-nix": "treefmt-nix",
         "unstable": "unstable"
       }
