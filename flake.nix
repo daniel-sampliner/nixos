@@ -21,6 +21,9 @@
     home-manager.url = "github:nix-community/home-manager/release-26.05";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
 
+    nix2container.url = "github:nlewo/nix2container";
+    nix2container.inputs.nixpkgs.follows = "nixpkgs";
+
     treefmt-nix.url = "github:numtide/treefmt-nix";
     treefmt-nix.inputs.nixpkgs.follows = "unstable";
   };
@@ -32,6 +35,7 @@
 
       imports = [
         ./devShell.nix
+        ./containers.nix
         ./home
         ./nixpkgs.nix
         ./treefmt.nix
