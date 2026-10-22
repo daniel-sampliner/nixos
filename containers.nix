@@ -27,7 +27,7 @@
           pkgsSlim = pkgs.appendOverlays [
             (_: _: {
               fp = config.allModuleArgs // {
-                inherit self;
+                inherit inputs self;
               };
             })
 
@@ -35,7 +35,13 @@
               final: prev:
               let
                 inherit (inputs) nixpkgs_cacert nixpkgs_release;
+                inherit (lib.asserts) assertMsg;
+                inherit (lib.strings) versionOlder;
               in
+              assert assertMsg (builtins.match ".*rm cmd/x509rootsfallback.go.*" pkgs.caddy.postConfigure or "" == null) "caddy overlay unnecessary";
+              assert assertMsg (versionOlder pkgs.cacert.version "3.131.1") "cacert overlay unnecessary";
+              assert assertMsg (versionOlder pkgs.go_1_26.version "1.26.10") "go_1_26 overlay unnecessary";
+              assert assertMsg (versionOlder pkgs.go_1_27.version "1.27.3") "go_1_27 overlay unnecessary";
               {
                 caddy = final.callPackage "${nixpkgs_release}/pkgs/by-name/ca/caddy/package.nix" { };
 
