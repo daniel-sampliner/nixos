@@ -7,10 +7,10 @@
   imports = [ inputs.treefmt-nix.flakeModule ];
 
   perSystem =
-    { inputs', ... }:
+    { pkgs, ... }:
     {
       treefmt = {
-        pkgs = inputs'.unstable.legacyPackages;
+        inherit pkgs;
 
         programs = {
           nixfmt.enable = true;
