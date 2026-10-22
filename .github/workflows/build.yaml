@@ -134,7 +134,7 @@ jobs:
             --retry-times 5
           )
           if [[ -n $publish ]]; then
-            skopeo_args+=(--sign-by-sigstore "${RUNNER_TEMP:?}/sigtore-params.yaml")
+            skopeo_args+=(--sign-by-sigstore "${RUNNER_TEMP:?}/sigstore-params.yaml")
           fi
 
           for tag in "${GITHUB_SHA:?}" "${github_ref_name_safe:?}"; do
