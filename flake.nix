@@ -34,11 +34,10 @@
   outputs =
     inputs@{ flake-parts, ... }:
     flake-parts.lib.mkFlake { inherit inputs; } {
-      debug = true;
-
       imports = [
-        ./devShell.nix
         ./containers.nix
+        ./devShell.nix
+        ./github.nix
         ./home
         ./nixpkgs.nix
         ./treefmt.nix

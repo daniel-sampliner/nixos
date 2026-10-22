@@ -9,13 +9,14 @@ in
 {
   dockerTools =
     let
-      dt = prev.dockerTools;
+      inherit (prev) dockerTools;
+      inherit (dockerTools) caCertificates;
     in
-    dt
+    dockerTools
     // {
-      caCertificates = dt.caCertificates.overrideAttrs (prev': {
-        buildInputs = prev'.buildInputs or [ ] ++ [ prev.cacert ];
-      });
+      caCertificates = prev.runCommand caCertificates.name { } ''
+        cp -Lr -- "${caCertificates}" "$out"
+      '';
     };
 
   nix2container =

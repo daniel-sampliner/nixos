@@ -32,53 +32,54 @@ let
         }
       );
 in
-nix2container.buildImage {
-  inherit name;
-  tag = caddy.version;
+lib.attrsets.recursiveUpdate
+  (nix2container.buildImage {
+    inherit name;
+    tag = caddy.version;
 
-  copyToRoot = [
-    (buildEnv {
-      name = "root";
-      paths = [
-        caddy-w-plugins
-        curlMinimal
-      ];
-      pathsToLink = [ "/bin" ];
-    })
-    (buildEnv {
-      name = "etc";
-      paths = [
-        dockerTools.caCertificates
-        mailcap
-      ];
-      pathsToLink = [ "/etc" ];
-    })
-  ];
-
-  config = {
-    Entrypoint = [ "caddy" ];
-    Cmd = [
-      "run"
-      "--config"
-      "/etc/caddy/Caddyfile"
-      "--adapter"
-      "caddyfile"
+    copyToRoot = [
+      (buildEnv {
+        name = "root";
+        paths = [
+          caddy-w-plugins
+          curlMinimal
+        ];
+        pathsToLink = [ "/bin" ];
+      })
+      (buildEnv {
+        name = "etc";
+        paths = [
+          dockerTools.caCertificates
+          mailcap
+        ];
+        pathsToLink = [ "/etc" ];
+      })
     ];
 
-    Env = [
-      "CADDY_VERSION=${caddy-w-plugins.version}"
-      "XDG_CONFIG_HOME=/opt/caddy/config"
-      "XDG_DATA_HOME=/opt/caddy/data"
-    ];
-    ExposedPorts = {
-      "80/tcp" = { };
-      "443/tcp" = { };
-      "443/udp" = { };
-      "2019/tcp" = { };
+    config = {
+      Entrypoint = [ "caddy" ];
+      Cmd = [
+        "run"
+        "--config"
+        "/etc/caddy/Caddyfile"
+        "--adapter"
+        "caddyfile"
+      ];
+
+      Env = [
+        "CADDY_VERSION=${caddy-w-plugins.version}"
+        "XDG_CONFIG_HOME=/opt/caddy/config"
+        "XDG_DATA_HOME=/opt/caddy/data"
+      ];
+      ExposedPorts = {
+        "80/tcp" = { };
+        "443/tcp" = { };
+        "443/udp" = { };
+        "2019/tcp" = { };
+      };
+      WorkingDir = "/srv";
     };
-    WorkingDir = "/srv";
-  };
-}
-// {
-  passthru = { inherit caddy-w-plugins; };
-}
+  })
+  {
+    passthru = { inherit caddy-w-plugins; };
+  }

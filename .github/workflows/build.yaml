@@ -1,0 +1,127 @@
+# SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: build
+
+on:
+  push:
+  workflow_dispatch:
+
+concurrency:
+  cancel-in-progress: true
+  group: >-
+    ${{ github.workflow }}- ${{ contains(fromJSON('["main"]'), github.ref_name)
+      && github.ref
+      || github.sha }}
+
+jobs:
+  cache-flake:
+    runs-on: ubuntu-slim
+    env:
+      USER: runner
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+          skipPush: true
+
+      - name: cache flake
+        run: |
+          nix eval --json .#lib.public_input_paths \
+            | jq -er '.[]' \
+            | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
+
+  gen-containers:
+    runs-on: ubuntu-slim
+    env:
+      USER: runner
+
+    outputs:
+      ctrs: ${{ steps.main.outputs.ctrs }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: list containers
+        id: main
+        run: |
+          nix eval --json '.#containers.entries' --apply 'builtins.attrNames' \
+            | jq -er '"ctrs=\(tojson)"' \
+            | tee -a "${GITHUB_OUTPUT:?}"
+
+  containers:
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+
+    needs:
+      - gen-containers
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ctr: ${{ fromJSON(needs.gen-containers.outputs.ctrs) }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: build
+        env:
+          CTR: ${{ matrix.ctr }}
+        run: |
+          nix -L build --keep-going ".#containers.entries.${CTR:?}"
+
+      - name: log into ghcr.io registry
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          skopeo login \
+            --password-stdin <<<"${GITHUB_TOKEN:?}"\
+            --username "${GITHUB_ACTOR:?}" \
+            ghcr.io
+
+      - name: push image to ghcr.io
+        env:
+          CTR: ${{ matrix.ctr }}
+        run: |
+          installable=".#containers.entries.${CTR:?}"
+          github_ref_name_safe=$(<<<"${GITHUB_REF_NAME:?}" tr -cs '[:alnum:]-' '-' \
+            | sed -E 's/-+$//')
+          repository=$(nix eval --raw "$installable.meta.repository")
+
+          for tag in "${GITHUB_SHA:?}" "${github_ref_name_safe:?}"; do
+            nix run "$installable.passthru.copyTo" -- \
+              --dest-compress-format zstd:chunked \
+              --retry-times 5 \
+              "docker://${repository:?}:$tag"
+          done
+
+  success:
+    runs-on: ubuntu-slim
+    if: ${{ !cancelled() }}
+    needs:
+      - containers
+
+    steps:
+      - name: success
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |-
+          jq -e 'length > 0 and all(. == "success" or . == "skipped")' \
+            <<<"${RESULTS:?}"

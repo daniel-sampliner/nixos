@@ -1,4 +1,4 @@
-# SPDX-FileCopyrightText: 2025 Daniel Sampliner <samplinerD@gmail.com>
+# SPDX-FileCopyrightText: 2025, 2026 Daniel Sampliner <samplinerD@gmail.com>
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
@@ -30,6 +30,17 @@
           };
 
           taplo.enable = true;
+
+          yamlfmt = {
+            enable = true;
+            settings.formatter = {
+              force_quote_style = "double";
+              retain_line_breaks_single = true;
+              trim_trailing_whitespace = true;
+              type = "basic";
+            };
+          };
+
           zig.enable = true;
         };
 

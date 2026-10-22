@@ -19,6 +19,11 @@
     {
       packages.containers =
         let
+          cacert = inputs'.nixpkgs_cacert.legacyPackages.cacert.overrideAttrs {
+            __intentionallyOverridingVersion = true;
+            version = "3.131";
+          };
+
           pkgsSlim = pkgs.appendOverlays [
             (_: _: {
               fp = config.allModuleArgs // {
@@ -33,6 +38,13 @@
               in
               {
                 caddy = final.callPackage "${nixpkgs_release}/pkgs/by-name/ca/caddy/package.nix" { };
+
+                dockerTools = prev.dockerTools // {
+                  caCertificates = prev.dockerTools.caCertificates.overrideAttrs (prev': {
+                    buildCommand = lib.strings.replaceString "${prev.cacert}" "${cacert}" prev'.buildCommand;
+                  });
+                };
+
                 go_1_26 = final.callPackage "${nixpkgs_cacert}/pkgs/development/compilers/go/1.26.nix" { };
                 go_1_27 = final.callPackage "${nixpkgs_release}/pkgs/development/compilers/go/1.27.nix" { };
               }
@@ -52,17 +64,15 @@
               replacements = [
                 {
                   oldDependency = pkgsSlim.cacert;
-                  newDependency = inputs'.nixpkgs_cacert.legacyPackages.cacert.overrideAttrs {
-                    __intentionallyOverridingVersion = true;
-                    version = "3.131";
-                  };
+                  newDependency = cacert;
                 }
               ];
             in
             builtins.mapAttrs (
               _: drv:
-              pkgsSlim.replaceDependencies { inherit drv replacements; }
-              // {
+              lib.recursiveUpdate (pkgsSlim.replaceDependencies { inherit drv replacements; }) {
+                meta = { inherit (drv.meta) repository tag tags; };
+
                 passthru = builtins.mapAttrs (
                   _: d:
                   if lib.attrsets.isDerivation d then
