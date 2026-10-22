@@ -124,13 +124,30 @@ jobs:
             | sed -E 's/-+$//')
           repository=$(nix eval --raw "$installable.meta.repository")
 
+          publish=""
+          if [[ ${GITHUB_REF_NAME:?} == main ]]; then
+            publish=publish
+          fi
+
+          skopeo_args=(
+            --dest-compress-format zstd:chunked
+            --retry-times 5
+          )
+          if [[ -n $publish ]]; then
+            skopeo_args+=(--sign-by-sigstore "${RUNNER_TEMP:?}/sigtore-params.yaml")
+          fi
+
           for tag in "${GITHUB_SHA:?}" "${github_ref_name_safe:?}"; do
-            nix run "$installable.passthru.copyTo" -- \
-              --dest-compress-format zstd:chunked \
-              --retry-times 5 \
-              --sign-by-sigstore "${RUNNER_TEMP:?}/sigstore-params.yaml" \
-              "docker://${repository:?}:$tag"
+            nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
           done
+
+          if [[ -z $publish ]]; then
+            exit 0
+          fi
+
+          while IFS=$'\t' read -r tag; do
+            nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
+          done < <(nix eval --json "$installable.meta.tags" | jq -er '@tsv')
 
   success:
     runs-on: ubuntu-slim
