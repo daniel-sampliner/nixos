@@ -13,7 +13,6 @@ let
 
   nono-completions = pkgs.pkgsExtra.nono-completions.override { inherit nono; };
   opensrcDir = "${config.xdg.cacheHome}/opensrc";
-  rtkDbDir = "${config.xdg.dataHome}/rtk";
 in
 {
   home.file.".pi/agent/extensions" = {
@@ -56,13 +55,11 @@ in
       ;
 
     inherit (pkgs.pkgsExtra) ai-jail;
-    inherit (pkgs.pkgsUnstable) rtk;
     inherit nono nono-completions pi-coding-agent;
   };
 
   home.sessionVariables = {
     OPENSRC_HOME = opensrcDir;
-    RTK_DB_PATH = "${rtkDbDir}/history.db";
   };
 
   programs.neovim.initLua = lib.mkOrder 1 ''
@@ -89,7 +86,6 @@ in
 
     tmpfiles.rules = [
       "d ${opensrcDir} 0700 - - 30d"
-      "d ${rtkDbDir}/tee 0700 - - 7d"
       "d %h/.pi/agent/sessions 0700 - - 30d"
     ];
   };
