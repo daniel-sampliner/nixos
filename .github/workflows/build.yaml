@@ -6,12 +6,17 @@ name: build
 
 on:
   push:
+    branches:
+      - "**"
+      - "!nix-update/**"
+      - "nix-update/pr"
+
   workflow_dispatch:
 
 concurrency:
   cancel-in-progress: true
   group: >-
-    ${{ github.workflow }}- ${{ contains(fromJSON('["main"]'), github.ref_name)
+    ${{ github.workflow }}-${{ contains(fromJSON('["main"]'), github.ref_name)
       && github.ref
       || github.sha }}
 
@@ -28,12 +33,11 @@ jobs:
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-          skipPush: true
 
       - name: cache flake
         run: |
-          nix eval --json .#lib.public_input_paths \
-            | jq -er '.[]' \
+          nix eval --json .#lib.public_inputs \
+            | jq -er 'to_entries[].value' \
             | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
 
   gen-containers:

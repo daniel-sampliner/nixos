@@ -5,9 +5,9 @@
 { inputs, lib, ... }:
 {
   flake.lib = {
-    public_input_paths = lib.trivial.pipe inputs [
+    public_inputs = lib.trivial.pipe inputs [
       (lib.attrsets.filterAttrs (n: _: n != "dgx"))
-      (lib.attrsets.mapAttrsToList (_: v: v.outPath))
+      (lib.attrsets.mapAttrs (_: v: v.outPath))
     ];
   };
 }

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: CC0-1.0
+
 fulcio:
   fulcioURL: "https://fulcio.sigstore.dev"
   oidcMode: "staticToken"
