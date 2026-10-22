@@ -146,9 +146,11 @@ jobs:
             exit 0
           fi
 
-          while IFS=$'\t' read -r tag; do
-            nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
-            echo "::notice::pushed image ${repository:?}:$tag" ${publish:+(SIGNED)}
+          while IFS=$'\t' read -r -a tags; do
+            for tag in "${tags[@]}"; do
+              nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
+              echo "::notice::pushed image ${repository:?}:$tag" ${publish:+(SIGNED)}
+            done
           done < <(nix eval --json "$installable.meta.tags" | jq -er '@tsv')
 
   success:
