@@ -156,6 +156,7 @@ jobs:
     if: ${{ !cancelled() }}
     needs:
       - containers
+      - gen-containers
 
     steps:
       - name: success
