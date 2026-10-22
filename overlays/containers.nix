@@ -2,9 +2,10 @@
 #
 # SPDX-License-Identifier: AGPL-3.0-or-later
 
-_: prev:
+final: prev:
 let
   inherit (prev) lib;
+  inherit (prev.fp.inputs) unstable;
 in
 {
   dockerTools =
@@ -18,6 +19,19 @@ in
         cp -Lr -- "${caCertificates}" "$out"
       '';
     };
+
+  jellyfin = final.callPackage "${unstable}/pkgs/by-name/je/jellyfin/package.nix" { };
+
+  jellyfin-ffmpeg = final.callPackage "${unstable}/pkgs/by-name/je/jellyfin-ffmpeg/package.nix" {
+    ffmpeg_8-full = prev.ffmpeg_8-headless.override {
+      withAvisynth = true;
+      withFdkAac = true;
+      withOpenh264 = true;
+      withRav1e = true;
+    };
+  };
+
+  jellyfin-web = final.callPackage "${unstable}/pkgs/by-name/je/jellyfin-web/package.nix" { };
 
   nix2container =
     let
