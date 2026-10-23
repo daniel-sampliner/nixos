@@ -100,12 +100,6 @@ jobs:
       USER: runner
 
     steps:
-      - uses: actions/checkout@v7.0.1
-        with:
-          ref: ${{ env.BRANCH }}
-          fetch-depth: 30
-          filter: "blob:none"
-
       - uses: actions/create-github-app-token@v3.3.0
         id: app-token
         with:
@@ -114,43 +108,22 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
 
+      - uses: actions/checkout@v7.0.1
+        with:
+          ref: ${{ env.BRANCH }}
+          fetch-depth: 30
+          filter: "blob:none"
+          token: ${{ steps.app-token.outputs.token }}
+
       - name: create branch
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          set -x
-          new_ref=refs/heads/${BRANCH%/*}/pr
-          sha=$(git rev-parse "${BRANCH:?}")
-          : "${new_ref:?}" "${sha:?}"
-
-          base_url="/repos/${GITHUB_REPOSITORY:?}/git"
-
-          ret=0
-          git ls-remote --exit-code --heads origin "$new_ref" || ret=$?
-          case $ret in
-          0) # update existing branch
-            gh api \
-              --method PATCH \
-              "$base_url/$new_ref" \
-              --field "sha=$sha" \
-              --field force=true
-            ;;
-          2) # create new branch
-            gh api \
-              --method POST \
-              "$base_url/refs" \
-              --field "ref=$new_ref" \
-              --field "sha=$sha"
-            ;;
-          *)
-            echo "::error::failed to list remote git refs: $ret"
-            exit $ret
-            ;;
-          esac
+          BRANCH=${BRANCH%/*}/pr
+          git branch -M "${BRANCH:?}"
+          git push --force --set-upstream origin "$BRANCH:$BRANCH"
+          tee -a "${GITHUB_ENV:?}" <<<"BRANCH=$BRANCH"
 
       - name: create or edit PR
         env:
-          BRANCH: ${{ github.workflow }}/pr
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -x
