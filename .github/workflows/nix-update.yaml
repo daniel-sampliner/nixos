@@ -80,6 +80,7 @@ jobs:
         with:
           client-id: ${{ vars.BOT_APP_ID }}
           private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+          permission-actions: write
 
       - name: trigger build workflow
         if: ${{ steps.update.outputs.changed == 'true' }}
@@ -95,10 +96,6 @@ jobs:
 
     if: ${{ needs.flake-update.outputs.changed == 'true' }}
 
-    permissions:
-      contents: write
-      pull-requests: write
-
     env:
       USER: runner
 
@@ -109,14 +106,54 @@ jobs:
           fetch-depth: 30
           filter: "blob:none"
 
-      - name: push branch and raise PR
+      - uses: actions/create-github-app-token@v3.3.0
+        id: app-token
+        with:
+          client-id: ${{ vars.BOT_APP_ID }}
+          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: create branch
         env:
-          BRANCH: ${{ github.workflow }}/pr
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -x
-          git branch --move "${BRANCH:?}"
-          git push --force --set-upstream origin "$BRANCH:$BRANCH"
+          new_ref=refs/heads/${BRANCH%/*}/pr
+          sha=$(git rev-parse "${BRANCH:?}")
+          : "${new_ref:?}" "${sha:?}"
+
+          base_url="/repos/${GITHUB_REPOSITORY:?}/git"
+
+          ret=0
+          git ls-remote --exit-code --heads origin "$new_ref" || ret=$?
+          case $ret in
+          0) # update existing branch
+            gh api \
+              --method PATCH \
+              "$base_url/$new_ref" \
+              --field "sha=$sha" \
+              --field force=true
+            ;;
+          2) # create new branch
+            gh api \
+              --method POST \
+              "$base_url/refs" \
+              --field "ref=$new_ref" \
+              --field "sha=$sha"
+            ;;
+          *)
+            echo "::error::failed to list remote git refs: $ret"
+            exit $ret
+            ;;
+          esac
+
+      - name: create or edit PR
+        env:
+          BRANCH: ${{ github.workflow }}/pr
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -x
 
           body="${RUNNER_TEMP:?}/body"
           git log "${GITHUB_SHA:?}".. --format='* %s' >"$body"
@@ -127,7 +164,7 @@ jobs:
           fi
 
           cmd=create
-          if [[ "$(gh pr view --json closed --jq .closed)" == false ]]; then
+          if [[ "$(gh pr view "${BRANCH:?}" --json closed --jq .closed)" == false ]]; then
             cmd=edit
           fi
 
@@ -141,19 +178,6 @@ jobs:
             echo "$pr"
             echo '```'
           } | tee -a "${GITHUB_STEP_SUMMARY:?}"
-
-      - uses: actions/create-github-app-token@v3.3.0
-        id: app-token
-        with:
-          client-id: ${{ vars.BOT_APP_ID }}
-          private-key: ${{ secrets.BOT_PRIVATE_KEY }}
-
-      - name: trigger build workflow
-        env:
-          BRANCH: ${{ github.workflow }}/pr
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          gh workflow run build.yaml --ref "${BRANCH:?}"
 
   cleanup-branch:
     runs-on: ubuntu-slim
