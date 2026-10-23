@@ -90,7 +90,7 @@ jobs:
         env:
           CTR: ${{ matrix.ctr }}
         run: |
-          nix -L build --keep-going ".#containers.entries.${CTR:?}"
+          nix -L build ".#containers.entries.${CTR:?}"
 
       - name: log into ghcr.io registry
         env:
@@ -101,61 +101,20 @@ jobs:
             --username "${GITHUB_ACTOR:?}" \
             ghcr.io
 
-      - name: fetch github OIDC token
-        uses: actions/github-script@v9.0.0
-        id: oidc-token
-        with:
-          script: |
-            const token = await core.getIDToken("sigstore");
-            core.setOutput("token", token);
-
       - name: configure skopeo sigstore
-        env:
-          OIDC_TOKEN: ${{ steps.oidc-token.outputs.token }}
         run: |
           dir=${GITHUB_WORKSPACE:?}/.github/workflows/sigstore
           sudo install -Dm0644 -t /etc/containers/registries.d "$dir/ghcr.yaml"
 
-          mkdir -p "${RUNNER_TEMP:?}"
-          envsubst '$OIDC_TOKEN' <"$dir/sigstore-params.yaml" >"$RUNNER_TEMP/sigstore-params.yaml"
-
       - name: push image to ghcr.io
+        uses: actions/github-script@v9.0.0
         env:
-          CTR: ${{ matrix.ctr }}
-        run: |
-          installable=".#containers.entries.${CTR:?}"
-          github_ref_name_safe=$(<<<"${GITHUB_REF_NAME:?}" tr -cs '[:alnum:]-' '-' \
-            | sed -E 's/-+$//')
-          repository=$(nix eval --raw "$installable.meta.repository")
-
-          publish=""
-          if [[ ${GITHUB_REF_NAME:?} == main ]]; then
-            publish=publish
-          fi
-
-          skopeo_args=(
-            --dest-compress-format zstd:chunked
-            --retry-times 5
-          )
-          if [[ -n $publish ]]; then
-            skopeo_args+=(--sign-by-sigstore "${RUNNER_TEMP:?}/sigstore-params.yaml")
-          fi
-
-          for tag in "${GITHUB_SHA:?}" "${github_ref_name_safe:?}"; do
-            nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
-            echo "::notice::pushed image ${repository:?}:$tag" ${publish:+(SIGNED)}
-          done
-
-          if [[ -z $publish ]]; then
-            exit 0
-          fi
-
-          while IFS=$'\t' read -r -a tags; do
-            for tag in "${tags[@]}"; do
-              nix run "$installable.passthru.copyTo" -- "${skopeo_args[@]}" "docker://${repository:?}:$tag"
-              echo "::notice::pushed image ${repository:?}:$tag" ${publish:+(SIGNED)}
-            done
-          done < <(nix eval --json "$installable.meta.tags" | jq -er '@tsv')
+          ctr: ${{ matrix.ctr }}
+        with:
+          script: |
+            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/push_image.js`);
+            const ret = await script(process.env.ctr, { core, exec });
+            if (!ret) core.setFailed("failed to push all tags");
 
   success:
     runs-on: ubuntu-slim
