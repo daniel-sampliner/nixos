@@ -3,14 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const fs = require("fs");
-
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} env not set`);
-  }
-  return value;
-}
+const requireEnv = require("./require_env.js");
 
 function slugify(name) {
   return name.replace(/[^A-Za-z0-9-]+/g, "-").replace(/^-+|-+$/, "");

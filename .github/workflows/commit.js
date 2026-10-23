@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 const fs = require("node:fs/promises");
+const requireEnv = require("./require_env.js");
 
 const query = `mutation (
   $githubRepository: String!
@@ -35,14 +36,6 @@ const query = `mutation (
 async function b64EncodeFile(path) {
   const contents = await fs.readFile(path);
   return contents.toString("base64");
-}
-
-function requireEnv(name) {
-  const value = process.env[name];
-  if (!value) {
-    throw new Error(`${name} env not set`);
-  }
-  return value;
 }
 
 module.exports = async (commit_subject, { exec, github }) => {
