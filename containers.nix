@@ -38,6 +38,11 @@
                 inherit (lib.asserts) assertMsg;
                 inherit (lib.strings) versionOlder;
               in
+              assert assertMsg (versionOlder inputs'.unstable.legacyPackages.cacert.version "3.131.1")
+                "nixpkgs_cacert unnecessary for cacert";
+              assert assertMsg (versionOlder inputs'.unstable.legacyPackages.go_1_26.version "1.26.10")
+                "nixpkgs_cacert unnecessary for go_1_26";
+
               assert assertMsg (versionOlder pkgs.cacert.version "3.131.1") "cacert overlay unnecessary";
               assert assertMsg (versionOlder pkgs.go_1_26.version "1.26.10") "go_1_26 overlay unnecessary";
               {
