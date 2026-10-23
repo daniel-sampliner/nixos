@@ -40,13 +40,14 @@ jobs:
             | jq -er 'to_entries[].value' \
             | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
 
-  gen-containers:
+  gen-matrix:
     runs-on: ubuntu-slim
     env:
       USER: runner
 
     outputs:
-      ctrs: ${{ steps.main.outputs.ctrs }}
+      homes: ${{ steps.homes.outputs.homes }}
+      ctrs: ${{ steps.ctrs.outputs.ctrs }}
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -56,8 +57,15 @@ jobs:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
+      - name: list homes
+        id: homes
+        run: |
+          nix eval --json '.#homeConfigurations' --apply 'builtins.attrNames' \
+            | jq -er '"homes=\(tojson)"' \
+            | tee -a "${GITHUB_OUTPUT:?}"
+
       - name: list containers
-        id: main
+        id: ctrs
         run: |
           nix eval --json '.#containers.entries' --apply 'builtins.attrNames' \
             | jq -er '"ctrs=\(tojson)"' \
@@ -71,12 +79,12 @@ jobs:
       packages: write
 
     needs:
-      - gen-containers
+      - gen-matrix
 
     strategy:
       fail-fast: false
       matrix:
-        ctr: ${{ fromJSON(needs.gen-containers.outputs.ctrs) }}
+        ctr: ${{ fromJSON(needs.gen-matrix.outputs.ctrs) }}
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -116,12 +124,38 @@ jobs:
             const ret = await script(process.env.ctr, { core, exec });
             if (!ret) core.setFailed("failed to push all tags");
 
+  homes:
+    runs-on: ubuntu-latest
+
+    needs:
+      - gen-matrix
+
+    strategy:
+      fail-fast: false
+      matrix:
+        home: ${{ fromJSON(needs.gen-matrix.outputs.homes) }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: build
+        env:
+          HOME: ${{ matrix.home }}
+        run: |
+          nix -L build ".#homeConfigurations.\"${HOME:?}\".activationPackage"
+
   success:
     runs-on: ubuntu-slim
     if: ${{ !cancelled() }}
     needs:
       - containers
-      - gen-containers
+      - gen-matrix
+      - homes
 
     steps:
       - name: success
