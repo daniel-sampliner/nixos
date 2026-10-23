@@ -5,6 +5,11 @@
 name: nix-update
 
 on:
+  push:
+    branches:
+      - '**'
+      - '!nix-update/**'
+
   schedule:
     - cron: "0 0 * * *"
 
