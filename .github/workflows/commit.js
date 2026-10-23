@@ -47,9 +47,7 @@ function requireEnv(name) {
 
 module.exports = async (commit_subject, { exec, github }) => {
   const status = await exec.getExecOutput("git", ["status", "--porcelain=v2"]);
-  if (status.exitCode !== 0) {
-    throw new Error(`git status failed: ${status.stderr.trim()}`);
-  }
+
   // porcelain v2 changed-file lines: "1 <XY> <sub> <mH> <mI> <mW> <hH> <hI> <path>".
   // The path is everything after the 8 fixed fields, so it may contain spaces.
   const changed_files = status.stdout
@@ -65,9 +63,6 @@ module.exports = async (commit_subject, { exec, github }) => {
   );
 
   const head = await exec.getExecOutput("git", ["rev-parse", "HEAD"]);
-  if (head.exitCode !== 0) {
-    throw new Error(`git rev-parse HEAD failed: ${head.stderr.trim()}`);
-  }
 
   const variables = {
     githubRepository: requireEnv("GITHUB_REPOSITORY"),
