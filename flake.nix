@@ -9,8 +9,6 @@
     nixpkgs.url = "https://channels.nixos.org/nixos-26.05/nixexprs.tar.zst";
     unstable.url = "https://channels.nixos.org/nixos-unstable/nixexprs.tar.zst";
 
-    nixpkgs_cacert.url = "github:nixos/nixpkgs/43a7ae3f9e374f1fde09022c81d4fb1326a67f60";
-
     dgx.url = "gitlab:dsampliner/nix-config?host=gitlab-master.nvidia.com";
     dgx.flake = false;
 
