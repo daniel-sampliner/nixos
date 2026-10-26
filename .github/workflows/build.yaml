@@ -71,7 +71,46 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7.0.1
+
+      - name: save cache url
+        run: |
+          CACHE_DIR="${RUNNER_TEMP:?}/nix-store-cache"
+          CACHE_URL="file://$CACHE_DIR?priority=0&trusted=1"
+          {
+            echo "CACHE_DIR=$CACHE_DIR"
+            echo "CACHE_URL=$CACHE_URL"
+          } | tee -a "${GITHUB_ENV:?}"
+
+      - name: set post-build-hook envs
+        run: |
+          export GH_CACHE_POST_BUILD_HOOK_DIR="${RUNNER_TEMP:?}/gh-cache-post-build-hook"
+          echo "GH_CACHE_POST_BUILD_HOOK_DIR=$GH_CACHE_POST_BUILD_HOOK_DIR" | tee -a "${GITHUB_ENV:?}"
+          mkdir -p "$GH_CACHE_POST_BUILD_HOOK_DIR"
+
+      - name: run post-build-hook daemon
+        background: true
+        id: post-build-hook-daemon
+        run: |
+          bash "${GITHUB_WORKSPACE:?}/.github/workflows/post-build-hook-daemon.sh"
+
+      - uses: actions/cache@v6.1.0
+        id: cache
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}
+            ~/.cache/nix
+          key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v0
+          restore-keys: |
+            nix-ctr-${{ matrix.ctr }}-
+            nix-ctr-
+            nix-
+
       - uses: cachix/install-nix-action@v31.11.2
+        with:
+          extra_nix_config: |
+            extra-substituters = ${{ env.CACHE_URL }}
+            post-build-hook = ${{ env.GH_CACHE_POST_BUILD_HOOK_DIR }}/script
+
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
@@ -105,6 +144,16 @@ jobs:
             const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/push_image.js`);
             const ret = await script(process.env.ctr, { core, exec });
             if (!ret) core.setFailed("failed to push all tags");
+
+      - name: stop post-build-hook daemon
+        if: always()
+        run: |
+          set +e
+          set -x
+          pid=$(< "${GH_CACHE_POST_BUILD_HOOK_DIR:?}/pid")
+          rm -f -- "$GH_CACHE_POST_BUILD_HOOK_DIR/fifo"
+          kill -TERM "$pid"
+          tail --follow --pid="$pid" /dev/null
 
   homes:
     runs-on: ubuntu-latest
