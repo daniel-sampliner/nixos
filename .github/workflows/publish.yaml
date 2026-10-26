@@ -1,0 +1,169 @@
+# SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: publish
+
+on:
+  push:
+    branches:
+      - main
+
+concurrency:
+  cancel-in-progress: true
+  group: >-
+    ${{ github.workflow }}-${{ contains(fromJSON('["main"]'), github.ref_name)
+      && github.ref
+      || github.sha }}
+
+permissions: {}
+
+jobs:
+  cache-flake:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+
+    env:
+      USER: runner
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: cache flake
+        run: |
+          nix eval --json .#lib.public_inputs \
+            | jq -er 'to_entries[].value' \
+            | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
+
+  gen-matrix:
+    runs-on: ubuntu-slim
+    permissions:
+      contents: read
+
+    env:
+      USER: runner
+
+    outputs:
+      ctrs: ${{ steps.outputs.outputs.ctrs }}
+      homes: ${{ steps.outputs.outputs.homes }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: return installables
+        uses: actions/github-script@v9.0.0
+        id: outputs
+        with:
+          script: |
+            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/gen_matrix.js`);
+            await script({ ctrs: ".#containers.entries", homes: ".#homeConfigurations" }, { core, exec });
+
+  containers:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      id-token: write
+      packages: write
+
+    needs:
+      - gen-matrix
+
+    strategy:
+      fail-fast: false
+      matrix:
+        ctr: ${{ fromJSON(needs.gen-matrix.outputs.ctrs) }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: build
+        env:
+          CTR: ${{ matrix.ctr }}
+        run: |
+          nix -L build ".#containers.entries.${CTR:?}"
+
+      - name: log into ghcr.io registry
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          skopeo login \
+            --password-stdin <<<"${GITHUB_TOKEN:?}"\
+            --username "${GITHUB_ACTOR:?}" \
+            ghcr.io
+
+      - name: configure skopeo sigstore
+        run: |
+          dir=${GITHUB_WORKSPACE:?}/.github/workflows/sigstore
+          sudo install -Dm0644 -t /etc/containers/registries.d "$dir/ghcr.yaml"
+
+      - name: push image to ghcr.io
+        uses: actions/github-script@v9.0.0
+        env:
+          ctr: ${{ matrix.ctr }}
+        with:
+          script: |
+            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/push_image.js`);
+            const ret = await script(process.env.ctr, { core, exec });
+            if (!ret) core.setFailed("failed to push all tags");
+
+  homes:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    needs:
+      - gen-matrix
+
+    strategy:
+      fail-fast: false
+      matrix:
+        home: ${{ fromJSON(needs.gen-matrix.outputs.homes) }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: build
+        env:
+          HOME: ${{ matrix.home }}
+        run: |
+          nix -L build ".#homeConfigurations.\"${HOME:?}\".activationPackage"
+
+  success:
+    runs-on: ubuntu-slim
+    if: ${{ !cancelled() }}
+    permissions: {}
+
+    needs:
+      - containers
+      - gen-matrix
+      - homes
+
+    steps:
+      - name: success
+        env:
+          RESULTS: ${{ toJSON(needs.*.result) }}
+        run: |-
+          jq -e 'length > 0 and all(. == "success" or . == "skipped")' \
+            <<<"${RESULTS:?}"

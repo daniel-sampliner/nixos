@@ -9,7 +9,7 @@ function slugify(name) {
   return name.replace(/[^A-Za-z0-9-]+/g, "-").replace(/^-+|-+$/, "");
 }
 
-module.exports = async (container, { core, exec }) => {
+module.exports = async (container, { core, exec }, mode = {}) => {
   if (!container) throw new Error("container not set");
   const installable = `.#containers.entries.${container}`;
 

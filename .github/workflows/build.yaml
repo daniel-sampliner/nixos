@@ -10,6 +10,7 @@ on:
   push:
     branches:
       - "**"
+      - "!main"
       - "!nix-update/**"
       - "nix-update/pr"
 
@@ -22,28 +23,14 @@ concurrency:
       && github.ref
       || github.sha }}
 
+permissions: {}
+
 jobs:
-  cache-flake:
-    runs-on: ubuntu-slim
-    env:
-      USER: runner
-
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.2
-      - uses: cachix/cachix-action@v17
-        with:
-          name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-
-      - name: cache flake
-        run: |
-          nix eval --json .#lib.public_inputs \
-            | jq -er 'to_entries[].value' \
-            | cachix push "${GITHUB_REPOSITORY_OWNER:?}"
-
   gen-matrix:
     runs-on: ubuntu-slim
+    permissions:
+      contents: read
+
     env:
       USER: runner
 
@@ -57,7 +44,6 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
       - name: return installables
         uses: actions/github-script@v9.0.0
@@ -71,6 +57,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       id-token: write
       packages: write
 
@@ -88,7 +75,6 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
       - name: build
         env:
@@ -98,7 +84,7 @@ jobs:
 
       - name: log into ghcr.io registry
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           skopeo login \
             --password-stdin <<<"${GITHUB_TOKEN:?}"\
@@ -122,6 +108,8 @@ jobs:
 
   homes:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
 
     needs:
       - gen-matrix
@@ -137,8 +125,6 @@ jobs:
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
-          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
-          pushFilter: "-source$"
 
       - name: build
         env:
@@ -149,6 +135,8 @@ jobs:
   success:
     runs-on: ubuntu-slim
     if: ${{ !cancelled() }}
+    permissions: {}
+
     needs:
       - containers
       - gen-matrix
