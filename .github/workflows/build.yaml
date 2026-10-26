@@ -48,8 +48,8 @@ jobs:
       USER: runner
 
     outputs:
-      homes: ${{ steps.homes.outputs.homes }}
-      ctrs: ${{ steps.ctrs.outputs.ctrs }}
+      ctrs: ${{ steps.outputs.outputs.ctrs }}
+      homes: ${{ steps.outputs.outputs.homes }}
 
     steps:
       - uses: actions/checkout@v7.0.1
@@ -59,19 +59,13 @@ jobs:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
-      - name: list homes
-        id: homes
-        run: |
-          nix eval --json '.#homeConfigurations' --apply 'builtins.attrNames' \
-            | jq -er '"homes=\(tojson)"' \
-            | tee -a "${GITHUB_OUTPUT:?}"
-
-      - name: list containers
-        id: ctrs
-        run: |
-          nix eval --json '.#containers.entries' --apply 'builtins.attrNames' \
-            | jq -er '"ctrs=\(tojson)"' \
-            | tee -a "${GITHUB_OUTPUT:?}"
+      - name: return installables
+        uses: actions/github-script@v9.0.0
+        id: outputs
+        with:
+          script: |
+            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/gen_matrix.js`);
+            await script({ ctrs: ".#containers.entries", homes: ".#homeConfigurations" }, { core, exec });
 
   containers:
     runs-on: ubuntu-latest
