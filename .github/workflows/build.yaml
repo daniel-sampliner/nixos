@@ -178,9 +178,9 @@ jobs:
 
       - name: build
         env:
-          HOME: ${{ matrix.home }}
+          _HOME: ${{ matrix.home }}
         run: |
-          nix -L build ".#homeConfigurations.\"${HOME:?}\".activationPackage"
+          nix -L build ".#homeConfigurations.\"${_HOME:?}\".activationPackage"
 
   success:
     runs-on: ubuntu-slim
