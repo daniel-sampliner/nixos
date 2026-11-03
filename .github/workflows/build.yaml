@@ -28,34 +28,12 @@ permissions: {}
 
 jobs:
   gen-matrix:
-    runs-on: ubuntu-slim
+    uses: ./.github/workflows/gen-matrix.yaml
     permissions:
       contents: read
 
-    env:
-      USER: runner
-
-    outputs:
-      ctrs: ${{ steps.outputs.outputs.ctrs }}
-      homes: ${{ steps.outputs.outputs.homes }}
-
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.2
-      - uses: cachix/cachix-action@v17
-        with:
-          name: ${{ github.repository_owner }}
-
-      - name: return installables
-        uses: actions/github-script@v9.0.0
-        id: outputs
-        with:
-          script: |
-            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/gen_matrix.js`);
-            await script({ ctrs: ".#containers.entries", homes: ".#homeConfigurations" }, { core, exec });
-
   containers:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/containers.yaml
 
     permissions:
       contents: read
@@ -65,125 +43,23 @@ jobs:
     needs:
       - gen-matrix
 
-    strategy:
-      fail-fast: false
-      matrix:
-        ctr: ${{ fromJSON(needs.gen-matrix.outputs.ctrs) }}
-
-    steps:
-      - uses: actions/checkout@v7.0.1
-
-      - name: save cache url
-        run: |
-          CACHE_DIR="${RUNNER_TEMP:?}/nix-store-cache"
-          CACHE_URL="file://$CACHE_DIR?priority=0&trusted=1"
-          {
-            echo "CACHE_DIR=$CACHE_DIR"
-            echo "CACHE_URL=$CACHE_URL"
-          } | tee -a "${GITHUB_ENV:?}"
-
-      - name: set post-build-hook envs
-        run: |
-          export GH_CACHE_POST_BUILD_HOOK_DIR="${RUNNER_TEMP:?}/gh-cache-post-build-hook"
-          echo "GH_CACHE_POST_BUILD_HOOK_DIR=$GH_CACHE_POST_BUILD_HOOK_DIR" | tee -a "${GITHUB_ENV:?}"
-          mkdir -p "$GH_CACHE_POST_BUILD_HOOK_DIR"
-
-      - name: run post-build-hook daemon
-        background: true
-        id: post-build-hook-daemon
-        run: |
-          bash "${GITHUB_WORKSPACE:?}/.github/workflows/post-build-hook-daemon.sh"
-
-      - uses: actions/cache@v6.1.0
-        id: cache
-        with:
-          path: |
-            ${{ env.CACHE_DIR }}
-            ~/.cache/nix
-          key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v0
-          restore-keys: |
-            nix-ctr-${{ matrix.ctr }}-
-            nix-ctr-
-            nix-
-
-      - uses: cachix/install-nix-action@v31.11.2
-        with:
-          extra_nix_config: |
-            extra-substituters = ${{ env.CACHE_URL }}
-            post-build-hook = ${{ env.GH_CACHE_POST_BUILD_HOOK_DIR }}/script
-
-      - uses: cachix/cachix-action@v17
-        with:
-          name: ${{ github.repository_owner }}
-
-      - name: build
-        env:
-          CTR: ${{ matrix.ctr }}
-        run: |
-          nix -L build ".#containers.entries.${CTR:?}"
-
-      - name: log into ghcr.io registry
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          skopeo login \
-            --password-stdin <<<"${GITHUB_TOKEN:?}"\
-            --username "${GITHUB_ACTOR:?}" \
-            ghcr.io
-
-      - name: configure skopeo sigstore
-        run: |
-          dir=${GITHUB_WORKSPACE:?}/.github/workflows/sigstore
-          sudo install -Dm0644 -t /etc/containers/registries.d "$dir/ghcr.yaml"
-
-      - name: push image to ghcr.io
-        uses: actions/github-script@v9.0.0
-        env:
-          ctr: ${{ matrix.ctr }}
-        with:
-          script: |
-            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/push_image.js`);
-            const ret = await script(process.env.ctr, { core, exec });
-            if (!ret) core.setFailed("failed to push all tags");
-
-      - name: stop post-build-hook daemon
-        if: always()
-        run: |
-          set +e
-          set -x
-          pid=$(< "${GH_CACHE_POST_BUILD_HOOK_DIR:?}/pid")
-          rm -f -- "$GH_CACHE_POST_BUILD_HOOK_DIR/fifo"
-          kill -TERM "$pid"
-          tail --follow --pid="$pid" /dev/null
+    with:
+      ctrs: ${{ needs.gen-matrix.outputs.ctrs }}
+      cache-enabled: true
 
   homes:
-    runs-on: ubuntu-latest
+    uses: ./.github/workflows/homes.yaml
     permissions:
       contents: read
 
     needs:
       - gen-matrix
 
-    strategy:
-      fail-fast: false
-      matrix:
-        home: ${{ fromJSON(needs.gen-matrix.outputs.homes) }}
-
-    steps:
-      - uses: actions/checkout@v7.0.1
-      - uses: cachix/install-nix-action@v31.11.2
-      - uses: cachix/cachix-action@v17
-        with:
-          name: ${{ github.repository_owner }}
-
-      - name: build
-        env:
-          _HOME: ${{ matrix.home }}
-        run: |
-          nix -L build ".#homeConfigurations.\"${_HOME:?}\".activationPackage"
+    with:
+      homes: ${{ needs.gen-matrix.outputs.homes }}
 
   success:
-    runs-on: ubuntu-slim
+    uses: ./.github/workflows/success.yaml
     if: ${{ !cancelled() }}
     permissions: {}
 
@@ -192,10 +68,5 @@ jobs:
       - gen-matrix
       - homes
 
-    steps:
-      - name: success
-        env:
-          RESULTS: ${{ toJSON(needs.*.result) }}
-        run: |-
-          jq -e 'length > 0 and all(. == "success" or . == "skipped")' \
-            <<<"${RESULTS:?}"
+    with:
+      results: ${{ toJSON(needs.*.result) }}

@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: homes
+
+on:
+  workflow_call:
+    inputs:
+      homes:
+        description: JSON array of home configuration names
+        required: true
+        type: string
+
+    secrets:
+      CACHIX_SIGNING_KEY:
+        description: Cachix signing key; omit for a pull-only cache client
+        required: false
+
+permissions: {}
+
+jobs:
+  homes:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        home: ${{ fromJSON(inputs.homes) }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: build
+        env:
+          _HOME: ${{ matrix.home }}
+        run: |-
+          nix -L build ".#homeConfigurations.\"${_HOME:?}\".activationPackage"

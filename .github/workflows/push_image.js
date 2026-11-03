@@ -9,7 +9,7 @@ function slugify(name) {
   return name.replace(/[^A-Za-z0-9-]+/g, "-").replace(/^-+|-+$/, "");
 }
 
-module.exports = async (container, { core, exec }, mode = {}) => {
+module.exports = async (container, publish, { core, exec }) => {
   if (!container) throw new Error("container not set");
   const installable = `.#containers.entries.${container}`;
 
@@ -33,8 +33,6 @@ module.exports = async (container, { core, exec }, mode = {}) => {
   ]);
   console.log("");
   const repository = repository_eval.stdout.trim();
-
-  const publish = github_ref_name == "main";
 
   const skopeo_args = [
     "--dest-compress-format",

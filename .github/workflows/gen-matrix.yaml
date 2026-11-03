@@ -1,0 +1,53 @@
+# SPDX-FileCopyrightText: 2026 Daniel Sampliner <samplinerD@gmail.com>
+#
+# SPDX-License-Identifier: AGPL-3.0-or-later
+
+name: gen-matrix
+
+on:
+  workflow_call:
+    outputs:
+      ctrs:
+        description: JSON array of container configuration names
+        value: ${{ jobs.gen-matrix.outputs.ctrs }}
+
+      homes:
+        description: JSON array of home configuration names
+        value: ${{ jobs.gen-matrix.outputs.homes }}
+
+    secrets:
+      CACHIX_SIGNING_KEY:
+        description: Cachix signing key; omit for a pull-only cache client
+        required: false
+
+permissions: {}
+
+jobs:
+  gen-matrix:
+    runs-on: ubuntu-slim
+
+    permissions:
+      contents: read
+
+    env:
+      USER: runner
+
+    outputs:
+      ctrs: ${{ steps.outputs.outputs.ctrs }}
+      homes: ${{ steps.outputs.outputs.homes }}
+
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: cachix/install-nix-action@v31.11.2
+      - uses: cachix/cachix-action@v17
+        with:
+          name: ${{ github.repository_owner }}
+          signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      - name: return installables
+        uses: actions/github-script@v9.0.0
+        id: outputs
+        with:
+          script: |-
+            const script = require(`${process.env.GITHUB_WORKSPACE}/.github/workflows/gen_matrix.js`);
+            await script({ ctrs: ".#containers.entries", homes: ".#homeConfigurations" }, { core, exec });

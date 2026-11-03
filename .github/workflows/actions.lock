@@ -3,10 +3,20 @@
 # Docs: https://gh.io/actions-lockfile
 version: 'v0.0.3'
 workflows:
-    '.github/workflows/build.yaml':
+    '.github/workflows/build.yaml': []
+    '.github/workflows/containers.yaml':
         - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
         - 'actions/github-script@v9.0.0'
+        - 'cachix/cachix-action@v17'
+        - 'cachix/install-nix-action@v31.11.2'
+    '.github/workflows/gen-matrix.yaml':
+        - 'actions/checkout@v7.0.1'
+        - 'actions/github-script@v9.0.0'
+        - 'cachix/cachix-action@v17'
+        - 'cachix/install-nix-action@v31.11.2'
+    '.github/workflows/homes.yaml':
+        - 'actions/checkout@v7.0.1'
         - 'cachix/cachix-action@v17'
         - 'cachix/install-nix-action@v31.11.2'
     '.github/workflows/nix-update.yaml':
@@ -17,9 +27,9 @@ workflows:
         - 'cachix/install-nix-action@v31.11.2'
     '.github/workflows/publish.yaml':
         - 'actions/checkout@v7.0.1'
-        - 'actions/github-script@v9.0.0'
         - 'cachix/cachix-action@v17'
         - 'cachix/install-nix-action@v31.11.2'
+    '.github/workflows/success.yaml': []
 dependencies:
     'actions/cache@v6.1.0':
         ref: 'v6.1.0'
