@@ -77,7 +77,7 @@ jobs:
           path: |
             ${{ env.CACHE_DIR }}
             ~/.cache/nix
-          key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v0
+          key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v1
           restore-keys: |
             nix-ctr-${{ matrix.ctr }}-
             nix-ctr-
@@ -137,3 +137,4 @@ jobs:
           rm -f -- "$GH_CACHE_POST_BUILD_HOOK_DIR/fifo"
           kill -TERM "$pid"
           tail --follow --pid="$pid" /dev/null
+          du -hsx "$CACHE_DIR"
