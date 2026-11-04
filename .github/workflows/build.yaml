@@ -19,10 +19,7 @@ on:
 concurrency:
   cancel-in-progress: true
   group: >-
-    ${{ github.workflow }}-${{ github.event.pull_request.number
-    && format('pr-{0}', github.event.pull_request.number)
-    || (contains(fromJSON('["main"]'), github.ref_name) && format('ref-{0}', github.ref_name))
-    || github.sha }}
+    ${{ github.workflow }}-${{ github.event.pull_request.number && format('pr-{0}', github.event.pull_request.number) || (contains(fromJSON('["main"]'), github.ref_name) && format('ref-{0}', github.ref_name)) || github.sha }}
 
 permissions: {}
 
