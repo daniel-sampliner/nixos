@@ -25,6 +25,11 @@
     enableBashIntegration = true;
     enableFishIntegration = true;
     enableZshIntegration = false;
+
+    settings = {
+      kind = "SwitchConfig";
+      version = "v1alpha1";
+    };
   };
 
   programs.zsh.initContent = ''
