@@ -83,6 +83,12 @@ jobs:
             nix-ctr-
             nix-
 
+      - name: ensure nix store cache is runner-writable
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          mkdir -p "$CACHE_DIR"/{nar,narinfo,build-trace-v2,log}
+          sudo chown -Rc "$USER" "$CACHE_DIR"
+
       - uses: cachix/install-nix-action@v31.11.2
         if: ${{ inputs.cache-enabled }}
         with:
