@@ -98,6 +98,13 @@ jobs:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
 
+      # cachix use replaces substituters in the user config; re-add the file
+      # cache dropped from the system config.
+      - name: re-add nix store cache substituter
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          echo "extra-substituters = ${CACHE_URL:?}" | tee -a ~/.config/nix/nix.conf
+
       - name: build
         env:
           CTR: ${{ matrix.ctr }}
