@@ -9,6 +9,22 @@ function slugify(name) {
   return name.replace(/[^A-Za-z0-9-]+/g, "-").replace(/^-+|-+$/, "");
 }
 
+async function getIDTokenWithRetry(core, audience, attempts = 5) {
+  for (let i = 1; ; i++) {
+    try {
+      return await core.getIDToken(audience);
+    } catch (err) {
+      if (i >= attempts || !/50[23]|timeout|connect/i.test(String(err))) throw err;
+      const base = Math.min(30000, 2000 * 2 ** i);
+      const delay = base * (0.5 + Math.random()); // 50-150% of base: decorrelate parallel jobs
+      core.warning(
+        `getIDToken attempt ${i} failed: ${String(err).trim()}; retrying in ${Math.round(delay / 1000)}s`,
+      );
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+}
+
 module.exports = async (container, publish, { core, exec }) => {
   if (!container) throw new Error("container not set");
   const installable = `.#containers.entries.${container}`;
@@ -63,7 +79,7 @@ module.exports = async (container, publish, { core, exec }) => {
     core.startGroup(`pushing ${repository}:${tag}`);
 
     if (publish) {
-      const oidcIDToken = await core.getIDToken("sigstore");
+      const oidcIDToken = await getIDTokenWithRetry(core, "sigstore");
       fs.writeFileSync(
         sigstore_params_path,
         JSON.stringify({
