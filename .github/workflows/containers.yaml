@@ -63,11 +63,10 @@ jobs:
         with:
           path: |
             ${{ env.CACHE_DIR }}
-          key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v0
+          key: nix-ctr-v1-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}
           restore-keys: |
-            nix-ctr-${{ matrix.ctr }}-
-            nix-ctr-
-            nix-
+            nix-ctr-v1-${{ matrix.ctr }}-
+            nix-ctr-v1-
 
       - name: ensure nix store cache is runner-writable
         if: ${{ inputs.cache-enabled }}
