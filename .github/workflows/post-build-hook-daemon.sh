@@ -39,7 +39,7 @@ flush() (
 	[[ $# -gt 0 ]] || return 0
 
 	set -x
-	nix --offline copy --to "${CACHE_URL:?}" "$@"
+	nix copy --to "${CACHE_URL:?}" "$@"
 )
 
 # Block until an in-flight copy slot is free. A failed copy must not kill
