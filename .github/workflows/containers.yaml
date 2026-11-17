@@ -76,7 +76,6 @@ jobs:
         with:
           path: |
             ${{ env.CACHE_DIR }}
-            ~/.cache/nix
           key: nix-ctr-${{ matrix.ctr }}-${{ hashFiles('flake.lock') }}-v0
           restore-keys: |
             nix-ctr-${{ matrix.ctr }}-
