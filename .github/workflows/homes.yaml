@@ -39,22 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7.0.1
 
-      - name: save cache url
+      - name: set nix store cache env
         if: ${{ inputs.cache-enabled }}
-        run: |
-          CACHE_DIR="${RUNNER_TEMP:?}/nix-store-cache"
-          CACHE_URL="file://$CACHE_DIR?priority=0&trusted=1"
-          {
-            echo "CACHE_DIR=$CACHE_DIR"
-            echo "CACHE_URL=$CACHE_URL"
-          } | tee -a "${GITHUB_ENV:?}"
-
-      - name: set post-build-hook envs
-        if: ${{ inputs.cache-enabled }}
-        run: |
-          export GH_CACHE_POST_BUILD_HOOK_DIR="${RUNNER_TEMP:?}/gh-cache-post-build-hook"
-          echo "GH_CACHE_POST_BUILD_HOOK_DIR=$GH_CACHE_POST_BUILD_HOOK_DIR" | tee -a "${GITHUB_ENV:?}"
-          mkdir -p "$GH_CACHE_POST_BUILD_HOOK_DIR"
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-env.sh"
 
       - name: run post-build-hook daemon
         if: ${{ inputs.cache-enabled }}
@@ -77,9 +64,7 @@ jobs:
 
       - name: ensure nix store cache is runner-writable
         if: ${{ inputs.cache-enabled }}
-        run: |
-          mkdir -p "$CACHE_DIR"/{nar,narinfo,build-trace-v2,log}
-          sudo chown -Rc "$USER" "$CACHE_DIR"
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-dir.sh"
 
       - uses: cachix/install-nix-action@v31.11.2
         if: ${{ inputs.cache-enabled }}
@@ -100,8 +85,7 @@ jobs:
       # cache dropped from the system config.
       - name: re-add nix store cache substituter
         if: ${{ inputs.cache-enabled }}
-        run: |
-          echo "extra-substituters = ${CACHE_URL:?}" | tee -a ~/.config/nix/nix.conf
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-substituter.sh"
 
       - name: build
         env:
@@ -111,10 +95,4 @@ jobs:
 
       - name: stop post-build-hook daemon
         if: ${{ inputs.cache-enabled && always() }}
-        run: |-
-          set +e
-          set -x
-          pid=$(< "${GH_CACHE_POST_BUILD_HOOK_DIR:?}/pid")
-          rm -f -- "$GH_CACHE_POST_BUILD_HOOK_DIR/fifo"
-          kill -TERM "$pid"
-          tail --follow --pid="$pid" /dev/null
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-daemon-teardown.sh"
