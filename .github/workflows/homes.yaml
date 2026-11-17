@@ -12,6 +12,11 @@ on:
         required: true
         type: string
 
+      cache-enabled:
+        description: Run the nix store cache path
+        type: boolean
+        default: false
+
     secrets:
       CACHIX_SIGNING_KEY:
         description: Cachix signing key; omit for a pull-only cache client
@@ -33,14 +38,83 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7.0.1
+
+      - name: save cache url
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          CACHE_DIR="${RUNNER_TEMP:?}/nix-store-cache"
+          CACHE_URL="file://$CACHE_DIR?priority=0&trusted=1"
+          {
+            echo "CACHE_DIR=$CACHE_DIR"
+            echo "CACHE_URL=$CACHE_URL"
+          } | tee -a "${GITHUB_ENV:?}"
+
+      - name: set post-build-hook envs
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          export GH_CACHE_POST_BUILD_HOOK_DIR="${RUNNER_TEMP:?}/gh-cache-post-build-hook"
+          echo "GH_CACHE_POST_BUILD_HOOK_DIR=$GH_CACHE_POST_BUILD_HOOK_DIR" | tee -a "${GITHUB_ENV:?}"
+          mkdir -p "$GH_CACHE_POST_BUILD_HOOK_DIR"
+
+      - name: run post-build-hook daemon
+        if: ${{ inputs.cache-enabled }}
+        background: true
+        id: post-build-hook-daemon
+        run: |
+          bash "${GITHUB_WORKSPACE:?}/.github/workflows/post-build-hook-daemon.sh"
+
+      - uses: actions/cache@v6.1.0
+        if: ${{ inputs.cache-enabled }}
+        id: cache
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}
+          key: nix-home-${{ matrix.home }}-${{ hashFiles('flake.lock') }}-v0
+          restore-keys: |
+            nix-home-${{ matrix.home }}-
+            nix-home-
+            nix-
+
+      - name: ensure nix store cache is runner-writable
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          mkdir -p "$CACHE_DIR"/{nar,narinfo,build-trace-v2,log}
+          sudo chown -Rc "$USER" "$CACHE_DIR"
+
       - uses: cachix/install-nix-action@v31.11.2
+        if: ${{ inputs.cache-enabled }}
+        with:
+          extra_nix_config: |
+            extra-substituters = ${{ env.CACHE_URL }}
+            post-build-hook = ${{ env.GH_CACHE_POST_BUILD_HOOK_DIR }}/script
+
+      - uses: cachix/install-nix-action@v31.11.2
+        if: ${{ !inputs.cache-enabled }}
+
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      # cachix use replaces substituters in the user config; re-add the file
+      # cache dropped from the system config.
+      - name: re-add nix store cache substituter
+        if: ${{ inputs.cache-enabled }}
+        run: |
+          echo "extra-substituters = ${CACHE_URL:?}" | tee -a ~/.config/nix/nix.conf
 
       - name: build
         env:
           _HOME: ${{ matrix.home }}
         run: |-
           nix -L build ".#homeConfigurations.\"${_HOME:?}\".activationPackage"
+
+      - name: stop post-build-hook daemon
+        if: ${{ inputs.cache-enabled && always() }}
+        run: |-
+          set +e
+          set -x
+          pid=$(< "${GH_CACHE_POST_BUILD_HOOK_DIR:?}/pid")
+          rm -f -- "$GH_CACHE_POST_BUILD_HOOK_DIR/fifo"
+          kill -TERM "$pid"
+          tail --follow --pid="$pid" /dev/null
