@@ -6,7 +6,7 @@
 
 set -eu
 
-: "${GH_CACHE_POST_BUILD_HOOK_DIR:?}" "${CACHE_URL:?}"
+: "${GH_CACHE_POST_BUILD_HOOK_DIR:?}"
 
 # shellcheck disable=SC2016
 envsubst '$GH_CACHE_POST_BUILD_HOOK_DIR' \
@@ -24,12 +24,10 @@ trap 'echo stopping loop >&2; loop=stop' INT TERM
 
 export PATH="/nix/var/nix/profiles/default/bin:$PATH"
 
-# One copy process per hook fire made every concurrently-running process
-# re-copy the same closure: `nix copy` copies the closure of each path it is
-# given, so N hook fires over one shared closure copy it N times, serialized
-# on the destination's per-path locks (build #1618's homes job stalled on a
-# 625-path closure re-announced by dozens of overlapping copies). Collect
-# paths, dedup them, copy them in batches, and cap the copies in flight.
+# Collect paths, dedup them, write them in batches, and cap the writers in
+# flight. The batches go through nix-cache-push.sh, which stores exactly the
+# given paths — nix copy would drag each path's whole closure, substitutable
+# paths included, into the cache.
 declare -A seen
 batch=()
 max_batch=16
@@ -39,7 +37,7 @@ flush() (
 	[[ $# -gt 0 ]] || return 0
 
 	set -x
-	nix copy --to "${CACHE_URL:?}" "$@"
+	bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-push.sh" "$@"
 )
 
 # Block until an in-flight copy slot is free. A failed copy must not kill
