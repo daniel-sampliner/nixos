@@ -16,7 +16,7 @@
 # accepts unsigned entries. So assemble each entry by hand from
 # `nix path-info --json` and a `nix store dump-path` NAR.
 
-set -eu
+set -euo pipefail
 
 : "${CACHE_DIR:?}"
 
@@ -25,33 +25,47 @@ mkdir -p "$CACHE_DIR/nar"
 [[ -e $CACHE_DIR/nix-cache-info ]] \
 	|| printf 'StoreDir: /nix/store\n' >"$CACHE_DIR/nix-cache-info"
 
+# nix path-info --json output shape differs by implementation: CppNix
+# wraps the infos in an object keyed by store path, Lix emits an array.
+# Normalize to the single info object.
+read_info() {
+	nix --offline path-info --json "$1" | jq -c '[ .[] ][0]'
+}
+
 push_path() {
 	local out="${1:?}"
 
 	# The narinfo is written last, so its existence implies a complete
 	# entry — re-pushed paths (restored caches) are skipped, not rewritten.
-	local name=${out##*/} hash_part=${out##*/}
-	hash_part=${hash_part:0:32}
+	local name=${out##*/}
+	local hash_part=${name:0:32}
 	local narinfo="$CACHE_DIR/$hash_part.narinfo"
 	[[ -e $narinfo ]] && return 0
 
 	local info
-	info=$(nix --offline path-info --json "$out")
-	out=$(jq -r '.[0].path' <<<"$info")
+	info=$(read_info "$out")
+	out=$(jq -r '.path' <<<"$info")
 	name=${out##*/}
 	hash_part=${name:0:32}
 	narinfo="$CACHE_DIR/$hash_part.narinfo"
 	[[ -e $narinfo ]] && return 0
 
 	local nar_size nar_hash_hex deriver ca refs
-	nar_size=$(jq -r '.[0].narSize' <<<"$info")
+	nar_size=$(jq -r '.narSize' <<<"$info")
 	# narHash arrives in SRI base64; the narinfo parser decodes the
 	# prefixed hash by length, so hand it hex.
-	nar_hash_hex=$(jq -r '.[0].narHash' <<<"$info" \
+	nar_hash_hex=$(jq -r '.narHash' <<<"$info" \
 		| sed 's/^sha256-//' | base64 -d | od -An -tx1 | tr -d ' \n')
-	deriver=$(jq -r '.[0].deriver // ""' <<<"$info")
-	ca=$(jq -r '.[0].ca // ""' <<<"$info")
-	refs=$(jq -r '[.[0].references[] | sub("^.*/"; "")] | join(" ")' <<<"$info")
+	deriver=$(jq -r '.deriver // ""' <<<"$info")
+	ca=$(jq -r '.ca // ""' <<<"$info")
+	refs=$(jq -r '[.references[] | sub("^.*/"; "")] | join(" ")' <<<"$info")
+
+	# The narinfo parser rejects NarSize 0; anything else missing here is
+	# a metadata failure that must not surface as a garbage entry.
+	[[ -n $nar_size && $nar_size != 0 && -n $nar_hash_hex && -n $out ]] || {
+		echo "nix-cache-push: incomplete metadata for '$out'" >&2
+		return 1
+	}
 
 	set -x
 
@@ -62,9 +76,11 @@ push_path() {
 	# NarHash and FileSize equals NarSize.
 	local tmp_nar url
 	tmp_nar=$(mktemp "$CACHE_DIR/nar/.tmp.XXXXXX")
+	trap 'rm -f -- "$tmp_nar"' EXIT
 	nix --offline store dump-path "$out" >"$tmp_nar"
 	url="nar/$nar_hash_hex.nar"
 	mv -- "$tmp_nar" "$CACHE_DIR/$url"
+	trap - EXIT
 
 	{
 		echo "StorePath: $out"
@@ -85,8 +101,19 @@ push_path() {
 	mv -- "$narinfo.tmp" "$narinfo"
 }
 
+if [[ ${1:-} == --single ]]; then
+	shift
+	push_path "$1"
+	exit
+fi
+
 for out in "$@"; do
-	# A failed entry must not drop the remaining paths of the batch: the
-	# entry is simply absent, and substitution falls back to upstream.
-	push_path "$out" || echo "nix-cache-push: failed to push '$out'" >&2
+	# Per-path isolation: the child shell re-arms errexit (a function
+	# invoked in a || list ignores -e for its whole body, even where it is
+	# explicitly set), so one failed push skips only that path. A skipped
+	# entry is absent from the cache and falls back to upstream at
+	# substitution time.
+	[[ -n $out ]] || continue
+	bash "$0" --single "$out" \
+		|| echo "nix-cache-push: failed to push '$out'" >&2
 done
