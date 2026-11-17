@@ -54,6 +54,7 @@ jobs:
 
     with:
       homes: ${{ needs.gen-matrix.outputs.homes }}
+      cache-enabled: true
 
   success:
     uses: ./.github/workflows/success.yaml

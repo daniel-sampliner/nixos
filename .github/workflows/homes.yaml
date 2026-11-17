@@ -12,6 +12,11 @@ on:
         required: true
         type: string
 
+      cache-enabled:
+        description: Run the nix store cache path
+        type: boolean
+        default: false
+
     secrets:
       CACHIX_SIGNING_KEY:
         description: Cachix signing key; omit for a pull-only cache client
@@ -33,14 +38,60 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7.0.1
+
+      - name: set nix store cache env
+        if: ${{ inputs.cache-enabled }}
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-env.sh"
+
+      - name: run post-build-hook daemon
+        if: ${{ inputs.cache-enabled }}
+        background: true
+        id: post-build-hook-daemon
+        run: |
+          bash "${GITHUB_WORKSPACE:?}/.github/workflows/post-build-hook-daemon.sh"
+
+      - uses: actions/cache@v6.1.0
+        if: ${{ inputs.cache-enabled }}
+        id: cache
+        with:
+          path: |
+            ${{ env.CACHE_DIR }}
+          key: nix-home-v1-${{ matrix.home }}-${{ hashFiles('flake.lock') }}
+          restore-keys: |
+            nix-home-v1-${{ matrix.home }}-
+            nix-home-v1-
+
+      - name: ensure nix store cache is runner-writable
+        if: ${{ inputs.cache-enabled }}
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-dir.sh"
+
       - uses: cachix/install-nix-action@v31.11.2
+        if: ${{ inputs.cache-enabled }}
+        with:
+          extra_nix_config: |
+            extra-substituters = ${{ env.CACHE_URL }}
+            post-build-hook = ${{ env.GH_CACHE_POST_BUILD_HOOK_DIR }}/script
+
+      - uses: cachix/install-nix-action@v31.11.2
+        if: ${{ !inputs.cache-enabled }}
+
       - uses: cachix/cachix-action@v17
         with:
           name: ${{ github.repository_owner }}
           signingKey: ${{ secrets.CACHIX_SIGNING_KEY }}
+
+      # cachix use replaces substituters in the user config; re-add the file
+      # cache dropped from the system config.
+      - name: re-add nix store cache substituter
+        if: ${{ inputs.cache-enabled }}
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-substituter.sh"
 
       - name: build
         env:
           _HOME: ${{ matrix.home }}
         run: |-
           nix -L build ".#homeConfigurations.\"${_HOME:?}\".activationPackage"
+
+      - name: stop post-build-hook daemon
+        if: ${{ inputs.cache-enabled && always() }}
+        run: bash "${GITHUB_WORKSPACE:?}/.github/workflows/nix-cache-daemon-teardown.sh"

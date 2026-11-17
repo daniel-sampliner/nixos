@@ -16,6 +16,7 @@ workflows:
         - 'cachix/cachix-action@v17'
         - 'cachix/install-nix-action@v31.11.2'
     '.github/workflows/homes.yaml':
+        - 'actions/cache@v6.1.0'
         - 'actions/checkout@v7.0.1'
         - 'cachix/cachix-action@v17'
         - 'cachix/install-nix-action@v31.11.2'
