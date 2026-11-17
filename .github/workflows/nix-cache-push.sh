@@ -26,10 +26,14 @@ mkdir -p "$CACHE_DIR/nar"
 	|| printf 'StoreDir: /nix/store\n' >"$CACHE_DIR/nix-cache-info"
 
 # nix path-info --json output shape differs by implementation: CppNix
-# wraps the infos in an object keyed by store path, Lix emits an array.
-# Normalize to the single info object.
+# wraps the infos in an object KEYED by store path (the info object
+# itself carries no path field), Lix emits an array of infos each carrying
+# a path field. Normalize to a single info object with a path field.
 read_info() {
-	nix --offline path-info --json "$1" | jq -c '[ .[] ][0]'
+	nix --offline path-info --json "$1" | jq -c '
+		if type == "array" then .[0]
+		else to_entries[0].value + {path: to_entries[0].key}
+		end'
 }
 
 push_path() {
@@ -76,7 +80,11 @@ push_path() {
 	# NarHash and FileSize equals NarSize.
 	local tmp_nar url
 	tmp_nar=$(mktemp "$CACHE_DIR/nar/.tmp.XXXXXX")
-	trap 'rm -f -- "$tmp_nar"' EXIT
+	# Bake the path into the trap: the local goes out of scope when the
+	# function returns before script exit, and an unset expansion fails
+	# under set -u. The now-expansion is the point (SC2064).
+	# shellcheck disable=SC2064
+	trap "rm -f -- '$tmp_nar'" EXIT
 	nix --offline store dump-path "$out" >"$tmp_nar"
 	url="nar/$nar_hash_hex.nar"
 	mv -- "$tmp_nar" "$CACHE_DIR/$url"
