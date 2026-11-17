@@ -46,8 +46,6 @@
               builtins.concatLists
               (lib.strings.concatStringsSep " | ")
             ];
-
-        sign-on-push = true;
       };
 
       revset-aliases = {
@@ -79,7 +77,10 @@
 
       revsets = {
         "bookmark-advance-to" = "closest_pushable(@)";
+        "git-sign-on-push" = "~signed() & mine()";
       };
+
+      signing.behavior = "drop";
 
       "--scope" = [
         {
