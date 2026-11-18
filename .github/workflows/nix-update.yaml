@@ -75,7 +75,7 @@ jobs:
     needs:
       - flake-update
 
-    if: ${{ needs.flake-update.outputs.changed == 'true' }}
+    if: ${{ needs.flake-update.outputs.changed == 'true' && contains(fromJSON('["main"]'), github.ref_name) }}
 
     env:
       USER: runner
@@ -131,6 +131,32 @@ jobs:
             echo "$pr"
             echo '```'
           } | tee -a "${GITHUB_STEP_SUMMARY:?}"
+
+          number="${pr##*/}"
+          subject="$title (#$number)"
+
+          head_count=$(git rev-list --count "${GITHUB_SHA:?}..")
+          if [[ "$head_count" != 1 ]]; then
+            echo "${BRANCH:?}: expected 1 commit beyond ${GITHUB_SHA:?}, found $head_count" >&2
+            exit 1
+          fi
+
+          armed=$(gh pr view "${BRANCH:?}" --json autoMergeRequest --jq '.autoMergeRequest != null')
+          if [[ "$armed" == true ]]; then
+            gh pr merge "${BRANCH:?}" --disable-auto
+          fi
+
+          gh pr merge "${BRANCH:?}" --auto --merge \
+            --subject "$subject" --body-file "$body"
+
+          {
+            echo "auto-merge armed: merge"
+            echo '```'
+            echo "$subject"
+            echo
+            cat "$body"
+            echo '```'
+          } >>"${GITHUB_STEP_SUMMARY:?}"
 
   cleanup-branch:
     runs-on: ubuntu-slim
